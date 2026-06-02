@@ -1,0 +1,1159 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>新托福阅读填空仿真考试</title>
+  <meta name="description" content="新托福阅读 Fill in the missing letters 电脑端仿真练习，支持逐篇提交、答案与解析。">
+  <style>
+    :root {
+      --ink: #242424;
+      --muted: #666666;
+      --teal: #168a83;
+      --line: #3d3d3d;
+      --box: #d9d9d9;
+      --box-active: #cfcfcf;
+      --box-border: #8b8b8b;
+      --right: #dff0e6;
+      --wrong: #f2d7d7;
+      --footer: #f4f4f4;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background: #ffffff;
+      font-family: Arial, Helvetica, "Microsoft YaHei", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .exam-bar {
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 36px 0 68px;
+      border-bottom: 3px solid var(--line);
+      background: #ffffff;
+      color: #313131;
+      font-size: 25px;
+      line-height: 1;
+      font-weight: 700;
+    }
+
+    .exam-left,
+    .exam-right {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      min-width: 0;
+    }
+
+    .divider {
+      width: 2px;
+      height: 28px;
+      background: #bdbdbd;
+      display: inline-block;
+    }
+
+    .range {
+      font-size: 24px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .timer {
+      min-width: 112px;
+      text-align: right;
+      font-size: 22px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .time-toggle {
+      border: 0;
+      background: transparent;
+      color: var(--teal);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 0;
+      font-size: 24px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .eye {
+      width: 27px;
+      height: 27px;
+      border: 4px solid var(--teal);
+      border-radius: 50% 65% 50% 65%;
+      display: inline-block;
+      position: relative;
+      transform: rotate(-45deg);
+    }
+
+    .eye::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--teal);
+      position: absolute;
+      left: 6px;
+      top: 6px;
+    }
+
+    .eye::after {
+      content: "";
+      width: 36px;
+      height: 4px;
+      background: var(--teal);
+      position: absolute;
+      left: -7px;
+      top: 10px;
+      transform: rotate(90deg);
+    }
+
+    .stage {
+      min-height: calc(100vh - 120px);
+      padding: 44px 76px 110px;
+    }
+
+    .prompt {
+      margin: 0;
+      text-align: center;
+      font-size: clamp(34px, 3vw, 48px);
+      line-height: 1.15;
+      font-weight: 800;
+      color: #050505;
+    }
+
+    .passage {
+      max-width: 1480px;
+      margin: clamp(110px, 21vh, 230px) auto 0;
+      font-size: clamp(24px, 1.65vw, 31px);
+      line-height: 1.52;
+      color: #292929;
+      word-break: normal;
+    }
+
+    .blank {
+      --slots: 3;
+      min-width: calc(var(--slots) * 22px + 18px);
+      height: 50px;
+      margin: 0 4px;
+      padding: 0 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      vertical-align: -12px;
+      background: var(--box);
+      border: 1px solid transparent;
+      outline: none;
+      cursor: text;
+    }
+
+    .blank:focus,
+    .blank.active {
+      background: var(--box-active);
+      border-color: var(--box-border);
+      box-shadow: inset 0 -3px 0 #777777;
+    }
+
+    .blank.correct {
+      background: var(--right);
+      border-color: #6aa47f;
+    }
+
+    .blank.incorrect {
+      background: var(--wrong);
+      border-color: #c27b7b;
+    }
+
+    .slot {
+      width: 18px;
+      min-width: 18px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #555555;
+      font-size: 28px;
+      font-weight: 500;
+      line-height: 1;
+      text-transform: lowercase;
+    }
+
+    .slot.filled {
+      color: #111111;
+      font-weight: 700;
+    }
+
+    .slot.cursor {
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .footer {
+      min-height: 68px;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-top: 1px solid #c9c9c9;
+      background: var(--footer);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 12px 38px;
+      z-index: 10;
+    }
+
+    .progress {
+      color: var(--muted);
+      font-size: 16px;
+      white-space: nowrap;
+    }
+
+    .footer-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      min-height: 40px;
+      min-width: 92px;
+      padding: 8px 15px;
+      border: 1px solid #8e8e8e;
+      border-radius: 2px;
+      background: #ffffff;
+      color: #222222;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .btn:hover {
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+
+    .btn.primary {
+      border-color: var(--teal);
+      background: var(--teal);
+      color: #ffffff;
+    }
+
+    .btn:disabled {
+      opacity: 0.46;
+      cursor: not-allowed;
+    }
+
+    .question-popover {
+      position: fixed;
+      right: 38px;
+      bottom: 82px;
+      width: 330px;
+      max-width: calc(100vw - 32px);
+      background: #ffffff;
+      border: 1px solid #b6b6b6;
+      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.18);
+      padding: 14px;
+      display: none;
+      z-index: 20;
+    }
+
+    .question-popover.open {
+      display: block;
+    }
+
+    .question-popover h2 {
+      margin: 0 0 12px;
+      font-size: 17px;
+    }
+
+    .question-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .q-jump {
+      height: 36px;
+      border: 1px solid #aaaaaa;
+      background: #ffffff;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .q-jump.active {
+      background: var(--teal);
+      border-color: var(--teal);
+      color: #ffffff;
+    }
+
+    .q-jump.done {
+      background: #e5f2eb;
+      border-color: #84b997;
+    }
+
+    .q-jump.active.done {
+      background: var(--teal);
+      color: #ffffff;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.36);
+      z-index: 30;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      width: min(780px, 100%);
+      max-height: min(720px, calc(100vh - 50px));
+      overflow: auto;
+      background: #ffffff;
+      border: 1px solid #888888;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.26);
+      padding: 22px;
+    }
+
+    .modal h2 {
+      margin: 0 0 14px;
+      font-size: 24px;
+    }
+
+    .score-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .score-card {
+      border: 1px solid #cccccc;
+      padding: 12px;
+    }
+
+    .score-card strong {
+      display: block;
+      color: var(--teal);
+      font-size: 28px;
+      line-height: 1.1;
+    }
+
+    .wrong-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .wrong-item {
+      border: 1px solid #dec0c0;
+      background: #fff8f8;
+      padding: 9px 10px;
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .answer-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .answer-item {
+      border: 1px solid #cccccc;
+      background: #ffffff;
+      padding: 11px 12px;
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .answer-item.correct {
+      border-color: #8ab99b;
+      background: #f4fbf6;
+    }
+
+    .answer-item.incorrect {
+      border-color: #d09a9a;
+      background: #fff8f8;
+    }
+
+    .answer-item h3 {
+      margin: 0 0 6px;
+      font-size: 16px;
+    }
+
+    .answer-meta {
+      margin-bottom: 5px;
+    }
+
+    .explain {
+      color: #444444;
+    }
+
+    .answer {
+      color: var(--teal);
+      font-weight: 700;
+    }
+
+    @media (max-width: 900px) {
+      .exam-bar {
+        height: auto;
+        min-height: 58px;
+        padding: 10px 18px;
+        gap: 8px;
+        flex-wrap: wrap;
+        font-size: 20px;
+      }
+
+      .range,
+      .time-toggle {
+        font-size: 18px;
+      }
+
+      .timer {
+        font-size: 18px;
+        min-width: 90px;
+      }
+
+      .stage {
+        padding: 36px 22px 128px;
+      }
+
+      .passage {
+        margin-top: 115px;
+      }
+
+      .footer {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 10px 16px;
+      }
+
+      .footer-actions {
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .exam-left,
+      .exam-right {
+        gap: 10px;
+      }
+
+      .divider {
+        height: 22px;
+      }
+
+      .prompt {
+        font-size: 30px;
+      }
+
+      .passage {
+        font-size: 22px;
+        line-height: 1.6;
+        margin-top: 82px;
+      }
+
+      .blank {
+        min-width: calc(var(--slots) * 18px + 16px);
+        height: 42px;
+        vertical-align: -10px;
+      }
+
+      .slot {
+        width: 15px;
+        min-width: 15px;
+        font-size: 23px;
+      }
+
+      .score-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="exam-bar">
+    <div class="exam-left">
+      <span>Reading</span>
+      <span class="divider"></span>
+      <span class="range" id="questionRange">Questions 1-10 of 200</span>
+    </div>
+    <div class="exam-right">
+      <span class="timer" id="timer">00:40:00</span>
+      <button class="time-toggle" id="timeToggle" type="button"><span class="eye" aria-hidden="true"></span><span id="timeToggleText">Hide Time</span></button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <h1 class="prompt">Fill in the missing letters in the paragraph.</h1>
+    <article class="passage" id="passage"></article>
+  </main>
+
+  <footer class="footer">
+    <div class="progress" id="progressText">Passage 1 of 20 - 0/200 blanks completed - 0/20 submitted</div>
+    <div class="footer-actions">
+      <button class="btn" id="prevBtn" type="button">Back</button>
+      <button class="btn" id="reviewBtn" type="button">Review</button>
+      <button class="btn" id="nextBtn" type="button">Next</button>
+      <button class="btn primary" id="submitBtn" type="button">Submit</button>
+      <button class="btn" id="exportBtn" type="button" disabled>Export</button>
+      <button class="btn" id="resetBtn" type="button">Restart</button>
+    </div>
+  </footer>
+
+  <section class="question-popover" id="questionPopover" aria-label="Question navigation">
+    <h2>Review Passages</h2>
+    <div class="question-grid" id="questionGrid"></div>
+  </section>
+
+  <section class="modal-backdrop" id="resultBackdrop" aria-label="Exam result">
+    <div class="modal">
+      <h2 id="resultTitle">Exam Result</h2>
+      <div id="resultContent"></div>
+      <div class="footer-actions">
+        <button class="btn" id="closeResultBtn" type="button">Close</button>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const STORAGE_KEY = "toefl-reading-missing-letters-site-v1";
+    const EXAM_SECONDS = 40 * 60;
+    const maskPattern = /[A-Za-z]+_(?:\s_)*|_/g;
+
+    const questions = [
+      { title: 'Continental Drift', text: 'Matching coastlines and similar rock belts provide evidence that continents have occupied different positions during Earth\'s history. Geologists interp_ _ _ these clues to show how adjac_ _ _ plates mov_ in relat_ _ _ to a marg_ _. Plates dr_ _ _ along th_ boundary, wh_ _ _ gives rise t_ the global distr_ _ _ _ _ _ _ of earthquakes and mountains. The study of continental drift continues to reveal how Earth\'s surface has changed.', answers: ['interpret', 'adjacent', 'move', 'relation', 'margin', 'drift', 'the', 'which', 'to', 'distribution'] },
+      { title: 'Glaciation', text: 'Moraines and polished bedrock preserve evidence that ice sheets once covered many northern landscapes. Climatologists examin_ these traces to determine how alp_ _ _ glaciers advan_ _ in thick_ _ _ _ within a vall_ _. Ice flo_ _ across th_ floor, wh_ _ _ results i_ distinctive eros_ _ _ features visible today. The study of glaciers continues to reveal how climate has shaped the landscape.', answers: ['examine', 'alpine', 'advance', 'thickness', 'valley', 'flows', 'the', 'which', 'in', 'erosion'] },
+      { title: 'Desert Erosion', text: 'Vast dunes and stone pavements record the long action of wind in arid environments. Geographers analy_ _ these surfaces to show how airbo_ _ _ sand grains ris_ in veloc_ _ _ in a sto_ _. Dunes shi_ _ across th_ basins, wh_ _ _ contributes t_ sharp contr_ _ _ observed in desert scenery. The study of deserts continues to reveal how climate and erosion interact.', answers: ['analyze', 'airborne', 'rise', 'velocity', 'storm', 'shift', 'the', 'which', 'to', 'contrast'] },
+      { title: 'Coral Reefs', text: 'Coral skeletons preserve records of warm shallow seas and the organisms that built reef communities. Marine biologists stud_ these structures to explain how symbio_ _ _ algae rema_ _ in bala_ _ _ inside a poly_. Reefs bui_ _ upon th_ shelves, wh_ _ _ accounts f_ _ the complex_ _ _ observed in tropical oceans. The study of coral reefs continues to reveal how marine ecosystems develop.', answers: ['study', 'symbiotic', 'remain', 'balance', 'polyp', 'build', 'the', 'which', 'for', 'complexity'] },
+      { title: 'Photosynthesis', text: 'Fossil leaves reveal that ancient plants developed different structures for capturing light. Botanists compar_ these forms to show how broad_ _ leaves capt_ _ _ more ener_ _ in a cano_ _. Species comp_ _ _ beneath th_ canopy, wh_ _ _ leads t_ uneven produc_ _ _ _ _ _ observed in forests. The study of photosynthesis continues to reveal how plants respond to their surroundings.', answers: ['compare', 'broader', 'capture', 'energy', 'canopy', 'compete', 'the', 'which', 'to', 'productivity'] },
+      { title: 'Bird Migration', text: 'Banding records trace seasonal routes that many birds follow across continents. Ornithologists inter_ _ _ _ these records to explain how juven_ _ _ birds trave_ in gro_ _ _ along a flyw_ _. Flocks ret_ _ _ to th_ _ _ breeding areas, wh_ _ _ results i_ broad distrib_ _ _ _ _ across regions. The study of migration continues to reveal how animals navigate long distances.', answers: ['interpret', 'juvenile', 'travel', 'groups', 'flyway', 'return', 'their', 'which', 'in', 'distribution'] },
+      { title: 'Social Insects', text: 'Amber fossils and modern colonies show that some insects developed highly organized social behavior. Entomologists obser_ _ these colonies to see how ster_ _ _ workers diff_ _ in func_ _ _ _ within a colo_ _. Workers coop_ _ _ _ _ inside th_ nest, wh_ _ _ contributes t_ social organi_ _ _ _ _ _ observed in ants and bees. The study of social insects continues to reveal how cooperation evolves.', answers: ['observe', 'sterile', 'differ', 'function', 'colony', 'cooperate', 'the', 'which', 'to', 'organization'] },
+      { title: 'Ecological Succession', text: 'Pollen grains in lake sediments record the sequence of plants that occupied a changing landscape. Ecologists reconstru_ _ these sequences to show how pione_ _ plants appe_ _ in ord_ _ within a clear_ _ _. Shrubs repla_ _ th_ grasses, wh_ _ _ leads t_ layered struc_ _ _ _ observed in young forests. The study of succession continues to reveal how ecosystems recover after disturbance.', answers: ['reconstruct', 'pioneer', 'appear', 'order', 'clearing', 'replace', 'the', 'which', 'to', 'structure'] },
+      { title: 'Ocean Currents', text: 'Floating instruments reveal that ocean water travels long distances and helps regulate climate. Oceanographers moni_ _ _ these paths to explain how sal_ _ _ waters sin_ in dep_ _ within a bas_ _. Currents circ_ _ _ _ _ through th_ oceans, wh_ _ _ gives rise t_ global exch_ _ _ _ of heat and nutrients. The study of ocean circulation continues to reveal how the seas distribute energy.', answers: ['monitor', 'saline', 'sink', 'depth', 'basin', 'circulate', 'the', 'which', 'to', 'exchange'] },
+      { title: 'Volcanism', text: 'Tephra layers record eruptions that altered landscapes around ancient volcanoes. Geologists analy_ _ these layers to learn how dissol_ _ _ gases bui_ _ in pres_ _ _ _ inside a chamb_ _. Eruptions bre_ _ through th_ crust, wh_ _ _ results i_ new terra_ _ around volcanic cones. The study of volcanism continues to reveal how Earth releases internal heat.', answers: ['analyze', 'dissolved', 'build', 'pressure', 'chamber', 'break', 'the', 'which', 'in', 'terrain'] },
+      { title: 'Domestication', text: 'Charred seeds document crops that early communities selected and planted near settlements. Archaeologists ident_ _ _ these remains to show how select_ _ plants impro_ _ in yi_ _ _ within a fie_ _. Farmers sett_ _ beside th_ rivers, wh_ _ _ contributes t_ agricultural expan_ _ _ _ in early societies. The study of domestication continues to reveal how people transformed wild plants into crops.', answers: ['identify', 'selected', 'improve', 'yield', 'field', 'settle', 'the', 'which', 'to', 'expansion'] },
+      { title: 'Irrigation', text: 'Canal traces show that ancient communities engineered water systems in dry regions. Archaeologists exami_ _ these systems to explain how stor_ _ water mov_ _ through chann_ _ _ in a settl_ _ _ _ _. Canals ext_ _ _ across th_ _ _ fields, wh_ _ _ leads t_ economic stabil_ _ _ in irrigation societies. The study of ancient water systems continues to reveal how cities supported dense populations.', answers: ['examine', 'stored', 'moves', 'channels', 'settlement', 'extend', 'their', 'which', 'to', 'stability'] },
+      { title: 'Maya Cities', text: 'Temples, plazas, and causeways preserve evidence of how Maya cities organized space and authority. Archaeologists surv_ _ these remains to show how ceremon_ _ _ centers exp_ _ _ in sca_ _ across a lowl_ _ _. Causeways conn_ _ _ th_ plazas, wh_ _ _ gives rise t_ political integr_ _ _ _ _ in city networks. The study of Maya urbanism continues to reveal how complex societies managed authority.', answers: ['survey', 'ceremonial', 'expand', 'scale', 'lowland', 'connect', 'the', 'which', 'to', 'integration'] },
+      { title: 'Cave Art', text: 'Pigments on cave walls preserve images made by prehistoric artists. Anthropologists examin_ these paintings to suggest how repeat_ _ images gai_ in mean_ _ _ within a chamb_ _. Artists choo_ _ th_ walls, wh_ _ _ contributes t_ visual vari_ _ _ across cave sites. The study of prehistoric painting continues to reveal how early humans represented their world.', answers: ['examine', 'repeated', 'gain', 'meaning', 'chamber', 'choose', 'the', 'which', 'to', 'variety'] },
+      { title: 'Greek Pottery', text: 'Painted vessels record trade, ritual, and daily life in ancient Mediterranean communities. Art historians compar_ ceramic styles to identify how import_ _ motifs spre_ _ in popula_ _ _ _ within a po_ _. Merchants tra_ _ across th_ sea, wh_ _ _ results i_ artistic circul_ _ _ _ _ among markets. The study of pottery continues to reveal how commerce influenced visual culture.', answers: ['compare', 'imported', 'spread', 'popularity', 'port', 'trade', 'the', 'which', 'in', 'circulation'] },
+      { title: 'Language Change', text: 'Inscriptions preserve words and spellings from earlier stages of a language. Linguists analy_ _ these records to explain how borrow_ _ words ent_ _ in us_ _ _ within a dial_ _ _. Speakers adj_ _ _ th_ _ _ speech, wh_ _ _ leads t_ regional vari_ _ _ _ _ in modern languages. The study of language change continues to reveal how communication adapts across communities.', answers: ['analyze', 'borrowed', 'enter', 'usage', 'dialect', 'adjust', 'their', 'which', 'to', 'variation'] },
+      { title: 'Star Formation', text: 'Infrared observations reveal dense clouds where new stars begin to form. Astronomers obser_ _ these clouds to determine how den_ _ gases colla_ _ _ in ma_ _ inside a nebul_. Stars clust_ _ within th_ nebula, wh_ _ _ results i_ varied luminos_ _ _ in stellar regions. The study of star formation continues to reveal how the universe produces new sources of light.', answers: ['observe', 'dense', 'collapse', 'mass', 'nebula', 'cluster', 'the', 'which', 'in', 'luminosity'] },
+      { title: 'Planetary Atmospheres', text: 'Spectral data identify gases that surround planets inside and beyond our solar system. Planetary scientists meas_ _ _ these gases to explain how light_ _ molecules decl_ _ _ in abund_ _ _ _ within an atmos_ _ _ _ _. Molecules rea_ _ to th_ radiation, wh_ _ _ accounts f_ _ chemical differ_ _ _ _ among planets. The study of planetary atmospheres continues to reveal how worlds become distinct from one another.', answers: ['measure', 'lighter', 'decline', 'abundance', 'atmosphere', 'react', 'the', 'which', 'for', 'difference'] },
+      { title: 'Early Mammals', text: 'Jaw fossils document small mammals that lived during the age of dinosaurs. Paleontologists compar_ these jaws to show how special_ _ _ _ teeth impro_ _ in surviv_ _ within a lin_ _ _ _. Mammals ada_ _ to th_ _ _ niches, wh_ _ _ gives rise t_ evolutionary radi_ _ _ _ _ in later groups. The study of early mammals continues to reveal how major animal groups diversified.', answers: ['compare', 'specialized', 'improve', 'survival', 'lineage', 'adapt', 'their', 'which', 'to', 'radiation'] },
+      { title: 'Wetlands', text: 'Peat cores preserve organic matter from habitats where water covers the soil for long periods. Ecologists examin_ these cores to reveal how satur_ _ _ _ soils ret_ _ _ in stor_ _ _ within a mar_ _. Plants roo_ within th_ sediments, wh_ _ _ contributes t_ carbon accum_ _ _ _ _ _ _ in wetland ecosystems. The study of wetlands continues to reveal how water, plants, and soil interact.', answers: ['examine', 'saturated', 'retain', 'storage', 'marsh', 'root', 'the', 'which', 'to', 'accumulation'] },
+    ];
+
+    const els = {
+      range: document.getElementById("questionRange"),
+      timer: document.getElementById("timer"),
+      timeToggle: document.getElementById("timeToggle"),
+      timeToggleText: document.getElementById("timeToggleText"),
+      passage: document.getElementById("passage"),
+      progress: document.getElementById("progressText"),
+      prev: document.getElementById("prevBtn"),
+      next: document.getElementById("nextBtn"),
+      review: document.getElementById("reviewBtn"),
+      submit: document.getElementById("submitBtn"),
+      exportBtn: document.getElementById("exportBtn"),
+      reset: document.getElementById("resetBtn"),
+      popover: document.getElementById("questionPopover"),
+      grid: document.getElementById("questionGrid"),
+      resultBackdrop: document.getElementById("resultBackdrop"),
+      resultTitle: document.getElementById("resultTitle"),
+      resultContent: document.getElementById("resultContent"),
+      closeResult: document.getElementById("closeResultBtn")
+    };
+
+    prepareQuestions();
+    let state = loadState();
+    let active = { q: 0, b: 0, pos: 0 };
+    els.timeToggleText.textContent = state.hideTime ? "Show Time" : "Hide Time";
+
+    renderGrid();
+    renderQuestion();
+    updateStatus();
+    startTimer();
+
+    els.prev.addEventListener("click", () => goToQuestion(state.current - 1));
+    els.next.addEventListener("click", () => goToQuestion(state.current + 1));
+    els.review.addEventListener("click", () => els.popover.classList.toggle("open"));
+    els.submit.addEventListener("click", () => submitCurrentGroup(false));
+    els.exportBtn.addEventListener("click", exportResult);
+    els.reset.addEventListener("click", resetExam);
+    els.closeResult.addEventListener("click", () => els.resultBackdrop.classList.remove("open"));
+    els.timeToggle.addEventListener("click", toggleTime);
+
+    document.addEventListener("click", event => {
+      if (!els.popover.contains(event.target) && !els.review.contains(event.target)) {
+        els.popover.classList.remove("open");
+      }
+    });
+
+    function prepareQuestions() {
+      questions.forEach((q, qIndex) => {
+        q.blanks = [];
+        maskPattern.lastIndex = 0;
+        let match;
+        while ((match = maskPattern.exec(q.text)) !== null) {
+          const token = match[0];
+          const prefix = token.replace(/[_\s]/g, "");
+          const missing = (token.match(/_/g) || []).length;
+          q.blanks.push({ token, prefix, missing, answer: q.answers[q.blanks.length] });
+        }
+        if (q.blanks.length !== q.answers.length) {
+          throw new Error(`Passage ${qIndex + 1} has mismatched blanks.`);
+        }
+      });
+    }
+
+    function createEmptyTyped() {
+      return questions.map(q => q.blanks.map(blank => Array(blank.missing).fill("")));
+    }
+
+    function loadState() {
+      const fresh = { current: 0, startedAt: Date.now(), submittedAt: null, submitted: false, hideTime: false, groupSubmitted: [], typed: [] };
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (saved && Array.isArray(saved.typed) && saved.typed.length === questions.length) {
+          return normalizeState(saved);
+        }
+      } catch (error) {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+      fresh.typed = createEmptyTyped();
+      fresh.groupSubmitted = Array(questions.length).fill(false);
+      return fresh;
+    }
+
+    function normalizeState(saved) {
+      const groupSubmitted = Array.isArray(saved.groupSubmitted)
+        ? saved.groupSubmitted.slice(0, questions.length).map(Boolean)
+        : Array(questions.length).fill(false);
+      while (groupSubmitted.length < questions.length) groupSubmitted.push(false);
+      const normalized = {
+        current: Number.isInteger(saved.current) ? saved.current : 0,
+        startedAt: saved.startedAt || Date.now(),
+        submittedAt: saved.submittedAt || null,
+        hideTime: Boolean(saved.hideTime),
+        groupSubmitted,
+        typed: saved.typed
+      };
+      normalized.submitted = normalized.groupSubmitted.every(Boolean);
+      if (!normalized.submitted) normalized.submittedAt = null;
+      normalized.current = clamp(normalized.current, 0, questions.length - 1);
+      return normalized;
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function renderGrid() {
+      els.grid.innerHTML = "";
+      questions.forEach((_, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "q-jump";
+        button.textContent = String(index + 1);
+        button.addEventListener("click", () => {
+          goToQuestion(index);
+          els.popover.classList.remove("open");
+        });
+        els.grid.appendChild(button);
+      });
+    }
+
+    function renderQuestion() {
+      const q = questions[state.current];
+      const first = state.current * 10 + 1;
+      const last = first + 9;
+      els.range.textContent = `Questions ${first}-${last} of 200`;
+      els.passage.innerHTML = "";
+
+      let cursor = 0;
+      let blankIndex = 0;
+      maskPattern.lastIndex = 0;
+      let match;
+      while ((match = maskPattern.exec(q.text)) !== null) {
+        if (match.index > cursor) els.passage.appendChild(document.createTextNode(q.text.slice(cursor, match.index)));
+        const blank = q.blanks[blankIndex];
+        if (blank.prefix) els.passage.appendChild(document.createTextNode(blank.prefix));
+        els.passage.appendChild(createBlankElement(state.current, blankIndex));
+        cursor = match.index + match[0].length;
+        blankIndex += 1;
+      }
+      els.passage.appendChild(document.createTextNode(q.text.slice(cursor)));
+
+      els.prev.disabled = state.current === 0;
+      els.next.disabled = state.current === questions.length - 1;
+      els.submit.disabled = false;
+      els.submit.textContent = isQuestionSubmitted(state.current) ? "Answers" : "Submit";
+      els.exportBtn.disabled = !state.groupSubmitted.every(Boolean);
+      updateStatus();
+    }
+
+    function createBlankElement(qIndex, bIndex) {
+      const blank = questions[qIndex].blanks[bIndex];
+      const wrapper = document.createElement("span");
+      wrapper.className = "blank";
+      wrapper.style.setProperty("--slots", blank.missing);
+      wrapper.tabIndex = isQuestionSubmitted(qIndex) ? -1 : 0;
+      wrapper.dataset.q = String(qIndex);
+      wrapper.dataset.b = String(bIndex);
+      wrapper.setAttribute("role", "textbox");
+      wrapper.setAttribute("aria-label", `Passage ${qIndex + 1}, blank ${bIndex + 1}`);
+
+      const typed = state.typed[qIndex][bIndex];
+      typed.forEach((letter, slotIndex) => {
+        const slot = document.createElement("span");
+        slot.className = `slot${letter ? " filled" : ""}`;
+        slot.dataset.slot = String(slotIndex);
+        slot.textContent = letter || "_";
+        wrapper.appendChild(slot);
+      });
+
+      if (isQuestionSubmitted(qIndex)) wrapper.classList.add(isBlankCorrect(qIndex, bIndex) ? "correct" : "incorrect");
+
+      wrapper.addEventListener("focus", () => {
+        active = { q: qIndex, b: bIndex, pos: nextEditablePosition(qIndex, bIndex) };
+        paintCursor(wrapper);
+      });
+      wrapper.addEventListener("click", event => {
+        const slot = event.target.closest(".slot");
+        active = { q: qIndex, b: bIndex, pos: slot ? Number(slot.dataset.slot) : nextEditablePosition(qIndex, bIndex) };
+        wrapper.focus();
+        paintCursor(wrapper);
+      });
+      wrapper.addEventListener("keydown", handleBlankKeydown);
+      wrapper.addEventListener("paste", handlePaste);
+      return wrapper;
+    }
+
+    function handleBlankKeydown(event) {
+      const wrapper = event.currentTarget;
+      const qIndex = Number(wrapper.dataset.q);
+      const bIndex = Number(wrapper.dataset.b);
+      if (isQuestionSubmitted(qIndex)) return;
+      const typed = state.typed[qIndex][bIndex];
+
+      if (/^[a-zA-Z]$/.test(event.key)) {
+        event.preventDefault();
+        const pos = clamp(active.pos, 0, typed.length - 1);
+        typed[pos] = event.key.toLowerCase();
+        active = { q: qIndex, b: bIndex, pos: Math.min(pos + 1, typed.length - 1) };
+        refreshBlank(qIndex, bIndex);
+        saveState();
+        updateStatus();
+        if (pos === typed.length - 1) focusNextBlank(qIndex, bIndex);
+        return;
+      }
+
+      if (event.key === "Backspace") {
+        event.preventDefault();
+        const pos = clamp(active.pos, 0, typed.length - 1);
+        if (typed[pos]) typed[pos] = "";
+        else if (pos > 0) {
+          typed[pos - 1] = "";
+          active = { q: qIndex, b: bIndex, pos: pos - 1 };
+        }
+        refreshBlank(qIndex, bIndex);
+        saveState();
+        updateStatus();
+        return;
+      }
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        active = { q: qIndex, b: bIndex, pos: Math.max(0, active.pos - 1) };
+        paintCursor(wrapper);
+        return;
+      }
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        active = { q: qIndex, b: bIndex, pos: Math.min(typed.length - 1, active.pos + 1) };
+        paintCursor(wrapper);
+        return;
+      }
+
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        focusNextBlank(qIndex, bIndex);
+      }
+    }
+
+    function handlePaste(event) {
+      event.preventDefault();
+      const wrapper = event.currentTarget;
+      const qIndex = Number(wrapper.dataset.q);
+      const bIndex = Number(wrapper.dataset.b);
+      if (isQuestionSubmitted(qIndex)) return;
+      const blank = questions[qIndex].blanks[bIndex];
+      const letters = (event.clipboardData || window.clipboardData).getData("text").trim().toLowerCase().replace(/[^a-z]/g, "");
+      const suffix = letters.startsWith(blank.prefix.toLowerCase()) ? letters.slice(blank.prefix.length) : letters;
+      state.typed[qIndex][bIndex] = Array.from({ length: blank.missing }, (_, index) => suffix[index] || "");
+      active = { q: qIndex, b: bIndex, pos: Math.min(suffix.length, blank.missing - 1) };
+      refreshBlank(qIndex, bIndex);
+      saveState();
+      updateStatus();
+      if (suffix.length >= blank.missing) focusNextBlank(qIndex, bIndex);
+    }
+
+    function refreshBlank(qIndex, bIndex) {
+      const wrapper = document.querySelector(`.blank[data-q="${qIndex}"][data-b="${bIndex}"]`);
+      if (!wrapper) return;
+      state.typed[qIndex][bIndex].forEach((letter, index) => {
+        const slot = wrapper.querySelector(`.slot[data-slot="${index}"]`);
+        slot.textContent = letter || "_";
+        slot.classList.toggle("filled", Boolean(letter));
+      });
+      paintCursor(wrapper);
+    }
+
+    function paintCursor(wrapper) {
+      document.querySelectorAll(".blank").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".slot.cursor").forEach(el => el.classList.remove("cursor"));
+      wrapper.classList.add("active");
+      const slot = wrapper.querySelector(`.slot[data-slot="${active.pos}"]`);
+      if (slot) slot.classList.add("cursor");
+    }
+
+    function focusNextBlank(qIndex, bIndex) {
+      if (bIndex + 1 < questions[qIndex].blanks.length) {
+        focusBlank(qIndex, bIndex + 1);
+      } else {
+        els.submit.focus();
+      }
+    }
+
+    function focusBlank(qIndex, bIndex) {
+      const wrapper = document.querySelector(`.blank[data-q="${qIndex}"][data-b="${bIndex}"]`);
+      if (!wrapper) return;
+      active = { q: qIndex, b: bIndex, pos: nextEditablePosition(qIndex, bIndex) };
+      wrapper.focus();
+      paintCursor(wrapper);
+    }
+
+    function nextEditablePosition(qIndex, bIndex) {
+      const typed = state.typed[qIndex][bIndex];
+      const emptyIndex = typed.findIndex(letter => !letter);
+      return emptyIndex === -1 ? typed.length - 1 : emptyIndex;
+    }
+
+    function goToQuestion(index, focusFirst = false) {
+      if (index < 0 || index >= questions.length) return;
+      state.current = index;
+      saveState();
+      renderQuestion();
+      if (focusFirst && !isQuestionSubmitted(index)) requestAnimationFrame(() => focusBlank(index, 0));
+    }
+
+    function updateStatus() {
+      const total = getTotalBlankCount();
+      const filled = getFilledBlankCount();
+      const submitted = state.groupSubmitted.filter(Boolean).length;
+      els.progress.textContent = `Passage ${state.current + 1} of ${questions.length} - ${filled}/${total} blanks completed - ${submitted}/${questions.length} submitted`;
+      els.grid.querySelectorAll(".q-jump").forEach((button, index) => {
+        button.className = "q-jump";
+        if (index === state.current) button.classList.add("active");
+        if (isQuestionFullyFilled(index) || isQuestionSubmitted(index)) button.classList.add("done");
+      });
+    }
+
+    function startTimer() {
+      updateTimer();
+      setInterval(updateTimer, 1000);
+    }
+
+    function updateTimer() {
+      if (state.hideTime) {
+        els.timer.textContent = "--:--:--";
+        return;
+      }
+      const endTime = state.submitted ? state.submittedAt || Date.now() : Date.now();
+      const elapsed = Math.max(0, Math.floor((endTime - state.startedAt) / 1000));
+      const displaySeconds = state.submitted ? elapsed : Math.max(0, EXAM_SECONDS - elapsed);
+      els.timer.textContent = formatTime(displaySeconds);
+      if (!state.submitted && displaySeconds === 0) submitExam(true);
+    }
+
+    function formatTime(totalSeconds) {
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function toggleTime() {
+      state.hideTime = !state.hideTime;
+      els.timeToggleText.textContent = state.hideTime ? "Show Time" : "Hide Time";
+      saveState();
+      updateTimer();
+    }
+
+    function submitCurrentGroup(auto) {
+      const qIndex = state.current;
+      if (isQuestionSubmitted(qIndex)) {
+        showPassageResult(qIndex);
+        return;
+      }
+      const unfilled = getQuestionBlankCount(qIndex) - getQuestionFilledBlankCount(qIndex);
+      if (!auto && unfilled > 0 && !window.confirm(`There are ${unfilled} unfinished blanks in this passage. Submit anyway?`)) return;
+      state.groupSubmitted[qIndex] = true;
+      if (state.groupSubmitted.every(Boolean)) {
+        state.submitted = true;
+        state.submittedAt = Date.now();
+      } else {
+        state.submitted = false;
+        state.submittedAt = null;
+      }
+      saveState();
+      renderQuestion();
+      showPassageResult(qIndex);
+    }
+
+    function submitExam(auto) {
+      if (state.submitted && state.groupSubmitted.every(Boolean)) return;
+      state.groupSubmitted = Array(questions.length).fill(true);
+      state.submitted = true;
+      state.submittedAt = Date.now();
+      saveState();
+      renderQuestion();
+      showResult();
+    }
+
+    function showPassageResult(qIndex) {
+      const q = questions[qIndex];
+      const correct = q.blanks.reduce((sum, _, bIndex) => sum + (isBlankCorrect(qIndex, bIndex) ? 1 : 0), 0);
+      els.resultTitle.textContent = `Passage ${qIndex + 1}: Answers and Explanations`;
+      els.resultContent.innerHTML = `
+        <div class="score-row">
+          <div class="score-card"><strong>${correct}</strong><span>Correct blanks</span></div>
+          <div class="score-card"><strong>${q.blanks.length - correct}</strong><span>Incorrect or blank</span></div>
+          <div class="score-card"><strong>${Math.round((correct / q.blanks.length) * 100)}%</strong><span>Passage accuracy</span></div>
+        </div>
+        <div class="answer-list">
+          ${q.blanks.map((blank, bIndex) => {
+            const suffix = state.typed[qIndex][bIndex].join("");
+            const user = suffix ? blank.prefix + suffix : "blank";
+            const ok = isBlankCorrect(qIndex, bIndex);
+            const detail = getBlankExplanation(qIndex, bIndex);
+            return `
+              <div class="answer-item ${ok ? "correct" : "incorrect"}">
+                <h3>Blank ${bIndex + 1}</h3>
+                <div class="answer-meta">Your answer: ${user}; Correct answer: <span class="answer">${blank.answer}</span></div>
+                <div class="explain"><strong>Focus:</strong> ${detail.focus}</div>
+                <div class="explain"><strong>Explanation:</strong> ${detail.explanation}</div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+      els.resultBackdrop.classList.add("open");
+    }
+
+    function showResult() {
+      const score = calculateScore();
+      const wrongItems = collectWrongItems();
+      els.resultTitle.textContent = "Full Exam Result";
+      els.resultContent.innerHTML = `
+        <div class="score-row">
+          <div class="score-card"><strong>${score.correct}</strong><span>Correct blanks</span></div>
+          <div class="score-card"><strong>${score.total - score.correct}</strong><span>Incorrect or blank</span></div>
+          <div class="score-card"><strong>${Math.round((score.correct / score.total) * 100)}%</strong><span>Accuracy</span></div>
+        </div>
+        <h3>Incorrect Items</h3>
+        <div class="wrong-list">
+          ${wrongItems.length ? wrongItems.map(item => `
+            <div class="wrong-item">Passage ${item.q + 1}, Blank ${item.b + 1}: Your answer: ${item.user || "blank"}; Correct answer: <span class="answer">${item.answer}</span></div>
+          `).join("") : `<div class="wrong-item">All correct.</div>`}
+        </div>
+      `;
+      els.resultBackdrop.classList.add("open");
+    }
+
+    function getBlankExplanation(qIndex, bIndex) {
+      const q = questions[qIndex];
+      const blank = q.blanks[bIndex];
+      const answer = blank.answer;
+      const prefix = blank.prefix;
+      const missing = blank.missing;
+      const collocations = {
+        to: "lead to / contribute to / give rise to",
+        in: "result in",
+        for: "account for"
+      };
+      const details = [
+        {
+          focus: "语境推断 + 第三人称单数谓语",
+          explanation: `${q.title} 是第二句或后续句子的学术动作，后面接 how 从句时需要谓语动词；第一句提供该学术主题的背景线索，所以 ${blank.token} 应补成 ${answer}。`
+        },
+        {
+          focus: "语境相关的形容词或分词作定语",
+          explanation: `${answer} 修饰后面的名词，必须和本段 ${q.title} 的学术语境一致；这个空主要考学生能否从第一句背景线索推断相关属性词。`
+        },
+        {
+          focus: "谓语动词",
+          explanation: `这个空位于 how 从句内部，前面已有主语，句子缺少谓语动词；${answer} 的形式和该从句主语保持一致。`
+        },
+        {
+          focus: "介词后的抽象名词",
+          explanation: `in 后面需要名词，表示变化发生的方面或维度；${answer} 是符合上下文的名词形式。`
+        },
+        {
+          focus: "冠词后的单数可数名词",
+          explanation: `a/an 后面需要单数可数名词；${answer} 是本段学术场景中的具体地点、结构或对象。`
+        },
+        {
+          focus: "第四句谓语动词",
+          explanation: `第四句开头的主语后缺少谓语动词；${answer} 描述该主题中的典型动作或变化过程。`
+        },
+        {
+          focus: "限定词",
+          explanation: `后面的名词需要限定词；${answer} 在这里起到冠词或物主限定词的作用，使名词短语完整。`
+        },
+        {
+          focus: "非限制性定语从句连接词",
+          explanation: `逗号后面引导非限制性定语从句，指代前面整个过程或事实，因此用 ${answer}。`
+        },
+        {
+          focus: "固定搭配中的介词",
+          explanation: `这里考固定搭配 ${collocations[answer] || "verb + preposition"}，所以介词必须填 ${answer}。`
+        },
+        {
+          focus: "形容词后的名词",
+          explanation: `前面有形容词修饰，空格处需要名词；${answer} 概括本段过程产生的结果或现象。`
+        }
+      ];
+      const detail = details[bIndex];
+      return {
+        focus: detail.focus,
+        explanation: `${detail.explanation} 题面给出 ${missing} 个缺失字母，和答案 ${answer} 在前缀 ${prefix} 后的字母数一致。`
+      };
+    }
+
+    function calculateScore() {
+      let correct = 0;
+      let total = 0;
+      questions.forEach((q, qIndex) => q.blanks.forEach((_, bIndex) => {
+        total += 1;
+        if (isBlankCorrect(qIndex, bIndex)) correct += 1;
+      }));
+      return { correct, total };
+    }
+
+    function collectWrongItems() {
+      const list = [];
+      questions.forEach((q, qIndex) => q.blanks.forEach((blank, bIndex) => {
+        if (!isBlankCorrect(qIndex, bIndex)) {
+          const suffix = state.typed[qIndex][bIndex].join("");
+          list.push({ q: qIndex, b: bIndex, user: suffix ? blank.prefix + suffix : "", answer: blank.answer });
+        }
+      }));
+      return list;
+    }
+
+    function exportResult() {
+      const score = calculateScore();
+      const wrongItems = collectWrongItems();
+      const lines = [
+        "TOEFL Missing Letters Simulation Result",
+        `Correct: ${score.correct}/${score.total}`,
+        `Accuracy: ${Math.round((score.correct / score.total) * 100)}%`,
+        "",
+        "Incorrect Items"
+      ];
+      if (!wrongItems.length) lines.push("All correct.");
+      wrongItems.forEach(item => lines.push(`Passage ${item.q + 1}, Blank ${item.b + 1}: yours=${item.user || "blank"}; answer=${item.answer}`));
+      const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "新托福填空题_仿真考试成绩.txt";
+      document.body.appendChild(link);
+      link.click();
+      URL.revokeObjectURL(link.href);
+      link.remove();
+    }
+
+    function resetExam() {
+      if (!window.confirm("Restart this exam? All answers will be cleared.")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      state = { current: 0, startedAt: Date.now(), submittedAt: null, submitted: false, hideTime: false, groupSubmitted: Array(questions.length).fill(false), typed: createEmptyTyped() };
+      active = { q: 0, b: 0, pos: 0 };
+      els.timeToggleText.textContent = "Hide Time";
+      els.resultBackdrop.classList.remove("open");
+      renderQuestion();
+      updateTimer();
+    }
+
+    function isQuestionSubmitted(qIndex) {
+      return Boolean(state.groupSubmitted[qIndex]);
+    }
+
+    function isQuestionFullyFilled(qIndex) {
+      return state.typed[qIndex].every((letters, bIndex) => letters.filter(Boolean).length === questions[qIndex].blanks[bIndex].missing);
+    }
+
+    function isBlankCorrect(qIndex, bIndex) {
+      const blank = questions[qIndex].blanks[bIndex];
+      const target = blank.answer.slice(blank.prefix.length).toLowerCase();
+      return state.typed[qIndex][bIndex].join("").toLowerCase() === target;
+    }
+
+    function getTotalBlankCount() {
+      return questions.reduce((sum, q) => sum + q.blanks.length, 0);
+    }
+
+    function getQuestionBlankCount(qIndex) {
+      return questions[qIndex].blanks.length;
+    }
+
+    function getQuestionFilledBlankCount(qIndex) {
+      return questions[qIndex].blanks.reduce((sum, blank, bIndex) => {
+        return sum + (state.typed[qIndex][bIndex].filter(Boolean).length === blank.missing ? 1 : 0);
+      }, 0);
+    }
+
+    function getFilledBlankCount() {
+      let count = 0;
+      questions.forEach((q, qIndex) => q.blanks.forEach((blank, bIndex) => {
+        if (state.typed[qIndex][bIndex].filter(Boolean).length === blank.missing) count += 1;
+      }));
+      return count;
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+  </script>
+</body>
+</html>
