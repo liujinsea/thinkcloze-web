@@ -21,4 +21,4 @@
 
 ## 使用提示
 
-学生进入网页后先看到 `Fill in Blanks` 首页。点击 `Set 1` 到 `Set 20` 中任意按钮进入单篇练习；每个 Set 独立计时。点击 `Submit` 后显示该 Set 的答案与解析，点击 `Return` 回到首页。
+学生进入网页后先看到 `Complete the Words` 首页。点击 `Set 1` 到 `Set 20` 中任意按钮进入单篇练习；每个 Set 独立计时。点击 `Submit` 后显示该 Set 的答案与解析，点击 `Return` 回到首页。
