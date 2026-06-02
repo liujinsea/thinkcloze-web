@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>新托福阅读填空仿真考试</title>
-  <meta name="description" content="新托福阅读 Fill in the missing letters 电脑端仿真练习，支持逐篇提交、答案与解析。">
+  <title>Fill in Blanks</title>
+  <meta name="description" content="Fill in Blanks: TOEFL-style reading missing-letter practice with per-set timing, submission, answers, and explanations.">
   <style>
     :root {
       --ink: #242424;
@@ -36,16 +36,78 @@
       font: inherit;
     }
 
+    .hidden {
+      display: none !important;
+    }
+
+    .home-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 42px 20px;
+      background: #ffffff;
+    }
+
+    .home-panel {
+      width: min(760px, 100%);
+      text-align: center;
+    }
+
+    .home-panel h1 {
+      margin: 0 0 10px;
+      font-size: clamp(38px, 5vw, 58px);
+      line-height: 1.08;
+      font-weight: 800;
+      color: #111111;
+    }
+
+    .home-panel p {
+      margin: 0 0 28px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.5;
+    }
+
+    .set-grid {
+      width: min(520px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .set-button {
+      min-height: 48px;
+      border: 1px solid #b8b8b8;
+      border-radius: 4px;
+      background: #ffffff;
+      color: #202020;
+      cursor: pointer;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .set-button:hover {
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+
+    .set-button.submitted {
+      background: #e5f2eb;
+      border-color: #84b997;
+    }
+
     .exam-bar {
-      height: 52px;
+      height: 46px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 36px 0 68px;
+      padding: 0 30px 0 54px;
       border-bottom: 3px solid var(--line);
       background: #ffffff;
       color: #313131;
-      font-size: 25px;
+      font-size: 21px;
       line-height: 1;
       font-weight: 700;
     }
@@ -54,27 +116,27 @@
     .exam-right {
       display: flex;
       align-items: center;
-      gap: 22px;
+      gap: 18px;
       min-width: 0;
     }
 
     .divider {
       width: 2px;
-      height: 28px;
+      height: 24px;
       background: #bdbdbd;
       display: inline-block;
     }
 
     .range {
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 700;
       white-space: nowrap;
     }
 
     .timer {
-      min-width: 112px;
+      min-width: 98px;
       text-align: right;
-      font-size: 22px;
+      font-size: 19px;
       font-weight: 700;
       white-space: nowrap;
     }
@@ -86,17 +148,17 @@
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       padding: 4px 0;
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 700;
       white-space: nowrap;
     }
 
     .eye {
-      width: 27px;
-      height: 27px;
-      border: 4px solid var(--teal);
+      width: 23px;
+      height: 23px;
+      border: 3px solid var(--teal);
       border-radius: 50% 65% 50% 65%;
       display: inline-block;
       position: relative;
@@ -105,35 +167,35 @@
 
     .eye::before {
       content: "";
-      width: 7px;
-      height: 7px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
       background: var(--teal);
       position: absolute;
-      left: 6px;
-      top: 6px;
+      left: 5px;
+      top: 5px;
     }
 
     .eye::after {
       content: "";
-      width: 36px;
-      height: 4px;
+      width: 31px;
+      height: 3px;
       background: var(--teal);
       position: absolute;
-      left: -7px;
-      top: 10px;
+      left: -6px;
+      top: 9px;
       transform: rotate(90deg);
     }
 
     .stage {
-      min-height: calc(100vh - 120px);
-      padding: 44px 76px 110px;
+      min-height: calc(100vh - 106px);
+      padding: 36px 66px 94px;
     }
 
     .prompt {
       margin: 0;
       text-align: center;
-      font-size: clamp(34px, 3vw, 48px);
+      font-size: clamp(28px, 2.5vw, 40px);
       line-height: 1.15;
       font-weight: 800;
       color: #050505;
@@ -141,24 +203,24 @@
 
     .passage {
       max-width: 1480px;
-      margin: clamp(110px, 21vh, 230px) auto 0;
-      font-size: clamp(24px, 1.65vw, 31px);
-      line-height: 1.52;
+      margin: clamp(86px, 17vh, 170px) auto 0;
+      font-size: clamp(20px, 1.35vw, 25px);
+      line-height: 1.48;
       color: #292929;
       word-break: normal;
     }
 
     .blank {
       --slots: 3;
-      min-width: calc(var(--slots) * 22px + 18px);
-      height: 50px;
+      min-width: calc(var(--slots) * 18px + 14px);
+      height: 42px;
       margin: 0 4px;
-      padding: 0 8px;
+      padding: 0 7px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 2px;
-      vertical-align: -12px;
+      vertical-align: -9px;
       background: var(--box);
       border: 1px solid transparent;
       outline: none;
@@ -183,14 +245,14 @@
     }
 
     .slot {
-      width: 18px;
-      min-width: 18px;
-      height: 34px;
+      width: 15px;
+      min-width: 15px;
+      height: 28px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       color: #555555;
-      font-size: 28px;
+      font-size: 23px;
       font-weight: 500;
       line-height: 1;
       text-transform: lowercase;
@@ -206,7 +268,7 @@
     }
 
     .footer {
-      min-height: 68px;
+      min-height: 60px;
       position: fixed;
       left: 0;
       right: 0;
@@ -217,13 +279,13 @@
       align-items: center;
       justify-content: space-between;
       gap: 18px;
-      padding: 12px 38px;
+      padding: 10px 30px;
       z-index: 10;
     }
 
     .progress {
       color: var(--muted);
-      font-size: 16px;
+      font-size: 14px;
       white-space: nowrap;
     }
 
@@ -236,15 +298,15 @@
     }
 
     .btn {
-      min-height: 40px;
-      min-width: 92px;
-      padding: 8px 15px;
+      min-height: 36px;
+      min-width: 86px;
+      padding: 7px 13px;
       border: 1px solid #8e8e8e;
       border-radius: 2px;
       background: #ffffff;
       color: #222222;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
     }
 
@@ -429,16 +491,16 @@
         padding: 10px 18px;
         gap: 8px;
         flex-wrap: wrap;
-        font-size: 20px;
+        font-size: 18px;
       }
 
       .range,
       .time-toggle {
-        font-size: 18px;
+        font-size: 16px;
       }
 
       .timer {
-        font-size: 18px;
+        font-size: 16px;
         min-width: 90px;
       }
 
@@ -447,7 +509,7 @@
       }
 
       .passage {
-        margin-top: 115px;
+        margin-top: 86px;
       }
 
       .footer {
@@ -472,13 +534,13 @@
       }
 
       .prompt {
-        font-size: 30px;
+        font-size: 27px;
       }
 
       .passage {
-        font-size: 22px;
+        font-size: 19px;
         line-height: 1.6;
-        margin-top: 82px;
+        margin-top: 68px;
       }
 
       .blank {
@@ -500,38 +562,48 @@
   </style>
 </head>
 <body>
-  <header class="exam-bar">
-    <div class="exam-left">
-      <span>Reading</span>
-      <span class="divider"></span>
-      <span class="range" id="questionRange">Questions 1-10 of 200</span>
+  <section class="home-screen" id="homeView">
+    <div class="home-panel">
+      <h1>Fill in Blanks</h1>
+      <p>Select a set to begin. Each set keeps its own timer and can be submitted separately.</p>
+      <div class="set-grid" id="homeGrid"></div>
     </div>
-    <div class="exam-right">
-      <span class="timer" id="timer">00:40:00</span>
-      <button class="time-toggle" id="timeToggle" type="button"><span class="eye" aria-hidden="true"></span><span id="timeToggleText">Hide Time</span></button>
-    </div>
-  </header>
+  </section>
 
-  <main class="stage">
-    <h1 class="prompt">Fill in the missing letters in the paragraph.</h1>
-    <article class="passage" id="passage"></article>
-  </main>
+  <section class="exam-screen hidden" id="examView">
+    <header class="exam-bar">
+      <div class="exam-left">
+        <span>Reading</span>
+        <span class="divider"></span>
+        <span class="range" id="questionRange">Set 1</span>
+      </div>
+      <div class="exam-right">
+        <span class="timer" id="timer">00:00:00</span>
+        <button class="time-toggle" id="timeToggle" type="button"><span class="eye" aria-hidden="true"></span><span id="timeToggleText">Hide Time</span></button>
+      </div>
+    </header>
 
-  <footer class="footer">
-    <div class="progress" id="progressText">Passage 1 of 20 - 0/200 blanks completed - 0/20 submitted</div>
-    <div class="footer-actions">
-      <button class="btn" id="prevBtn" type="button">Back</button>
-      <button class="btn" id="reviewBtn" type="button">Review</button>
-      <button class="btn" id="nextBtn" type="button">Next</button>
-      <button class="btn primary" id="submitBtn" type="button">Submit</button>
-      <button class="btn" id="exportBtn" type="button" disabled>Export</button>
-      <button class="btn" id="resetBtn" type="button">Restart</button>
-    </div>
-  </footer>
+    <main class="stage">
+      <h1 class="prompt">Fill in the missing letters in the paragraph.</h1>
+      <article class="passage" id="passage"></article>
+    </main>
 
-  <section class="question-popover" id="questionPopover" aria-label="Question navigation">
-    <h2>Review Passages</h2>
-    <div class="question-grid" id="questionGrid"></div>
+    <footer class="footer">
+      <div class="progress" id="progressText">Set 1 - 0/10 blanks completed</div>
+      <div class="footer-actions">
+        <button class="btn" id="prevBtn" type="button">Return</button>
+        <button class="btn hidden" id="reviewBtn" type="button">Review</button>
+        <button class="btn hidden" id="nextBtn" type="button">Next</button>
+        <button class="btn primary" id="submitBtn" type="button">Submit</button>
+        <button class="btn hidden" id="exportBtn" type="button" disabled>Export</button>
+        <button class="btn" id="resetBtn" type="button">Restart Set</button>
+      </div>
+    </footer>
+
+    <section class="question-popover" id="questionPopover" aria-label="Question navigation">
+      <h2>Review Passages</h2>
+      <div class="question-grid" id="questionGrid"></div>
+    </section>
   </section>
 
   <section class="modal-backdrop" id="resultBackdrop" aria-label="Exam result">
@@ -545,8 +617,7 @@
   </section>
 
   <script>
-    const STORAGE_KEY = "toefl-reading-missing-letters-site-v1";
-    const EXAM_SECONDS = 40 * 60;
+    const STORAGE_KEY = "toefl-reading-missing-letters-site-v2";
     const maskPattern = /[A-Za-z]+_(?:\s_)*|_/g;
 
     const questions = [
@@ -573,6 +644,9 @@
     ];
 
     const els = {
+      homeView: document.getElementById("homeView"),
+      examView: document.getElementById("examView"),
+      homeGrid: document.getElementById("homeGrid"),
       range: document.getElementById("questionRange"),
       timer: document.getElementById("timer"),
       timeToggle: document.getElementById("timeToggle"),
@@ -595,15 +669,16 @@
 
     prepareQuestions();
     let state = loadState();
+    let currentView = "home";
     let active = { q: 0, b: 0, pos: 0 };
     els.timeToggleText.textContent = state.hideTime ? "Show Time" : "Hide Time";
 
     renderGrid();
-    renderQuestion();
-    updateStatus();
+    renderHome();
+    showHome();
     startTimer();
 
-    els.prev.addEventListener("click", () => goToQuestion(state.current - 1));
+    els.prev.addEventListener("click", showHome);
     els.next.addEventListener("click", () => goToQuestion(state.current + 1));
     els.review.addEventListener("click", () => els.popover.classList.toggle("open"));
     els.submit.addEventListener("click", () => submitCurrentGroup(false));
@@ -640,7 +715,7 @@
     }
 
     function loadState() {
-      const fresh = { current: 0, startedAt: Date.now(), submittedAt: null, submitted: false, hideTime: false, groupSubmitted: [], typed: [] };
+      const fresh = { current: 0, submitted: false, hideTime: false, groupSubmitted: [], setElapsed: [], setStartedAt: [], typed: [] };
       try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
         if (saved && Array.isArray(saved.typed) && saved.typed.length === questions.length) {
@@ -651,6 +726,8 @@
       }
       fresh.typed = createEmptyTyped();
       fresh.groupSubmitted = Array(questions.length).fill(false);
+      fresh.setElapsed = Array(questions.length).fill(0);
+      fresh.setStartedAt = Array(questions.length).fill(null);
       return fresh;
     }
 
@@ -659,16 +736,20 @@
         ? saved.groupSubmitted.slice(0, questions.length).map(Boolean)
         : Array(questions.length).fill(false);
       while (groupSubmitted.length < questions.length) groupSubmitted.push(false);
+      const setElapsed = Array.isArray(saved.setElapsed)
+        ? saved.setElapsed.slice(0, questions.length).map(value => Number(value) || 0)
+        : Array(questions.length).fill(0);
+      while (setElapsed.length < questions.length) setElapsed.push(0);
+      const setStartedAt = Array(questions.length).fill(null);
       const normalized = {
         current: Number.isInteger(saved.current) ? saved.current : 0,
-        startedAt: saved.startedAt || Date.now(),
-        submittedAt: saved.submittedAt || null,
         hideTime: Boolean(saved.hideTime),
         groupSubmitted,
+        setElapsed,
+        setStartedAt,
         typed: saved.typed
       };
       normalized.submitted = normalized.groupSubmitted.every(Boolean);
-      if (!normalized.submitted) normalized.submittedAt = null;
       normalized.current = clamp(normalized.current, 0, questions.length - 1);
       return normalized;
     }
@@ -692,11 +773,47 @@
       });
     }
 
+    function renderHome() {
+      els.homeGrid.innerHTML = "";
+      questions.forEach((_, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `set-button${isQuestionSubmitted(index) ? " submitted" : ""}`;
+        button.textContent = `Set ${index + 1}`;
+        button.addEventListener("click", () => openSet(index));
+        els.homeGrid.appendChild(button);
+      });
+    }
+
+    function showHome() {
+      pauseCurrentTimer();
+      currentView = "home";
+      els.resultBackdrop.classList.remove("open");
+      els.examView.classList.add("hidden");
+      els.homeView.classList.remove("hidden");
+      renderHome();
+      updateTimer();
+      saveState();
+    }
+
+    function openSet(index) {
+      pauseCurrentTimer();
+      state.current = index;
+      currentView = "exam";
+      els.homeView.classList.add("hidden");
+      els.examView.classList.remove("hidden");
+      startSetTimer(index);
+      renderQuestion();
+      updateTimer();
+      saveState();
+      if (!isQuestionSubmitted(index)) {
+        requestAnimationFrame(() => focusBlank(index, 0));
+      }
+    }
+
     function renderQuestion() {
       const q = questions[state.current];
-      const first = state.current * 10 + 1;
-      const last = first + 9;
-      els.range.textContent = `Questions ${first}-${last} of 200`;
+      els.range.textContent = `Set ${state.current + 1}`;
       els.passage.innerHTML = "";
 
       let cursor = 0;
@@ -714,10 +831,11 @@
       els.passage.appendChild(document.createTextNode(q.text.slice(cursor)));
 
       els.prev.disabled = state.current === 0;
-      els.next.disabled = state.current === questions.length - 1;
+      els.prev.disabled = false;
+      els.next.disabled = true;
       els.submit.disabled = false;
       els.submit.textContent = isQuestionSubmitted(state.current) ? "Answers" : "Submit";
-      els.exportBtn.disabled = !state.groupSubmitted.every(Boolean);
+      els.exportBtn.disabled = true;
       updateStatus();
     }
 
@@ -871,17 +989,18 @@
 
     function goToQuestion(index, focusFirst = false) {
       if (index < 0 || index >= questions.length) return;
-      state.current = index;
-      saveState();
-      renderQuestion();
+      openSet(index);
       if (focusFirst && !isQuestionSubmitted(index)) requestAnimationFrame(() => focusBlank(index, 0));
     }
 
     function updateStatus() {
-      const total = getTotalBlankCount();
-      const filled = getFilledBlankCount();
+      if (currentView !== "exam") {
+        return;
+      }
+      const total = getQuestionBlankCount(state.current);
+      const filled = getQuestionFilledBlankCount(state.current);
       const submitted = state.groupSubmitted.filter(Boolean).length;
-      els.progress.textContent = `Passage ${state.current + 1} of ${questions.length} - ${filled}/${total} blanks completed - ${submitted}/${questions.length} submitted`;
+      els.progress.textContent = `Set ${state.current + 1} - ${filled}/${total} blanks completed - ${submitted}/${questions.length} sets submitted`;
       els.grid.querySelectorAll(".q-jump").forEach((button, index) => {
         button.className = "q-jump";
         if (index === state.current) button.classList.add("active");
@@ -895,15 +1014,15 @@
     }
 
     function updateTimer() {
+      if (currentView !== "exam") {
+        els.timer.textContent = "00:00:00";
+        return;
+      }
       if (state.hideTime) {
         els.timer.textContent = "--:--:--";
         return;
       }
-      const endTime = state.submitted ? state.submittedAt || Date.now() : Date.now();
-      const elapsed = Math.max(0, Math.floor((endTime - state.startedAt) / 1000));
-      const displaySeconds = state.submitted ? elapsed : Math.max(0, EXAM_SECONDS - elapsed);
-      els.timer.textContent = formatTime(displaySeconds);
-      if (!state.submitted && displaySeconds === 0) submitExam(true);
+      els.timer.textContent = formatTime(getSetElapsedSeconds(state.current));
     }
 
     function formatTime(totalSeconds) {
@@ -920,6 +1039,35 @@
       updateTimer();
     }
 
+    function startSetTimer(qIndex) {
+      if (isQuestionSubmitted(qIndex)) return;
+      if (!state.setStartedAt[qIndex]) {
+        state.setStartedAt[qIndex] = Date.now();
+      }
+    }
+
+    function pauseCurrentTimer() {
+      const qIndex = state.current;
+      if (!Number.isInteger(qIndex) || qIndex < 0 || qIndex >= questions.length) return;
+      if (isQuestionSubmitted(qIndex)) {
+        state.setStartedAt[qIndex] = null;
+        return;
+      }
+      const startedAt = state.setStartedAt[qIndex];
+      if (!startedAt) return;
+      state.setElapsed[qIndex] += Date.now() - startedAt;
+      state.setStartedAt[qIndex] = null;
+    }
+
+    function getSetElapsedSeconds(qIndex) {
+      if (!Number.isInteger(qIndex) || qIndex < 0 || qIndex >= questions.length) return 0;
+      let elapsed = state.setElapsed[qIndex] || 0;
+      if (!isQuestionSubmitted(qIndex) && state.setStartedAt[qIndex]) {
+        elapsed += Date.now() - state.setStartedAt[qIndex];
+      }
+      return Math.max(0, Math.floor(elapsed / 1000));
+    }
+
     function submitCurrentGroup(auto) {
       const qIndex = state.current;
       if (isQuestionSubmitted(qIndex)) {
@@ -928,24 +1076,24 @@
       }
       const unfilled = getQuestionBlankCount(qIndex) - getQuestionFilledBlankCount(qIndex);
       if (!auto && unfilled > 0 && !window.confirm(`There are ${unfilled} unfinished blanks in this passage. Submit anyway?`)) return;
+      pauseCurrentTimer();
       state.groupSubmitted[qIndex] = true;
       if (state.groupSubmitted.every(Boolean)) {
         state.submitted = true;
-        state.submittedAt = Date.now();
       } else {
         state.submitted = false;
-        state.submittedAt = null;
       }
       saveState();
       renderQuestion();
+      renderHome();
       showPassageResult(qIndex);
     }
 
     function submitExam(auto) {
       if (state.submitted && state.groupSubmitted.every(Boolean)) return;
+      pauseCurrentTimer();
       state.groupSubmitted = Array(questions.length).fill(true);
       state.submitted = true;
-      state.submittedAt = Date.now();
       saveState();
       renderQuestion();
       showResult();
@@ -954,7 +1102,7 @@
     function showPassageResult(qIndex) {
       const q = questions[qIndex];
       const correct = q.blanks.reduce((sum, _, bIndex) => sum + (isBlankCorrect(qIndex, bIndex) ? 1 : 0), 0);
-      els.resultTitle.textContent = `Passage ${qIndex + 1}: Answers and Explanations`;
+      els.resultTitle.textContent = `Set ${qIndex + 1}: Answers and Explanations`;
       els.resultContent.innerHTML = `
         <div class="score-row">
           <div class="score-card"><strong>${correct}</strong><span>Correct blanks</span></div>
@@ -994,7 +1142,7 @@
         <h3>Incorrect Items</h3>
         <div class="wrong-list">
           ${wrongItems.length ? wrongItems.map(item => `
-            <div class="wrong-item">Passage ${item.q + 1}, Blank ${item.b + 1}: Your answer: ${item.user || "blank"}; Correct answer: <span class="answer">${item.answer}</span></div>
+            <div class="wrong-item">Set ${item.q + 1}, Blank ${item.b + 1}: Your answer: ${item.user || "blank"}; Correct answer: <span class="answer">${item.answer}</span></div>
           `).join("") : `<div class="wrong-item">All correct.</div>`}
         </div>
       `;
@@ -1093,7 +1241,7 @@
         "Incorrect Items"
       ];
       if (!wrongItems.length) lines.push("All correct.");
-      wrongItems.forEach(item => lines.push(`Passage ${item.q + 1}, Blank ${item.b + 1}: yours=${item.user || "blank"}; answer=${item.answer}`));
+      wrongItems.forEach(item => lines.push(`Set ${item.q + 1}, Blank ${item.b + 1}: yours=${item.user || "blank"}; answer=${item.answer}`));
       const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
@@ -1105,14 +1253,21 @@
     }
 
     function resetExam() {
-      if (!window.confirm("Restart this exam? All answers will be cleared.")) return;
-      localStorage.removeItem(STORAGE_KEY);
-      state = { current: 0, startedAt: Date.now(), submittedAt: null, submitted: false, hideTime: false, groupSubmitted: Array(questions.length).fill(false), typed: createEmptyTyped() };
-      active = { q: 0, b: 0, pos: 0 };
+      const qIndex = state.current;
+      if (!window.confirm(`Restart Set ${qIndex + 1}? Answers in this set will be cleared.`)) return;
+      state.typed[qIndex] = questions[qIndex].blanks.map(blank => Array(blank.missing).fill(""));
+      state.groupSubmitted[qIndex] = false;
+      state.setElapsed[qIndex] = 0;
+      state.setStartedAt[qIndex] = Date.now();
+      state.submitted = false;
+      state.hideTime = false;
+      active = { q: qIndex, b: 0, pos: 0 };
       els.timeToggleText.textContent = "Hide Time";
       els.resultBackdrop.classList.remove("open");
       renderQuestion();
+      renderHome();
       updateTimer();
+      saveState();
     }
 
     function isQuestionSubmitted(qIndex) {
