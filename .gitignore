@@ -1,4 +1,9 @@
 chrome-preview-profile/
 edge-preview-profile/
+node_modules/
+.vercel/
+.env
+.env.local
+config.js
 *.tmp
 *.log

@@ -1,0 +1,9 @@
+{
+  "name": "thinkcloze",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build-config.js",
+    "serve": "python -m http.server 8000"
+  }
+}

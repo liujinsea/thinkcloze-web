@@ -19,6 +19,8 @@
     window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
   </script>
   <script defer src="/_vercel/insights/script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
   <style>
     :root {
       --ink: #242424;
@@ -81,6 +83,33 @@
       color: var(--muted);
       font-size: 17px;
       line-height: 1.5;
+    }
+
+    .user-row {
+      min-height: 34px;
+      margin: -12px 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .user-status {
+      min-width: 120px;
+    }
+
+    .status-link {
+      border: 0;
+      background: transparent;
+      color: var(--teal);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .status-link:hover {
+      text-decoration: underline;
     }
 
     .set-grid {
@@ -212,6 +241,10 @@
       color: #9b3b3b;
       font-size: 14px;
       line-height: 1.4;
+    }
+
+    .auth-message.success {
+      color: #1c715f;
     }
 
     .exam-bar {
@@ -682,6 +715,10 @@
     <div class="home-panel">
       <h1>Complete the Words</h1>
       <p>Select a set to begin. Each set keeps its own timer and can be submitted separately.</p>
+      <div class="user-row">
+        <span class="user-status" id="userStatus">Checking login...</span>
+        <button class="status-link hidden" id="logoutBtn" type="button">Log Out</button>
+      </div>
       <div class="set-grid" id="homeGrid"></div>
     </div>
     <button class="unlock-banner hidden" id="unlockBanner" type="button">Register to Unlock Sets 21-40</button>
@@ -762,6 +799,20 @@
   <script>
     const STORAGE_KEY = "toefl-reading-missing-letters-site-v3";
     const maskPattern = /[A-Za-z]+_(?:\s_)*|_/g;
+    const DEFAULT_SUPABASE_URL = "https://ceqdjnljlfrybjyjqgse.supabase.co";
+    const DEFAULT_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_YTOBM7PpJ5lq7rWBcby14Q_T1-PtSj6";
+    const appConfig = window.THINKCLOZE_CONFIG || {};
+    const supabaseUrl = appConfig.SUPABASE_URL || DEFAULT_SUPABASE_URL;
+    const supabasePublishableKey = appConfig.SUPABASE_PUBLISHABLE_KEY || DEFAULT_SUPABASE_PUBLISHABLE_KEY;
+    const supabaseClient = window.supabase && supabaseUrl && supabasePublishableKey
+      ? window.supabase.createClient(supabaseUrl, supabasePublishableKey, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+          }
+        })
+      : null;
 
     const questions = [
       { title: 'Continental Drift', text: 'Matching coastlines and similar rock belts provide evidence that continents have occupied different positions during Earth\'s history. Geologists interp_ _ _ these clues to show how adjac_ _ _ plates mov_ in relat_ _ _ to a marg_ _. Plates dr_ _ _ along th_ boundary, wh_ _ _ gives rise t_ the global distr_ _ _ _ _ _ _ of earthquakes and mountains. The study of continental drift continues to reveal how Earth\'s surface has changed.', answers: ['interpret', 'adjacent', 'move', 'relation', 'margin', 'drift', 'the', 'which', 'to', 'distribution'] },
@@ -791,6 +842,8 @@
       examView: document.getElementById("examView"),
       authView: document.getElementById("authView"),
       homeGrid: document.getElementById("homeGrid"),
+      userStatus: document.getElementById("userStatus"),
+      logoutBtn: document.getElementById("logoutBtn"),
       unlockBanner: document.getElementById("unlockBanner"),
       registerTab: document.getElementById("registerTab"),
       loginTab: document.getElementById("loginTab"),
@@ -825,12 +878,17 @@
     let authMode = "register";
     let currentView = "home";
     let active = { q: 0, b: 0, pos: 0 };
+    let authReady = false;
+    let authSession = null;
+    let currentUser = null;
+    let syncingSubmissions = false;
     els.timeToggleText.textContent = state.hideTime ? "Show Time" : "Hide Time";
 
     renderGrid();
     renderHome();
     showHome();
     startTimer();
+    initSupabaseAuth();
 
     els.prev.addEventListener("click", showHome);
     els.next.addEventListener("click", () => goToQuestion(state.current + 1));
@@ -845,6 +903,7 @@
     els.loginTab.addEventListener("click", () => setAuthMode("login"));
     els.authForm.addEventListener("submit", handleAuthSubmit);
     els.authBack.addEventListener("click", showHome);
+    els.logoutBtn.addEventListener("click", handleLogout);
 
     document.addEventListener("click", event => {
       if (!els.popover.contains(event.target) && !els.review.contains(event.target)) {
@@ -874,7 +933,7 @@
     }
 
     function loadState() {
-      const fresh = { current: 0, submitted: false, hideTime: false, groupSubmitted: [], setElapsed: [], setStartedAt: [], typed: [], account: null, authenticatedEmail: "" };
+      const fresh = { current: 0, submitted: false, hideTime: false, groupSubmitted: [], setElapsed: [], setStartedAt: [], typed: [], pendingSubmissions: [] };
       try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
         if (saved && Array.isArray(saved.typed) && saved.typed.length === questions.length) {
@@ -907,8 +966,7 @@
         setElapsed,
         setStartedAt,
         typed: saved.typed,
-        account: saved.account && saved.account.email && saved.account.password ? saved.account : null,
-        authenticatedEmail: typeof saved.authenticatedEmail === "string" ? saved.authenticatedEmail : ""
+        pendingSubmissions: Array.isArray(saved.pendingSubmissions) ? saved.pendingSubmissions : []
       };
       normalized.submitted = normalized.groupSubmitted.every(Boolean);
       normalized.current = clamp(normalized.current, 0, questions.length - 1);
@@ -945,6 +1003,7 @@
         els.homeGrid.appendChild(button);
       });
       updateUnlockBanner();
+      renderAuthStatus();
     }
 
     function showHome() {
@@ -982,8 +1041,8 @@
       els.examView.classList.add("hidden");
       els.authView.classList.remove("hidden");
       els.resultBackdrop.classList.remove("open");
-      els.authMessage.textContent = "";
       setAuthMode(authMode);
+      if (!supabaseClient) setAuthMessage("Supabase is not configured yet.");
       updateTimer();
     }
 
@@ -1189,7 +1248,34 @@
     }
 
     function isAuthenticated() {
-      return Boolean(state.account && state.authenticatedEmail === state.account.email);
+      return Boolean(currentUser && currentUser.email);
+    }
+
+    function getUserEmail() {
+      return currentUser && currentUser.email ? currentUser.email : "";
+    }
+
+    function renderAuthStatus() {
+      if (!els.userStatus) return;
+      if (!supabaseClient) {
+        els.userStatus.textContent = "Supabase not configured";
+        els.logoutBtn.classList.add("hidden");
+        return;
+      }
+      if (!authReady) {
+        els.userStatus.textContent = "Checking login...";
+        els.logoutBtn.classList.add("hidden");
+        return;
+      }
+      if (isAuthenticated()) {
+        const pending = state.pendingSubmissions.length;
+        els.userStatus.textContent = `Logged in: ${getUserEmail()}${pending ? ` · ${pending} pending sync` : ""}`;
+        els.logoutBtn.classList.remove("hidden");
+        return;
+      }
+      const pending = state.pendingSubmissions.length;
+      els.userStatus.textContent = pending ? `${pending} result${pending > 1 ? "s" : ""} waiting for login` : "Not logged in";
+      els.logoutBtn.classList.add("hidden");
     }
 
     function updateUnlockBanner() {
@@ -1206,7 +1292,7 @@
     function handleUnlockClick() {
       if (!allSetsCompleted()) return;
       if (!isAuthenticated()) {
-        setAuthMode(state.account ? "login" : "register");
+        setAuthMode("register");
         showAuth();
         return;
       }
@@ -1219,40 +1305,107 @@
       els.loginTab.classList.toggle("active", authMode === "login");
       els.authSubmit.textContent = authMode === "register" ? "Register" : "Log In";
       els.authPassword.autocomplete = authMode === "register" ? "new-password" : "current-password";
-      els.authMessage.textContent = "";
+      setAuthMessage("");
     }
 
-    function handleAuthSubmit(event) {
+    function setAuthMessage(message, type) {
+      els.authMessage.textContent = message;
+      els.authMessage.classList.toggle("success", type === "success");
+    }
+
+    async function initSupabaseAuth() {
+      if (!supabaseClient) {
+        authReady = true;
+        renderAuthStatus();
+        renderHome();
+        return;
+      }
+      try {
+        const { data, error } = await supabaseClient.auth.getSession();
+        if (error) throw error;
+        authSession = data.session || null;
+        currentUser = authSession ? authSession.user : null;
+        if (currentUser) {
+          await ensureProfile();
+          syncPendingSubmissions();
+        }
+      } catch (error) {
+        console.warn("Supabase session check failed:", error.message || error);
+      } finally {
+        authReady = true;
+        renderAuthStatus();
+        renderHome();
+      }
+
+      supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+        authSession = session || null;
+        currentUser = authSession ? authSession.user : null;
+        if (currentUser) {
+          await ensureProfile();
+          syncPendingSubmissions();
+        }
+        authReady = true;
+        renderAuthStatus();
+        renderHome();
+      });
+    }
+
+    async function ensureProfile() {
+      if (!supabaseClient || !currentUser) return;
+      const { error } = await supabaseClient
+        .from("profiles")
+        .upsert({ id: currentUser.id, email: currentUser.email }, { onConflict: "id" });
+      if (error) console.warn("Profile sync failed:", error.message || error);
+    }
+
+    async function handleAuthSubmit(event) {
       event.preventDefault();
+      if (!supabaseClient) {
+        setAuthMessage("Supabase is not configured yet.");
+        return;
+      }
       const email = els.authEmail.value.trim().toLowerCase();
       const password = els.authPassword.value;
       if (!email || !password) {
-        els.authMessage.textContent = "Please enter an email and password.";
+        setAuthMessage("Please enter an email and password.");
         return;
       }
       if (password.length < 6) {
-        els.authMessage.textContent = "Password must be at least 6 characters.";
+        setAuthMessage("Password must be at least 6 characters.");
         return;
       }
-      if (authMode === "register") {
-        state.account = { email, password };
-        state.authenticatedEmail = email;
-        saveState();
+      els.authSubmit.disabled = true;
+      setAuthMessage(authMode === "register" ? "Creating account..." : "Logging in...", "success");
+      try {
+        const result = authMode === "register"
+          ? await supabaseClient.auth.signUp({ email, password })
+          : await supabaseClient.auth.signInWithPassword({ email, password });
+        if (result.error) throw result.error;
+        if (!result.data.session) {
+          setAuthMessage("Account created. To keep users logged in immediately, turn off email confirmation in Supabase Auth settings.");
+          return;
+        }
+        authSession = result.data.session;
+        currentUser = authSession.user;
+        await ensureProfile();
+        await syncPendingSubmissions();
         els.authForm.reset();
+        renderAuthStatus();
         showHome();
-        return;
+      } catch (error) {
+        setAuthMessage(error.message || "Authentication failed. Please try again.");
+      } finally {
+        els.authSubmit.disabled = false;
       }
-      if (!state.account) {
-        els.authMessage.textContent = "No account found. Please register first.";
-        return;
-      }
-      if (state.account.email !== email || state.account.password !== password) {
-        els.authMessage.textContent = "Email or password is incorrect.";
-        return;
-      }
-      state.authenticatedEmail = email;
-      saveState();
-      els.authForm.reset();
+    }
+
+    async function handleLogout() {
+      if (!supabaseClient) return;
+      await supabaseClient.auth.signOut();
+      authSession = null;
+      currentUser = null;
+      renderAuthStatus();
+      renderHome();
       showHome();
     }
 
@@ -1331,6 +1484,7 @@
       } else {
         state.submitted = false;
       }
+      queueSubmissionForSync(buildSubmissionPayload(qIndex));
       saveState();
       renderQuestion();
       renderHome();
@@ -1345,6 +1499,93 @@
       saveState();
       renderQuestion();
       showResult();
+    }
+
+    function buildSubmissionPayload(qIndex) {
+      const q = questions[qIndex];
+      const correct = q.blanks.reduce((sum, _, bIndex) => sum + (isBlankCorrect(qIndex, bIndex) ? 1 : 0), 0);
+      const blankCount = q.blanks.length;
+      const submittedAt = new Date().toISOString();
+      return {
+        clientSubmissionId: `${qIndex + 1}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+        setId: qIndex + 1,
+        accuracy: Number(((correct / blankCount) * 100).toFixed(2)),
+        correctCount: correct,
+        blankCount,
+        elapsedSeconds: getSetElapsedSeconds(qIndex),
+        submittedAt,
+        answers: q.blanks.map((blank, bIndex) => {
+          const suffix = state.typed[qIndex][bIndex].join("");
+          return {
+            blankIndex: bIndex + 1,
+            userAnswer: suffix ? blank.prefix + suffix : "",
+            isCorrect: isBlankCorrect(qIndex, bIndex)
+          };
+        })
+      };
+    }
+
+    function queueSubmissionForSync(payload) {
+      state.pendingSubmissions.push(payload);
+      saveState();
+      renderAuthStatus();
+      syncPendingSubmissions();
+    }
+
+    async function syncPendingSubmissions() {
+      if (syncingSubmissions || !supabaseClient || !isAuthenticated() || !state.pendingSubmissions.length) {
+        renderAuthStatus();
+        return;
+      }
+      syncingSubmissions = true;
+      renderAuthStatus();
+      const remaining = [];
+      for (const payload of state.pendingSubmissions) {
+        try {
+          await saveSubmissionRecord(payload);
+        } catch (error) {
+          console.warn("Submission sync failed:", error.message || error);
+          remaining.push(payload);
+        }
+      }
+      state.pendingSubmissions = remaining;
+      saveState();
+      syncingSubmissions = false;
+      renderAuthStatus();
+    }
+
+    async function saveSubmissionRecord(payload) {
+      const submissionRow = {
+        user_id: currentUser.id,
+        client_submission_id: payload.clientSubmissionId,
+        set_id: payload.setId,
+        accuracy: payload.accuracy,
+        correct_count: payload.correctCount,
+        blank_count: payload.blankCount,
+        elapsed_seconds: payload.elapsedSeconds,
+        submitted_at: payload.submittedAt
+      };
+      const { data: submission, error: submissionError } = await supabaseClient
+        .from("set_submissions")
+        .upsert(submissionRow, { onConflict: "user_id,client_submission_id" })
+        .select("id")
+        .single();
+      if (submissionError) throw submissionError;
+
+      const answerRows = payload.answers.map(answer => ({
+        submission_id: submission.id,
+        user_id: currentUser.id,
+        client_submission_id: payload.clientSubmissionId,
+        set_id: payload.setId,
+        blank_index: answer.blankIndex,
+        user_answer: answer.userAnswer,
+        is_correct: answer.isCorrect,
+        created_at: payload.submittedAt
+      }));
+      const { error: answersError } = await supabaseClient
+        .from("blank_answer_records")
+        .upsert(answerRows, { onConflict: "user_id,client_submission_id,blank_index" });
+      if (answersError) throw answersError;
     }
 
     function showPassageResult(qIndex) {
