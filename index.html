@@ -14,6 +14,11 @@
 
     gtag('config', 'G-J0H05BT9EQ');
   </script>
+  <!-- Vercel Analytics -->
+  <script>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
   <style>
     :root {
       --ink: #242424;
@@ -129,8 +134,7 @@
       background: #106d68;
     }
 
-    .auth-screen,
-    .payment-screen {
+    .auth-screen {
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -139,8 +143,7 @@
       background: #ffffff;
     }
 
-    .auth-panel,
-    .payment-panel {
+    .auth-panel {
       width: min(460px, 100%);
       border: 1px solid #d5d5d5;
       border-radius: 6px;
@@ -149,20 +152,13 @@
       box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
     }
 
-    .payment-panel {
-      width: min(620px, 100%);
-      text-align: center;
-    }
-
-    .auth-panel h1,
-    .payment-panel h1 {
+    .auth-panel h1 {
       margin: 0 0 8px;
       font-size: 28px;
       line-height: 1.2;
     }
 
-    .auth-panel p,
-    .payment-panel p {
+    .auth-panel p {
       margin: 0 0 20px;
       color: var(--muted);
       line-height: 1.5;
@@ -216,18 +212,6 @@
       color: #9b3b3b;
       font-size: 14px;
       line-height: 1.4;
-    }
-
-    .payment-box {
-      height: 260px;
-      border: 2px dashed #b9c9c7;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--muted);
-      margin: 18px 0;
-      background: #f8fbfa;
     }
 
     .exam-bar {
@@ -700,13 +684,13 @@
       <p>Select a set to begin. Each set keeps its own timer and can be submitted separately.</p>
       <div class="set-grid" id="homeGrid"></div>
     </div>
-    <button class="unlock-banner hidden" id="unlockBanner" type="button">Register and Pay to Unlock Sets 21-40</button>
+    <button class="unlock-banner hidden" id="unlockBanner" type="button">Register to Unlock Sets 21-40</button>
   </section>
 
   <section class="auth-screen hidden" id="authView">
     <div class="auth-panel">
       <h1>Register to Unlock More Sets</h1>
-      <p>Create an account or log in, then return to the unlock banner to continue to payment.</p>
+      <p>Create an account or log in with your email to unlock Sets 21-40.</p>
       <div class="auth-tabs">
         <button class="auth-tab active" id="registerTab" type="button">Register</button>
         <button class="auth-tab" id="loginTab" type="button">Log In</button>
@@ -726,18 +710,6 @@
           <button class="btn" id="authBack" type="button">Return</button>
         </div>
       </form>
-    </div>
-  </section>
-
-  <section class="payment-screen hidden" id="paymentView">
-    <div class="payment-panel">
-      <h1>Unlock Sets 21-40</h1>
-      <p>Payment page placeholder. You can replace this area with your Alipay QR code later.</p>
-      <div class="payment-box">Alipay QR Code Placeholder</div>
-      <div class="footer-actions">
-        <button class="btn primary" id="paymentDone" type="button">I Have Paid</button>
-        <button class="btn" id="paymentBack" type="button">Return</button>
-      </div>
     </div>
   </section>
 
@@ -818,7 +790,6 @@
       homeView: document.getElementById("homeView"),
       examView: document.getElementById("examView"),
       authView: document.getElementById("authView"),
-      paymentView: document.getElementById("paymentView"),
       homeGrid: document.getElementById("homeGrid"),
       unlockBanner: document.getElementById("unlockBanner"),
       registerTab: document.getElementById("registerTab"),
@@ -829,8 +800,6 @@
       authMessage: document.getElementById("authMessage"),
       authSubmit: document.getElementById("authSubmit"),
       authBack: document.getElementById("authBack"),
-      paymentBack: document.getElementById("paymentBack"),
-      paymentDone: document.getElementById("paymentDone"),
       range: document.getElementById("questionRange"),
       timer: document.getElementById("timer"),
       timeToggle: document.getElementById("timeToggle"),
@@ -876,12 +845,6 @@
     els.loginTab.addEventListener("click", () => setAuthMode("login"));
     els.authForm.addEventListener("submit", handleAuthSubmit);
     els.authBack.addEventListener("click", showHome);
-    els.paymentBack.addEventListener("click", showHome);
-    els.paymentDone.addEventListener("click", () => {
-      state.paymentStarted = true;
-      saveState();
-      showHome();
-    });
 
     document.addEventListener("click", event => {
       if (!els.popover.contains(event.target) && !els.review.contains(event.target)) {
@@ -911,7 +874,7 @@
     }
 
     function loadState() {
-      const fresh = { current: 0, submitted: false, hideTime: false, groupSubmitted: [], setElapsed: [], setStartedAt: [], typed: [], account: null, authenticatedEmail: "", paymentStarted: false };
+      const fresh = { current: 0, submitted: false, hideTime: false, groupSubmitted: [], setElapsed: [], setStartedAt: [], typed: [], account: null, authenticatedEmail: "" };
       try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
         if (saved && Array.isArray(saved.typed) && saved.typed.length === questions.length) {
@@ -945,8 +908,7 @@
         setStartedAt,
         typed: saved.typed,
         account: saved.account && saved.account.email && saved.account.password ? saved.account : null,
-        authenticatedEmail: typeof saved.authenticatedEmail === "string" ? saved.authenticatedEmail : "",
-        paymentStarted: Boolean(saved.paymentStarted)
+        authenticatedEmail: typeof saved.authenticatedEmail === "string" ? saved.authenticatedEmail : ""
       };
       normalized.submitted = normalized.groupSubmitted.every(Boolean);
       normalized.current = clamp(normalized.current, 0, questions.length - 1);
@@ -991,7 +953,6 @@
       els.resultBackdrop.classList.remove("open");
       els.examView.classList.add("hidden");
       els.authView.classList.add("hidden");
-      els.paymentView.classList.add("hidden");
       els.homeView.classList.remove("hidden");
       renderHome();
       updateTimer();
@@ -1004,7 +965,6 @@
       currentView = "exam";
       els.homeView.classList.add("hidden");
       els.authView.classList.add("hidden");
-      els.paymentView.classList.add("hidden");
       els.examView.classList.remove("hidden");
       startSetTimer(index);
       renderQuestion();
@@ -1020,32 +980,11 @@
       currentView = "auth";
       els.homeView.classList.add("hidden");
       els.examView.classList.add("hidden");
-      els.paymentView.classList.add("hidden");
       els.authView.classList.remove("hidden");
       els.resultBackdrop.classList.remove("open");
       els.authMessage.textContent = "";
       setAuthMode(authMode);
       updateTimer();
-    }
-
-    function showPayment() {
-      if (!allSetsCompleted()) {
-        showHome();
-        return;
-      }
-      if (!isAuthenticated()) {
-        showAuth();
-        return;
-      }
-      pauseCurrentTimer();
-      currentView = "payment";
-      els.homeView.classList.add("hidden");
-      els.examView.classList.add("hidden");
-      els.authView.classList.add("hidden");
-      els.paymentView.classList.remove("hidden");
-      els.resultBackdrop.classList.remove("open");
-      updateTimer();
-      saveState();
     }
 
     function renderQuestion() {
@@ -1260,8 +1199,8 @@
       }
       els.unlockBanner.classList.remove("hidden");
       els.unlockBanner.textContent = isAuthenticated()
-        ? "Pay to Unlock Sets 21-40"
-        : "Register and Pay to Unlock Sets 21-40";
+        ? "Sets 21-40 Unlocked with Email Registration"
+        : "Register to Unlock Sets 21-40";
     }
 
     function handleUnlockClick() {
@@ -1271,7 +1210,7 @@
         showAuth();
         return;
       }
-      showPayment();
+      showHome();
     }
 
     function setAuthMode(mode) {
