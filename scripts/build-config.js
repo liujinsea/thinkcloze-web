@@ -27,5 +27,10 @@ const config = {
 };
 
 const output = `window.THINKCLOZE_CONFIG = ${JSON.stringify(config, null, 2)};\n`;
-fs.writeFileSync(path.join(root, "config.js"), output, "utf8");
-console.log("Generated config.js for Thinkcloze.");
+const configPath = path.join(root, "config.js");
+if (fs.existsSync(configPath) && fs.readFileSync(configPath, "utf8") === output) {
+  console.log("config.js is already up to date.");
+} else {
+  fs.writeFileSync(configPath, output, "utf8");
+  console.log("Generated config.js for Thinkcloze.");
+}

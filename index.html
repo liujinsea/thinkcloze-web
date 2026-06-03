@@ -717,6 +717,7 @@
       <p>Select a set to begin. Each set keeps its own timer and can be submitted separately.</p>
       <div class="user-row">
         <span class="user-status" id="userStatus">Checking login...</span>
+        <button class="status-link hidden" id="loginBtn" type="button">Register / Log In</button>
         <button class="status-link hidden" id="logoutBtn" type="button">Log Out</button>
       </div>
       <div class="set-grid" id="homeGrid"></div>
@@ -843,6 +844,7 @@
       authView: document.getElementById("authView"),
       homeGrid: document.getElementById("homeGrid"),
       userStatus: document.getElementById("userStatus"),
+      loginBtn: document.getElementById("loginBtn"),
       logoutBtn: document.getElementById("logoutBtn"),
       unlockBanner: document.getElementById("unlockBanner"),
       registerTab: document.getElementById("registerTab"),
@@ -903,6 +905,7 @@
     els.loginTab.addEventListener("click", () => setAuthMode("login"));
     els.authForm.addEventListener("submit", handleAuthSubmit);
     els.authBack.addEventListener("click", showHome);
+    els.loginBtn.addEventListener("click", handleLoginClick);
     els.logoutBtn.addEventListener("click", handleLogout);
 
     document.addEventListener("click", event => {
@@ -1259,22 +1262,26 @@
       if (!els.userStatus) return;
       if (!supabaseClient) {
         els.userStatus.textContent = "Supabase not configured";
+        els.loginBtn.classList.add("hidden");
         els.logoutBtn.classList.add("hidden");
         return;
       }
       if (!authReady) {
         els.userStatus.textContent = "Checking login...";
+        els.loginBtn.classList.add("hidden");
         els.logoutBtn.classList.add("hidden");
         return;
       }
       if (isAuthenticated()) {
         const pending = state.pendingSubmissions.length;
         els.userStatus.textContent = `Logged in: ${getUserEmail()}${pending ? ` · ${pending} pending sync` : ""}`;
+        els.loginBtn.classList.add("hidden");
         els.logoutBtn.classList.remove("hidden");
         return;
       }
       const pending = state.pendingSubmissions.length;
       els.userStatus.textContent = pending ? `${pending} result${pending > 1 ? "s" : ""} waiting for login` : "Not logged in";
+      els.loginBtn.classList.remove("hidden");
       els.logoutBtn.classList.add("hidden");
     }
 
@@ -1297,6 +1304,11 @@
         return;
       }
       showHome();
+    }
+
+    function handleLoginClick() {
+      setAuthMode("register");
+      showAuth();
     }
 
     function setAuthMode(mode) {

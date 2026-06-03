@@ -3,6 +3,8 @@ edge-preview-profile/
 node_modules/
 .vercel/
 .env
+.env.*
+!.env.example
 .env.local
 config.js
 *.tmp
