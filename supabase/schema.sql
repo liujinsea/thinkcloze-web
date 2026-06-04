@@ -3,10 +3,17 @@ create extension if not exists pgcrypto;
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text,
+  is_anonymous boolean not null default false,
   unlocked_sets integer[] not null default array[]::integer[],
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.profiles
+  add column if not exists is_anonymous boolean not null default false;
+
+alter table public.profiles
+  add column if not exists unlocked_sets integer[] not null default array[]::integer[];
 
 create table if not exists public.set_submissions (
   id uuid primary key default gen_random_uuid(),
@@ -17,11 +24,15 @@ create table if not exists public.set_submissions (
   correct_count integer not null check (correct_count >= 0),
   blank_count integer not null check (blank_count > 0),
   elapsed_seconds integer not null check (elapsed_seconds >= 0),
+  user_is_anonymous boolean not null default false,
   submitted_at timestamptz not null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (user_id, client_submission_id)
 );
+
+alter table public.set_submissions
+  add column if not exists user_is_anonymous boolean not null default false;
 
 create table if not exists public.blank_answer_records (
   id uuid primary key default gen_random_uuid(),
@@ -72,9 +83,11 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email)
-  values (new.id, new.email)
-  on conflict (id) do update set email = excluded.email;
+  insert into public.profiles (id, email, is_anonymous)
+  values (new.id, new.email, false)
+  on conflict (id) do update set
+    email = excluded.email,
+    is_anonymous = excluded.is_anonymous;
   return new;
 end;
 $$;

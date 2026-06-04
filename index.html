@@ -727,8 +727,8 @@
 
   <section class="auth-screen hidden" id="authView">
     <div class="auth-panel">
-      <h1>Register to Unlock More Sets</h1>
-      <p>Create an account or log in with your email to unlock Sets 21-40.</p>
+      <h1>Register or Log In</h1>
+      <p>Use your email and password to save your progress.</p>
       <div class="auth-tabs">
         <button class="auth-tab active" id="registerTab" type="button">Register</button>
         <button class="auth-tab" id="loginTab" type="button">Log In</button>
@@ -938,7 +938,7 @@
     }
 
     function loadState() {
-      const fresh = { current: 0, submitted: false, hideTime: false, groupSubmitted: [], setElapsed: [], setStartedAt: [], typed: [], pendingSubmissions: [] };
+      const fresh = { current: 0, submitted: false, hideTime: false, groupSubmitted: [], setElapsed: [], setStartedAt: [], typed: [], pendingSubmissions: [], submissionArchive: [] };
       try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
         if (saved && Array.isArray(saved.typed) && saved.typed.length === questions.length) {
@@ -971,8 +971,12 @@
         setElapsed,
         setStartedAt,
         typed: saved.typed,
-        pendingSubmissions: Array.isArray(saved.pendingSubmissions) ? saved.pendingSubmissions : []
+        pendingSubmissions: Array.isArray(saved.pendingSubmissions) ? saved.pendingSubmissions : [],
+        submissionArchive: Array.isArray(saved.submissionArchive) ? saved.submissionArchive : []
       };
+      if (!normalized.submissionArchive.length && normalized.pendingSubmissions.length) {
+        normalized.submissionArchive = normalized.pendingSubmissions.slice();
+      }
       normalized.submitted = normalized.groupSubmitted.every(Boolean);
       normalized.current = clamp(normalized.current, 0, questions.length - 1);
       return normalized;
@@ -1335,7 +1339,15 @@
     }
 
     function isAuthenticated() {
-      return Boolean(currentUser && currentUser.email);
+      return Boolean(currentUser && currentUser.email && !isAnonymousUser());
+    }
+
+    function hasSupabaseUser() {
+      return Boolean(currentUser && currentUser.id);
+    }
+
+    function isAnonymousUser() {
+      return Boolean(currentUser && (currentUser.is_anonymous || !currentUser.email));
     }
 
     function getUserEmail() {
@@ -1351,20 +1363,27 @@
         return;
       }
       if (!authReady) {
-        els.userStatus.textContent = "Checking login...";
+        els.userStatus.textContent = "Starting guest mode...";
         els.loginBtn.classList.add("hidden");
         els.logoutBtn.classList.add("hidden");
         return;
       }
       if (isAuthenticated()) {
         const pending = state.pendingSubmissions.length;
-        els.userStatus.textContent = `Logged in: ${getUserEmail()}${pending ? ` · ${pending} pending sync` : ""}`;
+        els.userStatus.textContent = `Logged in: ${getUserEmail()}${pending ? ` - ${pending} pending sync` : ""}`;
         els.loginBtn.classList.add("hidden");
         els.logoutBtn.classList.remove("hidden");
         return;
       }
+      if (isAnonymousUser()) {
+        const pending = state.pendingSubmissions.length;
+        els.userStatus.textContent = `Guest mode: progress is saving${pending ? ` - ${pending} pending sync` : ""}`;
+        els.loginBtn.classList.remove("hidden");
+        els.logoutBtn.classList.add("hidden");
+        return;
+      }
       const pending = state.pendingSubmissions.length;
-      els.userStatus.textContent = pending ? `${pending} result${pending > 1 ? "s" : ""} waiting for login` : "Not logged in";
+      els.userStatus.textContent = pending ? `${pending} result${pending > 1 ? "s" : ""} waiting for sync` : "Guest progress is saved locally";
       els.loginBtn.classList.remove("hidden");
       els.logoutBtn.classList.add("hidden");
     }
@@ -1421,10 +1440,8 @@
         if (error) throw error;
         authSession = data.session || null;
         currentUser = authSession ? authSession.user : null;
-        if (currentUser) {
-          await ensureProfile();
-          syncPendingSubmissions();
-        }
+        if (currentUser) await handleActiveSupabaseUser();
+        else await startAnonymousSession();
       } catch (error) {
         console.warn("Supabase session check failed:", error.message || error);
       } finally {
@@ -1436,21 +1453,33 @@
       supabaseClient.auth.onAuthStateChange(async (_event, session) => {
         authSession = session || null;
         currentUser = authSession ? authSession.user : null;
-        if (currentUser) {
-          await ensureProfile();
-          syncPendingSubmissions();
-        }
+        if (currentUser) await handleActiveSupabaseUser();
         authReady = true;
         renderAuthStatus();
         renderHome();
       });
     }
 
+    async function startAnonymousSession() {
+      if (!supabaseClient || hasSupabaseUser()) return;
+      const { data, error } = await supabaseClient.auth.signInAnonymously();
+      if (error) throw error;
+      authSession = data.session || null;
+      currentUser = data.user || (authSession ? authSession.user : null);
+      if (currentUser) await handleActiveSupabaseUser();
+    }
+
+    async function handleActiveSupabaseUser() {
+      await ensureProfile();
+      queueArchivedSubmissionsForCurrentUser();
+      await syncPendingSubmissions();
+    }
+
     async function ensureProfile() {
       if (!supabaseClient || !currentUser) return;
       const { error } = await supabaseClient
         .from("profiles")
-        .upsert({ id: currentUser.id, email: currentUser.email }, { onConflict: "id" });
+        .upsert({ id: currentUser.id, email: currentUser.email || null, is_anonymous: isAnonymousUser() }, { onConflict: "id" });
       if (error) console.warn("Profile sync failed:", error.message || error);
     }
 
@@ -1471,20 +1500,27 @@
         return;
       }
       els.authSubmit.disabled = true;
-      setAuthMessage(authMode === "register" ? "Creating account..." : "Logging in...", "success");
+      setAuthMessage(authMode === "register" ? "Saving progress with email..." : "Logging in...", "success");
       try {
-        const result = authMode === "register"
-          ? await supabaseClient.auth.signUp({ email, password })
-          : await supabaseClient.auth.signInWithPassword({ email, password });
+        if (authMode === "register" && !hasSupabaseUser()) {
+          await startAnonymousSession();
+        }
+        const result = authMode === "register" && isAnonymousUser()
+          ? await supabaseClient.auth.updateUser({ email, password })
+          : authMode === "register"
+            ? await supabaseClient.auth.signUp({ email, password })
+            : await supabaseClient.auth.signInWithPassword({ email, password });
         if (result.error) throw result.error;
-        if (!result.data.session) {
-          setAuthMessage("Account created. To keep users logged in immediately, turn off email confirmation in Supabase Auth settings.");
+        const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+        if (sessionError) throw sessionError;
+        authSession = sessionData.session || result.data.session || authSession;
+        currentUser = authSession ? authSession.user : result.data.user || currentUser;
+        if (authMode === "register" && !isAuthenticated()) {
+          await handleActiveSupabaseUser();
+          setAuthMessage("Check your email to finish saving this guest account. Practice can continue now.", "success");
           return;
         }
-        authSession = result.data.session;
-        currentUser = authSession.user;
-        await ensureProfile();
-        await syncPendingSubmissions();
+        await handleActiveSupabaseUser();
         els.authForm.reset();
         renderAuthStatus();
         showHome();
@@ -1500,7 +1536,14 @@
       await supabaseClient.auth.signOut();
       authSession = null;
       currentUser = null;
+      authReady = false;
       renderAuthStatus();
+      try {
+        await startAnonymousSession();
+      } catch (error) {
+        console.warn("Anonymous sign-in after logout failed:", error.message || error);
+      }
+      authReady = true;
       renderHome();
       showHome();
     }
@@ -1610,6 +1653,7 @@
         blankCount,
         elapsedSeconds: getSetElapsedSeconds(qIndex),
         submittedAt,
+        syncedUserIds: [],
         answers: q.blanks.map((blank, bIndex) => {
           const suffix = state.typed[qIndex][bIndex].join("");
           return {
@@ -1622,14 +1666,55 @@
     }
 
     function queueSubmissionForSync(payload) {
-      state.pendingSubmissions.push(payload);
+      rememberSubmission(payload);
+      addPendingSubmission(payload);
       saveState();
       renderAuthStatus();
       syncPendingSubmissions();
     }
 
+    function rememberSubmission(payload) {
+      const existing = state.submissionArchive.find(item => item.clientSubmissionId === payload.clientSubmissionId);
+      if (existing) return existing;
+      const archived = {
+        ...payload,
+        syncedUserIds: Array.isArray(payload.syncedUserIds) ? payload.syncedUserIds : []
+      };
+      state.submissionArchive.push(archived);
+      return archived;
+    }
+
+    function addPendingSubmission(payload) {
+      const archived = rememberSubmission(payload);
+      if (!state.pendingSubmissions.some(item => item.clientSubmissionId === archived.clientSubmissionId)) {
+        state.pendingSubmissions.push(archived);
+      }
+    }
+
+    function queueArchivedSubmissionsForCurrentUser() {
+      if (!hasSupabaseUser()) return;
+      state.submissionArchive.forEach(payload => {
+        const syncedUserIds = Array.isArray(payload.syncedUserIds) ? payload.syncedUserIds : [];
+        if (!syncedUserIds.includes(currentUser.id)) addPendingSubmission(payload);
+      });
+      saveState();
+    }
+
+    function markSubmissionSynced(clientSubmissionId, userId) {
+      state.submissionArchive.forEach(payload => {
+        if (payload.clientSubmissionId !== clientSubmissionId) return;
+        if (!Array.isArray(payload.syncedUserIds)) payload.syncedUserIds = [];
+        if (!payload.syncedUserIds.includes(userId)) payload.syncedUserIds.push(userId);
+      });
+      state.pendingSubmissions.forEach(payload => {
+        if (payload.clientSubmissionId !== clientSubmissionId) return;
+        if (!Array.isArray(payload.syncedUserIds)) payload.syncedUserIds = [];
+        if (!payload.syncedUserIds.includes(userId)) payload.syncedUserIds.push(userId);
+      });
+    }
+
     async function syncPendingSubmissions() {
-      if (syncingSubmissions || !supabaseClient || !isAuthenticated() || !state.pendingSubmissions.length) {
+      if (syncingSubmissions || !supabaseClient || !hasSupabaseUser() || !state.pendingSubmissions.length) {
         renderAuthStatus();
         return;
       }
@@ -1637,8 +1722,11 @@
       renderAuthStatus();
       const remaining = [];
       for (const payload of state.pendingSubmissions) {
+        const syncedUserIds = Array.isArray(payload.syncedUserIds) ? payload.syncedUserIds : [];
+        if (syncedUserIds.includes(currentUser.id)) continue;
         try {
           await saveSubmissionRecord(payload);
+          markSubmissionSynced(payload.clientSubmissionId, currentUser.id);
         } catch (error) {
           console.warn("Submission sync failed:", error.message || error);
           remaining.push(payload);
@@ -1659,6 +1747,7 @@
         correct_count: payload.correctCount,
         blank_count: payload.blankCount,
         elapsed_seconds: payload.elapsedSeconds,
+        user_is_anonymous: isAnonymousUser(),
         submitted_at: payload.submittedAt
       };
       const { data: submission, error: submissionError } = await supabaseClient
