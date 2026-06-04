@@ -58,46 +58,62 @@
 
     .home-screen {
       min-height: 100vh;
-      display: flex;
-      align-items: center;
+      display: grid;
+      align-items: start;
       justify-content: center;
-      padding: 42px 20px;
+      padding: 28px 20px;
       background: #ffffff;
     }
 
     .home-panel {
-      width: min(760px, 100%);
-      text-align: center;
+      width: min(900px, 100%);
+      text-align: left;
+    }
+
+    .home-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 20px;
+    }
+
+    .home-copy {
+      min-width: 0;
     }
 
     .home-panel h1 {
-      margin: 0 0 10px;
-      font-size: clamp(38px, 5vw, 58px);
-      line-height: 1.08;
+      margin: 0;
+      font-size: 34px;
+      line-height: 1.15;
       font-weight: 800;
       color: #111111;
     }
 
     .home-panel p {
-      margin: 0 0 28px;
+      margin: 6px 0 0;
       color: var(--muted);
-      font-size: 17px;
-      line-height: 1.5;
+      font-size: 15px;
+      line-height: 1.4;
     }
 
     .user-row {
-      min-height: 34px;
-      margin: -12px 0 24px;
+      min-height: 30px;
+      margin: 2px 0 0;
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 10px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 8px;
       color: var(--muted);
       font-size: 14px;
+      padding: 0;
+      text-align: right;
     }
 
     .user-status {
-      min-width: 120px;
+      min-width: 0;
+      max-width: 320px;
     }
 
     .status-link {
@@ -113,21 +129,21 @@
     }
 
     .set-grid {
-      width: min(520px, 100%);
-      margin: 0 auto;
+      width: 100%;
+      margin: 0;
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
     }
 
     .set-button {
-      min-height: 48px;
+      min-height: 42px;
       border: 1px solid #b8b8b8;
       border-radius: 4px;
       background: #ffffff;
       color: #202020;
       cursor: pointer;
-      font-size: 17px;
+      font-size: 15px;
       font-weight: 700;
     }
 
@@ -142,25 +158,22 @@
     }
 
     .unlock-banner {
-      position: fixed;
-      left: 50%;
-      bottom: 24px;
-      transform: translateX(-50%);
-      width: min(680px, calc(100vw - 32px));
-      min-height: 54px;
+      width: 100%;
+      min-height: 42px;
+      margin-top: 14px;
       border: 1px solid var(--teal);
       border-radius: 6px;
-      background: var(--teal);
-      color: #ffffff;
+      background: #ffffff;
+      color: var(--teal);
       cursor: pointer;
-      box-shadow: 0 10px 30px rgba(22, 138, 131, 0.22);
-      font-size: 18px;
+      box-shadow: none;
+      font-size: 15px;
       font-weight: 800;
       letter-spacing: 0;
     }
 
     .unlock-banner:hover {
-      background: #106d68;
+      background: #f0faf8;
     }
 
     .auth-screen {
@@ -707,22 +720,67 @@
       .score-row {
         grid-template-columns: 1fr;
       }
+
+      .home-screen {
+        padding: 22px 14px;
+      }
+
+      .home-header {
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      .home-panel h1 {
+        font-size: 28px;
+      }
+
+      .home-panel p {
+        font-size: 14px;
+      }
+
+      .user-row {
+        align-items: flex-start;
+        justify-content: flex-start;
+        flex-direction: column;
+        gap: 6px;
+        margin: 0;
+        text-align: left;
+      }
+
+      .user-status {
+        max-width: 100%;
+      }
+
+      .set-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .set-button {
+        min-height: 40px;
+        font-size: 14px;
+      }
     }
   </style>
 </head>
 <body>
   <section class="home-screen" id="homeView">
     <div class="home-panel">
-      <h1>Complete the Words</h1>
-      <p>Select a set to begin. Each set keeps its own timer and can be submitted separately.</p>
-      <div class="user-row">
-        <span class="user-status" id="userStatus">Checking login...</span>
-        <button class="status-link hidden" id="loginBtn" type="button">Register / Log In</button>
-        <button class="status-link hidden" id="logoutBtn" type="button">Log Out</button>
+      <div class="home-header">
+        <div class="home-copy">
+          <h1>Complete the Words</h1>
+          <p>Select a set to begin. Each set keeps its own timer and can be submitted separately.</p>
+        </div>
+        <div class="user-row">
+          <span class="user-status" id="userStatus">Checking login...</span>
+          <button class="status-link hidden" id="loginBtn" type="button">Register / Log In</button>
+          <button class="status-link hidden" id="logoutBtn" type="button">Log Out</button>
+        </div>
       </div>
       <div class="set-grid" id="homeGrid"></div>
+      <button class="unlock-banner hidden" id="unlockBanner" type="button">Register to Unlock Sets 21-40</button>
     </div>
-    <button class="unlock-banner hidden" id="unlockBanner" type="button">Register to Unlock Sets 21-40</button>
   </section>
 
   <section class="auth-screen hidden" id="authView">
