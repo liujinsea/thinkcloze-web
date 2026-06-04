@@ -884,15 +884,17 @@
     let authSession = null;
     let currentUser = null;
     let syncingSubmissions = false;
+    let currentRouteKey = "";
+    let applyingHistoryRoute = false;
     els.timeToggleText.textContent = state.hideTime ? "Show Time" : "Hide Time";
 
     renderGrid();
     renderHome();
-    showHome();
+    initAppNavigation();
     startTimer();
     initSupabaseAuth();
 
-    els.prev.addEventListener("click", showHome);
+    els.prev.addEventListener("click", () => showHome());
     els.next.addEventListener("click", () => goToQuestion(state.current + 1));
     els.review.addEventListener("click", () => els.popover.classList.toggle("open"));
     els.submit.addEventListener("click", () => submitCurrentGroup(false));
@@ -1009,7 +1011,86 @@
       renderAuthStatus();
     }
 
-    function showHome() {
+    function initAppNavigation() {
+      const params = new URLSearchParams(window.location.search);
+      const setParam = Number(params.get("set"));
+      const authParam = params.get("auth");
+      if (Number.isInteger(setParam) && setParam >= 1 && setParam <= questions.length) {
+        openSet(setParam - 1, { replace: true });
+      } else if (authParam) {
+        setAuthMode(authParam === "login" ? "login" : "register");
+        showAuth({ replace: true });
+      } else {
+        showHome({ replace: true });
+      }
+
+      window.addEventListener("popstate", event => {
+        const route = event.state || parseRouteFromUrl();
+        applyingHistoryRoute = true;
+        if (route.view === "exam") {
+          openSet(route.setIndex, { replace: true });
+        } else if (route.view === "auth") {
+          setAuthMode(route.mode || "register");
+          showAuth({ replace: true });
+        } else {
+          showHome({ replace: true });
+        }
+        currentRouteKey = JSON.stringify(route);
+        trackPageView(buildRouteUrl(route));
+        applyingHistoryRoute = false;
+      });
+    }
+
+    function parseRouteFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const setParam = Number(params.get("set"));
+      if (Number.isInteger(setParam) && setParam >= 1 && setParam <= questions.length) {
+        return { view: "exam", setIndex: setParam - 1 };
+      }
+      const authParam = params.get("auth");
+      if (authParam) return { view: "auth", mode: authParam === "login" ? "login" : "register" };
+      return { view: "home" };
+    }
+
+    function buildRouteUrl(route) {
+      const url = new URL(window.location.href);
+      url.search = "";
+      url.hash = "";
+      if (route.view === "exam") {
+        url.searchParams.set("set", String(route.setIndex + 1));
+      } else if (route.view === "auth") {
+        url.searchParams.set("auth", route.mode || "register");
+      } else {
+        url.searchParams.set("home", "1");
+      }
+      return `${url.pathname}${url.search}`;
+    }
+
+    function updateRoute(route, options = {}) {
+      if (applyingHistoryRoute) return;
+      const routeKey = JSON.stringify(route);
+      if (routeKey === currentRouteKey && !options.replace) return;
+      currentRouteKey = routeKey;
+      const url = buildRouteUrl(route);
+      const method = options.replace ? "replaceState" : "pushState";
+      window.history[method](route, "", url);
+      trackPageView(url);
+    }
+
+    function trackPageView(pagePath) {
+      if (typeof window.gtag === "function") {
+        window.gtag("event", "page_view", {
+          page_title: document.title,
+          page_location: window.location.href,
+          page_path: pagePath
+        });
+      }
+      if (typeof window.va === "function") {
+        window.va("pageview", { path: pagePath });
+      }
+    }
+
+    function showHome(options = {}) {
       pauseCurrentTimer();
       currentView = "home";
       els.resultBackdrop.classList.remove("open");
@@ -1019,9 +1100,10 @@
       renderHome();
       updateTimer();
       saveState();
+      updateRoute({ view: "home" }, options);
     }
 
-    function openSet(index) {
+    function openSet(index, options = {}) {
       pauseCurrentTimer();
       state.current = index;
       currentView = "exam";
@@ -1035,9 +1117,10 @@
       if (!isQuestionSubmitted(index)) {
         requestAnimationFrame(() => focusBlank(index, 0));
       }
+      updateRoute({ view: "exam", setIndex: index }, options);
     }
 
-    function showAuth() {
+    function showAuth(options = {}) {
       pauseCurrentTimer();
       currentView = "auth";
       els.homeView.classList.add("hidden");
@@ -1047,6 +1130,7 @@
       setAuthMode(authMode);
       if (!supabaseClient) setAuthMessage("Supabase is not configured yet.");
       updateTimer();
+      updateRoute({ view: "auth", mode: authMode }, options);
     }
 
     function renderQuestion() {
