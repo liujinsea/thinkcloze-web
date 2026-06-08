@@ -996,7 +996,7 @@
     }
 
     function loadState() {
-      const fresh = { current: 0, submitted: false, hideTime: false, groupSubmitted: [], setElapsed: [], setStartedAt: [], typed: [], pendingSubmissions: [], submissionArchive: [] };
+      const fresh = { current: 0, submitted: false, hideTime: false, groupSubmitted: [], setElapsed: [], setStartedAt: [], typed: [], pendingSubmissions: [], submissionArchive: [], pendingEvents: [], eventArchive: [] };
       try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
         if (saved && Array.isArray(saved.typed) && saved.typed.length === questions.length) {
@@ -1030,7 +1030,9 @@
         setStartedAt,
         typed: saved.typed,
         pendingSubmissions: Array.isArray(saved.pendingSubmissions) ? saved.pendingSubmissions : [],
-        submissionArchive: Array.isArray(saved.submissionArchive) ? saved.submissionArchive : []
+        submissionArchive: Array.isArray(saved.submissionArchive) ? saved.submissionArchive : [],
+        pendingEvents: Array.isArray(saved.pendingEvents) ? saved.pendingEvents : [],
+        eventArchive: Array.isArray(saved.eventArchive) ? saved.eventArchive : []
       };
       if (!normalized.submissionArchive.length && normalized.pendingSubmissions.length) {
         normalized.submissionArchive = normalized.pendingSubmissions.slice();
@@ -1252,6 +1254,7 @@
       wrapper.addEventListener("click", event => {
         const slot = event.target.closest(".slot");
         active = { q: qIndex, b: bIndex, pos: slot ? Number(slot.dataset.slot) : nextEditablePosition(qIndex, bIndex) };
+        trackSetEvent("quiz_started", qIndex, { blankIndex: bIndex + 1 });
         wrapper.focus();
         paintCursor(wrapper);
       });
@@ -1275,6 +1278,7 @@
         refreshBlank(qIndex, bIndex);
         saveState();
         updateStatus();
+        maybeTrackHalfComplete(qIndex);
         if (pos === typed.length - 1) focusNextBlank(qIndex, bIndex);
         return;
       }
@@ -1327,6 +1331,7 @@
       refreshBlank(qIndex, bIndex);
       saveState();
       updateStatus();
+      maybeTrackHalfComplete(qIndex);
       if (suffix.length >= blank.missing) focusNextBlank(qIndex, bIndex);
     }
 
@@ -1531,6 +1536,8 @@
       await ensureProfile();
       queueArchivedSubmissionsForCurrentUser();
       await syncPendingSubmissions();
+      queueArchivedEventsForCurrentUser();
+      await syncPendingEvents();
     }
 
     async function ensureProfile() {
@@ -1682,6 +1689,7 @@
         state.submitted = false;
       }
       queueSubmissionForSync(buildSubmissionPayload(qIndex));
+      trackSetEvent("submitted", qIndex);
       saveState();
       renderQuestion();
       renderHome();
@@ -1829,6 +1837,112 @@
         .from("blank_answer_records")
         .upsert(answerRows, { onConflict: "user_id,client_submission_id,blank_index" });
       if (answersError) throw answersError;
+    }
+
+    function maybeTrackHalfComplete(qIndex) {
+      if (getQuestionFilledBlankCount(qIndex) > 5) {
+        trackSetEvent("half_complete", qIndex, {
+          filledBlanks: getQuestionFilledBlankCount(qIndex),
+          totalBlanks: getQuestionBlankCount(qIndex)
+        });
+      }
+    }
+
+    function trackSetEvent(eventName, qIndex, options = {}) {
+      if (eventName !== "submitted" && hasRecordedSetEvent(eventName, qIndex)) return;
+      const payload = {
+        clientEventId: `${eventName}-${qIndex + 1}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+        eventName,
+        setId: qIndex + 1,
+        blankIndex: options.blankIndex || null,
+        eventContext: {
+          filledBlanks: options.filledBlanks || getQuestionFilledBlankCount(qIndex),
+          totalBlanks: options.totalBlanks || getQuestionBlankCount(qIndex)
+        },
+        createdAt: new Date().toISOString(),
+        syncedUserIds: []
+      };
+      rememberEvent(payload);
+      addPendingEvent(payload);
+      saveState();
+      syncPendingEvents();
+    }
+
+    function hasRecordedSetEvent(eventName, qIndex) {
+      return state.eventArchive.some(event => event.eventName === eventName && event.setId === qIndex + 1);
+    }
+
+    function rememberEvent(payload) {
+      const existing = state.eventArchive.find(event => event.clientEventId === payload.clientEventId);
+      if (existing) return existing;
+      const archived = {
+        ...payload,
+        syncedUserIds: Array.isArray(payload.syncedUserIds) ? payload.syncedUserIds : []
+      };
+      state.eventArchive.push(archived);
+      return archived;
+    }
+
+    function addPendingEvent(payload) {
+      const archived = rememberEvent(payload);
+      if (!state.pendingEvents.some(event => event.clientEventId === archived.clientEventId)) {
+        state.pendingEvents.push(archived);
+      }
+    }
+
+    function queueArchivedEventsForCurrentUser() {
+      if (!hasSupabaseUser()) return;
+      state.eventArchive.forEach(payload => {
+        const syncedUserIds = Array.isArray(payload.syncedUserIds) ? payload.syncedUserIds : [];
+        if (!syncedUserIds.includes(currentUser.id)) addPendingEvent(payload);
+      });
+      saveState();
+    }
+
+    function markEventSynced(clientEventId, userId) {
+      state.eventArchive.forEach(payload => {
+        if (payload.clientEventId !== clientEventId) return;
+        if (!Array.isArray(payload.syncedUserIds)) payload.syncedUserIds = [];
+        if (!payload.syncedUserIds.includes(userId)) payload.syncedUserIds.push(userId);
+      });
+      state.pendingEvents.forEach(payload => {
+        if (payload.clientEventId !== clientEventId) return;
+        if (!Array.isArray(payload.syncedUserIds)) payload.syncedUserIds = [];
+        if (!payload.syncedUserIds.includes(userId)) payload.syncedUserIds.push(userId);
+      });
+    }
+
+    async function syncPendingEvents() {
+      if (!supabaseClient || !hasSupabaseUser() || !state.pendingEvents.length) return;
+      const remaining = [];
+      for (const payload of state.pendingEvents) {
+        const syncedUserIds = Array.isArray(payload.syncedUserIds) ? payload.syncedUserIds : [];
+        if (syncedUserIds.includes(currentUser.id)) continue;
+        try {
+          await saveEventRecord(payload);
+          markEventSynced(payload.clientEventId, currentUser.id);
+        } catch (error) {
+          console.warn("Event sync failed:", error.message || error);
+          remaining.push(payload);
+        }
+      }
+      state.pendingEvents = remaining;
+      saveState();
+    }
+
+    async function saveEventRecord(payload) {
+      const { error } = await supabaseClient
+        .from("user_events")
+        .upsert({
+          user_id: currentUser.id,
+          client_event_id: payload.clientEventId,
+          event_name: payload.eventName,
+          set_id: payload.setId,
+          blank_index: payload.blankIndex,
+          event_context: payload.eventContext,
+          created_at: payload.createdAt
+        }, { onConflict: "user_id,client_event_id" });
+      if (error) throw error;
     }
 
     function showPassageResult(qIndex) {

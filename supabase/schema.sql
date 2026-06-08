@@ -47,6 +47,18 @@ create table if not exists public.blank_answer_records (
   unique (user_id, client_submission_id, blank_index)
 );
 
+create table if not exists public.user_events (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  client_event_id text not null,
+  event_name text not null check (event_name in ('quiz_started', 'half_complete', 'submitted')),
+  set_id integer check (set_id > 0),
+  blank_index integer check (blank_index is null or blank_index > 0),
+  event_context jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  unique (user_id, client_event_id)
+);
+
 create index if not exists set_submissions_user_id_idx
   on public.set_submissions (user_id);
 
@@ -55,6 +67,15 @@ create index if not exists set_submissions_submitted_at_idx
 
 create index if not exists blank_answer_records_user_id_idx
   on public.blank_answer_records (user_id);
+
+create index if not exists user_events_user_id_idx
+  on public.user_events (user_id);
+
+create index if not exists user_events_event_name_idx
+  on public.user_events (event_name);
+
+create index if not exists user_events_created_at_idx
+  on public.user_events (created_at desc);
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -100,6 +121,7 @@ for each row execute function public.handle_new_user();
 alter table public.profiles enable row level security;
 alter table public.set_submissions enable row level security;
 alter table public.blank_answer_records enable row level security;
+alter table public.user_events enable row level security;
 
 drop policy if exists profiles_select_own on public.profiles;
 create policy profiles_select_own
@@ -148,3 +170,38 @@ create policy blank_answer_records_update_own
 on public.blank_answer_records for update
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
+
+drop policy if exists user_events_select_own on public.user_events;
+create policy user_events_select_own
+on public.user_events for select
+using (auth.uid() = user_id);
+
+drop policy if exists user_events_insert_own on public.user_events;
+create policy user_events_insert_own
+on public.user_events for insert
+with check (auth.uid() = user_id);
+
+drop policy if exists user_events_update_own on public.user_events;
+create policy user_events_update_own
+on public.user_events for update
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+create or replace function public.get_public_stats()
+returns table(metric text, value bigint)
+language sql
+security definer
+set search_path = public
+as $$
+  select 'users'::text, count(*)::bigint from public.profiles
+  union all
+  select 'quiz_started'::text, count(*)::bigint from public.user_events where event_name = 'quiz_started'
+  union all
+  select 'half_complete'::text, count(*)::bigint from public.user_events where event_name = 'half_complete'
+  union all
+  select 'submitted'::text, count(*)::bigint from public.user_events where event_name = 'submitted'
+  union all
+  select 'attempts'::text, count(*)::bigint from public.set_submissions;
+$$;
+
+grant execute on function public.get_public_stats() to anon, authenticated;
