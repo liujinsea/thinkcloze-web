@@ -9,3 +9,5 @@ node_modules/
 config.js
 *.tmp
 *.log
+
+.vercel

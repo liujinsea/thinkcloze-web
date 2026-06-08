@@ -1,0 +1,21 @@
+{
+  "name": "5月SAT A卷阅读词汇",
+  "short_name": "SAT词汇",
+  "description": "5月SAT A卷阅读词汇背词、测验、错题和艾宾浩斯复习",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f7f7fb",
+  "theme_color": "#3157d5",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
