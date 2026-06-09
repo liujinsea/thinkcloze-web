@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="SAT教学语言" />
+<meta name="theme-color" content="#3157d5" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<title>SAT教学语言练习</title>
+<style>
+:root{--bg:#f7f7fb;--card:#fff;--text:#171827;--muted:#70758a;--line:#e6e7ef;--primary:#3157d5;--good:#0a8f5a;--bad:#ce2f45;--chip:#eef2ff;--warn:#fff8df;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;}
+.app{max-width:760px;margin:0 auto;padding:18px 14px 40px}
+header{position:sticky;top:0;z-index:5;background:rgba(247,247,251,.94);backdrop-filter:blur(10px);padding:10px 0 12px;border-bottom:1px solid var(--line)}
+h1{font-size:22px;margin:4px 0 6px}
+.sub{color:var(--muted);font-size:13px;line-height:1.45}
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:14px 0 10px}
+button,select,input{font:inherit}
+.tab,.btn{border:0;border-radius:14px;padding:11px 10px;background:#fff;color:var(--text);box-shadow:0 1px 0 rgba(0,0,0,.04)}
+.tab.active,.btn.primary{background:var(--primary);color:#fff}
+.btn{width:100%;margin:6px 0;font-weight:650}
+.btn.ghost{background:#fff;border:1px solid var(--line)}
+.btn.good{background:var(--good);color:#fff}
+.btn.bad{background:var(--bad);color:#fff}
+.panel{display:none}
+.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;margin:14px 0;box-shadow:0 8px 22px rgba(28,32,54,.05)}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:4px;border-radius:999px;background:var(--chip);padding:5px 9px;font-size:12px;color:#293b8f;margin:3px}
+.promptLabel{color:var(--muted);font-size:13px;margin-top:12px}
+.term{font-size:30px;font-weight:800;line-height:1.22;margin:18px 0 14px;overflow-wrap:anywhere}
+.answer{font-size:22px;line-height:1.42;margin:16px 0;color:#213f98;font-weight:760;overflow-wrap:anywhere}
+.note{color:var(--muted);font-size:14px;line-height:1.55;background:#fafafd;border-radius:14px;padding:10px;margin-top:10px}
+select,input{width:100%;padding:12px;border-radius:14px;border:1px solid var(--line);background:#fff;margin:6px 0 10px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px;text-align:center}
+.num{font-size:22px;font-weight:800}
+.label{font-size:12px;color:var(--muted)}
+.option{width:100%;text-align:left;margin:8px 0;padding:14px;border-radius:16px;border:1px solid var(--line);background:#fff;line-height:1.35;overflow-wrap:anywhere}
+.option.correct{border-color:var(--good);background:#eefaf5}
+.option.wrong{border-color:var(--bad);background:#fff0f2}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.btn.star{background:var(--warn);border:1px solid #f0d36a;color:#765a00}
+.btn.done{background:#eefaf5;border:1px solid #9dddbf;color:#075f3b}
+.listItem{padding:12px 0;border-bottom:1px solid var(--line)}
+.small{font-size:12px;color:var(--muted)}
+.hidden{display:none}
+.center{text-align:center}
+.speakBtn{width:auto;display:inline-flex;align-items:center;justify-content:center;padding:7px 11px;border-radius:999px;font-size:13px;background:#fff;color:var(--text);border:1px solid var(--line);box-shadow:none;margin:2px 0 8px}
+@media (min-width:900px){
+  .app{max-width:980px;padding:14px 18px 28px}
+  h1{font-size:20px;margin:2px 0 4px}
+  .sub{font-size:12px}
+  .tabs{gap:8px;margin:10px 0 8px}
+  .tab,.btn{border-radius:12px;padding:8px 9px;font-size:14px}
+  .card{border-radius:18px;padding:14px;margin:10px 0}
+  .term{font-size:26px;margin:14px 0 12px;line-height:1.18}
+  .answer{font-size:18px;margin:10px 0}
+  .note{font-size:13px;line-height:1.4;padding:8px;margin-top:8px}
+  select,input{padding:9px;border-radius:12px;margin:4px 0 8px;font-size:14px}
+  .stats{gap:8px}
+  .stat{border-radius:14px;padding:8px}
+  .num{font-size:18px}
+  .label{font-size:11px}
+  .option{margin:6px 0;padding:10px 12px;border-radius:13px;font-size:15px;line-height:1.3}
+  .actions{gap:8px;margin-top:8px}
+  .actions .btn{font-size:14px;padding:8px 9px}
+  .pill{font-size:11px;padding:4px 8px}
+  .listItem{padding:9px 0}
+}
+@media (max-width:480px){
+  .app{padding:14px 12px 36px}
+  .term{font-size:26px}
+  .answer{font-size:20px}
+  .option{padding:13px;font-size:16px}
+  .stats{gap:7px}
+  .stat{padding:9px 5px}
+  .label{font-size:11px}
+}
+</style>
+</head>
+<body><div class="app">
+<header>
+  <h1>SAT教学语言练习</h1>
+  <div class="sub">Grammar / Math / Reading · 410 张课堂表达卡</div>
+  <div class="tabs">
+    <button class="tab active" data-tab="study">背诵</button>
+    <button class="tab" data-tab="quiz">测验</button>
+    <button class="tab" data-tab="review">复习</button>
+    <button class="tab" data-tab="wrong">错题</button>
+    <button class="tab" data-tab="list">句表</button>
+  </div>
+</header>
+
+<section id="study" class="panel active">
+  <div class="card">
+    <label for="scope">选择范围</label>
+    <select id="scope"></select>
+    <div class="stats">
+      <div class="stat"><div class="num" id="totalN">0</div><div class="label">待练</div></div>
+      <div class="stat"><div class="num" id="knownN">0</div><div class="label">已掌握</div></div>
+      <div class="stat"><div class="num" id="wrongN">0</div><div class="label">错题</div></div>
+      <div class="stat"><div class="num" id="dueN">0</div><div class="label">今日复习</div></div>
+    </div>
+  </div>
+  <div class="card center">
+    <div id="cardMeta"></div>
+    <div class="promptLabel">中文提示</div>
+    <div class="term" id="studyTerm">-</div>
+    <button class="btn primary" id="showBtn">显示英文</button>
+    <div id="answerBox" class="hidden">
+      <div class="answer" id="studyMeaning"></div>
+      <button class="speakBtn" id="studySpeakBtn" type="button">朗读英文</button>
+      <div class="note" id="studyNote"></div>
+      <button class="btn good" id="knowBtn">已掌握</button>
+      <button class="btn bad" id="dontKnowBtn">还不熟 / 加入错题</button>
+    </div>
+    <button class="btn ghost" id="nextBtn">下一张</button>
+  </div>
+</section>
+
+<section id="quiz" class="panel">
+  <div class="card">
+    <label for="quizScope">测验范围</label>
+    <select id="quizScope"></select>
+    <button class="btn primary" id="startQuiz">开始 / 下一题</button>
+  </div>
+  <div class="card">
+    <div id="quizMeta"></div>
+    <div class="promptLabel">中文提示</div>
+    <div class="term" id="quizTerm">点击开始</div>
+    <div id="options"></div>
+    <div class="actions">
+      <button class="btn star" id="favQuizBtn">收藏</button>
+      <button class="btn done" id="knownQuizBtn">已掌握 / 不再显示</button>
+    </div>
+    <div id="quizFeedback" class="note hidden"></div>
+  </div>
+</section>
+
+<section id="review" class="panel">
+  <div class="card">
+    <div class="row"><strong>间隔复习</strong><button class="btn primary" style="width:auto;padding:9px 12px" id="startReview">开始今日复习</button></div>
+  </div>
+  <div class="card">
+    <div id="reviewMeta"></div>
+    <div class="promptLabel">中文提示</div>
+    <div class="term" id="reviewTerm">今日到期表达会显示在这里</div>
+    <div id="reviewOptions"></div>
+    <div id="reviewFeedback" class="note hidden"></div>
+  </div>
+  <div class="card" id="reviewList"></div>
+</section>
+
+<section id="wrong" class="panel">
+  <div class="card">
+    <div class="row"><strong>错题本</strong><button class="btn primary" style="width:auto;padding:9px 12px" id="wrongQuizBtn">错题集中测验</button><button class="btn ghost" style="width:auto;padding:9px 12px" id="clearWrong">清空</button></div>
+  </div>
+  <div class="card" id="wrongList"></div>
+</section>
+
+<section id="list" class="panel">
+  <div class="card">
+    <input id="search" placeholder="搜索中文 / 英文 / Unit / ID" />
+    <select id="listScope"></select>
+  </div>
+  <div class="card" id="cardList"></div>
+</section>
+</div>
+
+<script>
+const SOURCE_CARDS = [{"ID":"G001","Subject":"Grammar","Unit":"General","Level":1,"Chinese":"先观察选项之间的区别。","English":"First, compare the answer choices.","Keywords":"","Example":""},{"ID":"G002","Subject":"Grammar","Unit":"General","Level":1,"Chinese":"你注意到了什么区别？","English":"What differences do you notice?","Keywords":"","Example":""},{"ID":"G003","Subject":"Grammar","Unit":"General","Level":1,"Chinese":"仔细比较选项。","English":"Compare the choices carefully.","Keywords":"","Example":""},{"ID":"G004","Subject":"Grammar","Unit":"General","Level":1,"Chinese":"先不要急着选答案。","English":"Don't rush to choose an answer.","Keywords":"","Example":""},{"ID":"G005","Subject":"Grammar","Unit":"General","Level":1,"Chinese":"关注选项中变化的部分。","English":"Pay attention to what changes from one option to another.","Keywords":"","Example":""},{"ID":"G006","Subject":"Grammar","Unit":"General","Level":1,"Chinese":"这道题考什么？","English":"What is being tested here?","Keywords":"","Example":""},{"ID":"G007","Subject":"Grammar","Unit":"General","Level":1,"Chinese":"我们一步一步来。","English":"Let's work through it step by step.","Keywords":"","Example":""},{"ID":"G008","Subject":"Grammar","Unit":"General","Level":1,"Chinese":"先判断考点。","English":"Let's identify the issue first.","Keywords":"","Example":""},{"ID":"G009","Subject":"Grammar","Unit":"General","Level":1,"Chinese":"关注空格前面的词。","English":"Look at the word immediately before the blank.","Keywords":"","Example":""},{"ID":"G010","Subject":"Grammar","Unit":"General","Level":1,"Chinese":"关注空格后面的词。","English":"Look at the word immediately after the blank.","Keywords":"","Example":""},{"ID":"G011","Subject":"Grammar","Unit":"General","Level":1,"Chinese":"把句子大声读出来。","English":"Read the sentence aloud.","Keywords":"","Example":""},{"ID":"G012","Subject":"Grammar","Unit":"General","Level":1,"Chinese":"先不要依赖语感。","English":"Don't rely on your ear alone.","Keywords":"","Example":""},{"ID":"G013","Subject":"Grammar","Unit":"General","Level":1,"Chinese":"语法优先，意思其次。","English":"Grammar comes first; meaning comes second.","Keywords":"","Example":""},{"ID":"G014","Subject":"Grammar","Unit":"General","Level":1,"Chinese":"先保证句子结构正确。","English":"Make sure the sentence structure is correct first.","Keywords":"","Example":""},{"ID":"G015","Subject":"Grammar","Unit":"General","Level":1,"Chinese":"然后再检查意思是否通顺。","English":"Then check whether the meaning works.","Keywords":"","Example":""},{"ID":"G016","Subject":"Grammar","Unit":"Sentence Boundaries","Level":1,"Chinese":"这道题考察句子边界。","English":"This question tests sentence boundaries.","Keywords":"","Example":""},{"ID":"G017","Subject":"Grammar","Unit":"Sentence Boundaries","Level":1,"Chinese":"先分析句子结构。","English":"Let's analyze the sentence structure first.","Keywords":"","Example":""},{"ID":"G018","Subject":"Grammar","Unit":"Sentence Boundaries","Level":2,"Chinese":"我们有一个独立分句还是两个独立分句？","English":"Do we have one independent clause or two independent clauses?","Keywords":"","Example":""},{"ID":"G019","Subject":"Grammar","Unit":"Sentence Boundaries","Level":2,"Chinese":"这是一个完整句吗？","English":"Is this a complete sentence?","Keywords":"","Example":""},{"ID":"G020","Subject":"Grammar","Unit":"Sentence Boundaries","Level":2,"Chinese":"这个分句可以独立成句。","English":"This clause can stand alone as a sentence.","Keywords":"","Example":""},{"ID":"G021","Subject":"Grammar","Unit":"Sentence Boundaries","Level":2,"Chinese":"这个分句不能独立成句。","English":"This clause cannot stand alone as a sentence.","Keywords":"","Example":""},{"ID":"G022","Subject":"Grammar","Unit":"Sentence Boundaries","Level":2,"Chinese":"这是一个残句。","English":"This is a sentence fragment.","Keywords":"","Example":""},{"ID":"G023","Subject":"Grammar","Unit":"Sentence Boundaries","Level":2,"Chinese":"这是一个连写句。","English":"This is a run-on sentence.","Keywords":"","Example":""},{"ID":"G024","Subject":"Grammar","Unit":"Sentence Boundaries","Level":2,"Chinese":"这是一个逗号拼接错误。","English":"This is a comma splice.","Keywords":"","Example":""},{"ID":"G025","Subject":"Grammar","Unit":"Sentence Boundaries","Level":2,"Chinese":"句子已经完整了。","English":"The sentence is already complete.","Keywords":"","Example":""},{"ID":"G026","Subject":"Grammar","Unit":"Sentence Boundaries","Level":2,"Chinese":"这里不需要句号。","English":"We do not need a period here.","Keywords":"","Example":""},{"ID":"G027","Subject":"Grammar","Unit":"Sentence Boundaries","Level":2,"Chinese":"这里不需要分号。","English":"We do not need a semicolon here.","Keywords":"","Example":""},{"ID":"G028","Subject":"Grammar","Unit":"Sentence Boundaries","Level":2,"Chinese":"句号可以分隔两个完整句。","English":"A period can separate two complete sentences.","Keywords":"","Example":""},{"ID":"G029","Subject":"Grammar","Unit":"Sentence Boundaries","Level":2,"Chinese":"分号可以连接两个相关的独立分句。","English":"A semicolon can join two closely related independent clauses.","Keywords":"","Example":""},{"ID":"G030","Subject":"Grammar","Unit":"Sentence Boundaries","Level":2,"Chinese":"逗号不能单独连接两个独立分句。","English":"A comma alone cannot join two independent clauses.","Keywords":"","Example":""},{"ID":"G031","Subject":"Grammar","Unit":"Sentence Boundaries","Level":2,"Chinese":"这里需要更强的停顿。","English":"We need a stronger break here.","Keywords":"","Example":""},{"ID":"G032","Subject":"Grammar","Unit":"Sentence Boundaries","Level":2,"Chinese":"这里不应该断开句子。","English":"We should not break the sentence here.","Keywords":"","Example":""},{"ID":"G033","Subject":"Grammar","Unit":"Sentence Boundaries","Level":1,"Chinese":"先找主句在哪里。","English":"First, find the main clause.","Keywords":"","Example":""},{"ID":"G034","Subject":"Grammar","Unit":"Sentence Boundaries","Level":2,"Chinese":"哪个部分承载句子的主要意思？","English":"Which part carries the main meaning of the sentence?","Keywords":"","Example":""},{"ID":"G035","Subject":"Grammar","Unit":"Sentence Boundaries","Level":2,"Chinese":"这个结构在语法上不完整。","English":"This structure is grammatically incomplete.","Keywords":"","Example":""},{"ID":"G036","Subject":"Grammar","Unit":"Punctuation","Level":1,"Chinese":"这道题考察标点。","English":"This question tests punctuation.","Keywords":"","Example":""},{"ID":"G037","Subject":"Grammar","Unit":"Punctuation","Level":2,"Chinese":"标点不是随机的。","English":"Punctuation is not random.","Keywords":"","Example":""},{"ID":"G038","Subject":"Grammar","Unit":"Punctuation","Level":2,"Chinese":"每个标点都有语法功能。","English":"Every punctuation mark has a grammatical function.","Keywords":"","Example":""},{"ID":"G039","Subject":"Grammar","Unit":"Punctuation","Level":2,"Chinese":"冒号前面必须是完整句。","English":"A colon must follow a complete sentence.","Keywords":"","Example":""},{"ID":"G040","Subject":"Grammar","Unit":"Punctuation","Level":2,"Chinese":"冒号后面通常是解释、例子或列表。","English":"A colon usually introduces an explanation, an example, or a list.","Keywords":"","Example":""},{"ID":"G041","Subject":"Grammar","Unit":"Punctuation","Level":2,"Chinese":"破折号可以强调补充信息。","English":"A dash can emphasize additional information.","Keywords":"","Example":""},{"ID":"G042","Subject":"Grammar","Unit":"Punctuation","Level":2,"Chinese":"一对破折号可以插入非必要信息。","English":"A pair of dashes can set off nonessential information.","Keywords":"","Example":""},{"ID":"G043","Subject":"Grammar","Unit":"Punctuation","Level":2,"Chinese":"逗号可以隔开非必要信息。","English":"Commas can set off nonessential information.","Keywords":"","Example":""},{"ID":"G044","Subject":"Grammar","Unit":"Punctuation","Level":2,"Chinese":"如果这里有一个逗号，通常还需要另一个逗号。","English":"If we have one comma here, we usually need another comma.","Keywords":"","Example":""},{"ID":"G045","Subject":"Grammar","Unit":"Punctuation","Level":2,"Chinese":"这个插入语应该被逗号隔开。","English":"This interruption should be set off by commas.","Keywords":"","Example":""},{"ID":"G046","Subject":"Grammar","Unit":"Punctuation","Level":2,"Chinese":"去掉这个部分，句子仍然成立。","English":"If we remove this part, the sentence still works.","Keywords":"","Example":""},{"ID":"G047","Subject":"Grammar","Unit":"Punctuation","Level":2,"Chinese":"所以这个信息是非必要信息。","English":"Therefore, this information is nonessential.","Keywords":"","Example":""},{"ID":"G048","Subject":"Grammar","Unit":"Punctuation","Level":2,"Chinese":"去掉这个部分，句子意思不完整。","English":"If we remove this part, the sentence becomes incomplete.","Keywords":"","Example":""},{"ID":"G049","Subject":"Grammar","Unit":"Punctuation","Level":2,"Chinese":"所以这个信息是必要信息。","English":"Therefore, this information is essential.","Keywords":"","Example":""},{"ID":"G050","Subject":"Grammar","Unit":"Punctuation","Level":2,"Chinese":"这里的逗号会打断主语和动词。","English":"This comma would separate the subject from the verb.","Keywords":"","Example":""},{"ID":"G051","Subject":"Grammar","Unit":"Punctuation","Level":2,"Chinese":"主语和动词之间通常不需要逗号。","English":"We normally do not put a comma between the subject and the verb.","Keywords":"","Example":""},{"ID":"G052","Subject":"Grammar","Unit":"Punctuation","Level":2,"Chinese":"动词和宾语之间不能随便加逗号。","English":"We should not place a comma between the verb and its object.","Keywords":"","Example":""},{"ID":"G053","Subject":"Grammar","Unit":"Punctuation","Level":2,"Chinese":"这个标点会制造不必要的停顿。","English":"This punctuation creates an unnecessary break.","Keywords":"","Example":""},{"ID":"G054","Subject":"Grammar","Unit":"Punctuation","Level":2,"Chinese":"这个选项的标点使用正确。","English":"This option uses punctuation correctly.","Keywords":"","Example":""},{"ID":"G055","Subject":"Grammar","Unit":"Punctuation","Level":2,"Chinese":"这个选项的标点破坏了句子结构。","English":"This punctuation breaks the sentence structure.","Keywords":"","Example":""},{"ID":"G056","Subject":"Grammar","Unit":"Agreement","Level":1,"Chinese":"这道题考察主谓一致。","English":"This question tests subject-verb agreement.","Keywords":"","Example":""},{"ID":"G057","Subject":"Grammar","Unit":"Agreement","Level":1,"Chinese":"先找主语。","English":"Let's identify the subject first.","Keywords":"","Example":""},{"ID":"G058","Subject":"Grammar","Unit":"Agreement","Level":2,"Chinese":"不要看离动词最近的名词。","English":"Don't look at the noun closest to the verb.","Keywords":"","Example":""},{"ID":"G059","Subject":"Grammar","Unit":"Agreement","Level":2,"Chinese":"找到真正的主语。","English":"Find the true subject.","Keywords":"","Example":""},{"ID":"G060","Subject":"Grammar","Unit":"Agreement","Level":2,"Chinese":"忽略介词短语。","English":"Ignore the prepositional phrase.","Keywords":"","Example":""},{"ID":"G061","Subject":"Grammar","Unit":"Agreement","Level":2,"Chinese":"忽略修饰语。","English":"Ignore the modifier.","Keywords":"","Example":""},{"ID":"G062","Subject":"Grammar","Unit":"Agreement","Level":2,"Chinese":"忽略逗号中间的信息。","English":"Ignore the information between commas.","Keywords":"","Example":""},{"ID":"G063","Subject":"Grammar","Unit":"Agreement","Level":2,"Chinese":"这些词只是干扰项。","English":"These words are just distractions.","Keywords":"","Example":""},{"ID":"G064","Subject":"Grammar","Unit":"Agreement","Level":2,"Chinese":"真正的主语在句子更前面。","English":"The real subject appears much earlier in the sentence.","Keywords":"","Example":""},{"ID":"G065","Subject":"Grammar","Unit":"Agreement","Level":1,"Chinese":"主语是单数还是复数？","English":"Is the subject singular or plural?","Keywords":"","Example":""},{"ID":"G066","Subject":"Grammar","Unit":"Agreement","Level":1,"Chinese":"这个主语是单数。","English":"This subject is singular.","Keywords":"","Example":""},{"ID":"G067","Subject":"Grammar","Unit":"Agreement","Level":1,"Chinese":"这个主语是复数。","English":"This subject is plural.","Keywords":"","Example":""},{"ID":"G068","Subject":"Grammar","Unit":"Agreement","Level":1,"Chinese":"所以动词应该用单数。","English":"Therefore, the verb should be singular.","Keywords":"","Example":""},{"ID":"G069","Subject":"Grammar","Unit":"Agreement","Level":1,"Chinese":"所以动词应该用复数。","English":"Therefore, the verb should be plural.","Keywords":"","Example":""},{"ID":"G070","Subject":"Grammar","Unit":"Agreement","Level":2,"Chinese":"each 后面通常用单数动词。","English":"Each usually takes a singular verb.","Keywords":"","Example":""},{"ID":"G071","Subject":"Grammar","Unit":"Agreement","Level":2,"Chinese":"every 后面通常用单数动词。","English":"Every usually takes a singular verb.","Keywords":"","Example":""},{"ID":"G072","Subject":"Grammar","Unit":"Agreement","Level":2,"Chinese":"neither 后面通常用单数动词。","English":"Neither usually takes a singular verb.","Keywords":"","Example":""},{"ID":"G073","Subject":"Grammar","Unit":"Agreement","Level":2,"Chinese":"either 后面通常用单数动词。","English":"Either usually takes a singular verb.","Keywords":"","Example":""},{"ID":"G074","Subject":"Grammar","Unit":"Agreement","Level":2,"Chinese":"集合名词在SAT里通常按单数处理。","English":"Collective nouns are usually treated as singular on the SAT.","Keywords":"","Example":""},{"ID":"G075","Subject":"Grammar","Unit":"Agreement","Level":2,"Chinese":"这个选项造成主谓不一致。","English":"This option creates a subject-verb agreement error.","Keywords":"","Example":""},{"ID":"G076","Subject":"Grammar","Unit":"Verb Form & Tense","Level":1,"Chinese":"这道题考察动词形式。","English":"This question tests verb form.","Keywords":"","Example":""},{"ID":"G077","Subject":"Grammar","Unit":"Verb Form & Tense","Level":1,"Chinese":"这道题考察时态。","English":"This question tests verb tense.","Keywords":"","Example":""},{"ID":"G078","Subject":"Grammar","Unit":"Verb Form & Tense","Level":1,"Chinese":"先确定时间线。","English":"Let's identify the timeline.","Keywords":"","Example":""},{"ID":"G079","Subject":"Grammar","Unit":"Verb Form & Tense","Level":1,"Chinese":"动作发生在什么时候？","English":"When does the action happen?","Keywords":"","Example":""},{"ID":"G080","Subject":"Grammar","Unit":"Verb Form & Tense","Level":2,"Chinese":"哪个动作先发生？","English":"Which action happened first?","Keywords":"","Example":""},{"ID":"G081","Subject":"Grammar","Unit":"Verb Form & Tense","Level":1,"Chinese":"这里需要过去时。","English":"We need the past tense here.","Keywords":"","Example":""},{"ID":"G082","Subject":"Grammar","Unit":"Verb Form & Tense","Level":1,"Chinese":"这里需要现在时。","English":"We need the present tense here.","Keywords":"","Example":""},{"ID":"G083","Subject":"Grammar","Unit":"Verb Form & Tense","Level":1,"Chinese":"这里需要完成时。","English":"We need the perfect tense here.","Keywords":"","Example":""},{"ID":"G084","Subject":"Grammar","Unit":"Verb Form & Tense","Level":2,"Chinese":"这个句子描述的是已完成的动作。","English":"The sentence describes a completed action.","Keywords":"","Example":""},{"ID":"G085","Subject":"Grammar","Unit":"Verb Form & Tense","Level":2,"Chinese":"这个句子描述的是持续状态。","English":"The sentence describes an ongoing state.","Keywords":"","Example":""},{"ID":"G086","Subject":"Grammar","Unit":"Verb Form & Tense","Level":1,"Chinese":"检查时态一致。","English":"Check for tense consistency.","Keywords":"","Example":""},{"ID":"G087","Subject":"Grammar","Unit":"Verb Form & Tense","Level":2,"Chinese":"没有理由不要切换时态。","English":"There is no reason to shift tense here.","Keywords":"","Example":""},{"ID":"G088","Subject":"Grammar","Unit":"Verb Form & Tense","Level":2,"Chinese":"这个选项造成时态跳跃。","English":"This option creates an unnecessary tense shift.","Keywords":"","Example":""},{"ID":"G089","Subject":"Grammar","Unit":"Verb Form & Tense","Level":2,"Chinese":"我们已经有一个谓语动词了。","English":"We already have a main verb.","Keywords":"","Example":""},{"ID":"G090","Subject":"Grammar","Unit":"Verb Form & Tense","Level":1,"Chinese":"这里不能再放另一个谓语动词。","English":"We cannot add another finite verb here.","Keywords":"","Example":""},{"ID":"G091","Subject":"Grammar","Unit":"Verb Form & Tense","Level":2,"Chinese":"这是现在分词。","English":"This is a present participle.","Keywords":"","Example":""},{"ID":"G092","Subject":"Grammar","Unit":"Verb Form & Tense","Level":2,"Chinese":"这是过去分词。","English":"This is a past participle.","Keywords":"","Example":""},{"ID":"G093","Subject":"Grammar","Unit":"Verb Form & Tense","Level":2,"Chinese":"这是不定式。","English":"This is an infinitive.","Keywords":"","Example":""},{"ID":"G094","Subject":"Grammar","Unit":"Verb Form & Tense","Level":2,"Chinese":"这个形式在语法上不成立。","English":"This form does not work grammatically.","Keywords":"","Example":""},{"ID":"G095","Subject":"Grammar","Unit":"Verb Form & Tense","Level":2,"Chinese":"这个动词形式和句子结构匹配。","English":"This verb form matches the sentence structure.","Keywords":"","Example":""},{"ID":"G096","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":1,"Chinese":"这道题考察代词指代。","English":"This question tests pronoun reference.","Keywords":"","Example":""},{"ID":"G097","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":2,"Chinese":"找到代词的先行词。","English":"Find the antecedent of the pronoun.","Keywords":"","Example":""},{"ID":"G098","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":2,"Chinese":"这个代词指代什么？","English":"What does this pronoun refer to?","Keywords":"","Example":""},{"ID":"G099","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":2,"Chinese":"指代必须清晰。","English":"The reference must be clear.","Keywords":"","Example":""},{"ID":"G100","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":2,"Chinese":"这个代词有歧义。","English":"This pronoun is ambiguous.","Keywords":"","Example":""},{"ID":"G101","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":2,"Chinese":"代词和先行词必须数一致。","English":"The pronoun must agree with its antecedent in number.","Keywords":"","Example":""},{"ID":"G102","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":1,"Chinese":"这道题考察修饰语。","English":"This question tests modifiers.","Keywords":"","Example":""},{"ID":"G103","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":1,"Chinese":"先找到修饰语。","English":"First, identify the modifier.","Keywords":"","Example":""},{"ID":"G104","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":2,"Chinese":"这个短语修饰谁？","English":"What does this phrase modify?","Keywords":"","Example":""},{"ID":"G105","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":2,"Chinese":"修饰语应该靠近被修饰对象。","English":"The modifier should be placed close to the word it modifies.","Keywords":"","Example":""},{"ID":"G106","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":1,"Chinese":"这是错位修饰。","English":"This is a misplaced modifier.","Keywords":"","Example":""},{"ID":"G107","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":1,"Chinese":"这是悬垂修饰。","English":"This is a dangling modifier.","Keywords":"","Example":""},{"ID":"G108","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":2,"Chinese":"谁在执行这个动作？","English":"Who is performing this action?","Keywords":"","Example":""},{"ID":"G109","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":2,"Chinese":"主语必须和修饰语逻辑匹配。","English":"The subject must logically match the modifier.","Keywords":"","Example":""},{"ID":"G110","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":2,"Chinese":"现在修饰关系清楚了。","English":"Now the modification is clear.","Keywords":"","Example":""},{"ID":"G111","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":1,"Chinese":"这道题考察逻辑连接。","English":"This question tests transitions.","Keywords":"","Example":""},{"ID":"G112","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":1,"Chinese":"先判断前后句的逻辑关系。","English":"First, determine the logical relationship between the sentences.","Keywords":"","Example":""},{"ID":"G113","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":1,"Chinese":"这是因果关系。","English":"This is a cause-and-effect relationship.","Keywords":"","Example":""},{"ID":"G114","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":1,"Chinese":"这是转折关系。","English":"This is a contrast relationship.","Keywords":"","Example":""},{"ID":"G115","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":1,"Chinese":"这是递进关系。","English":"This is an addition relationship.","Keywords":"","Example":""},{"ID":"G116","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":1,"Chinese":"这是例证关系。","English":"This is an example relationship.","Keywords":"","Example":""},{"ID":"G117","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":2,"Chinese":"therefore 表示结果。","English":"Therefore indicates a result.","Keywords":"","Example":""},{"ID":"G118","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":2,"Chinese":"however 表示转折。","English":"However indicates contrast.","Keywords":"","Example":""},{"ID":"G119","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":2,"Chinese":"furthermore 表示递进。","English":"Furthermore indicates addition.","Keywords":"","Example":""},{"ID":"G120","Subject":"Grammar","Unit":"Pronouns / Modifiers / Transitions","Level":2,"Chinese":"这个连接词和逻辑关系不匹配。","English":"This transition does not match the logical relationship.","Keywords":"","Example":""},{"ID":"M001","Subject":"Math","Unit":"General Math Teaching","Level":1,"Chinese":"先别急着算。","English":"Don't start calculating right away.","Keywords":"","Example":""},{"ID":"M002","Subject":"Math","Unit":"General Math Teaching","Level":1,"Chinese":"先理解题目。","English":"Let's understand the problem first.","Keywords":"","Example":""},{"ID":"M003","Subject":"Math","Unit":"General Math Teaching","Level":1,"Chinese":"题目到底在问什么？","English":"What exactly is the question asking?","Keywords":"","Example":""},{"ID":"M004","Subject":"Math","Unit":"General Math Teaching","Level":1,"Chinese":"已知条件是什么？","English":"What information is given?","Keywords":"","Example":""},{"ID":"M005","Subject":"Math","Unit":"General Math Teaching","Level":1,"Chinese":"我们要求什么？","English":"What are we trying to find?","Keywords":"","Example":""},{"ID":"M006","Subject":"Math","Unit":"General Math Teaching","Level":2,"Chinese":"把题目翻译成数学表达式。","English":"Translate the problem into a mathematical expression.","Keywords":"","Example":""},{"ID":"M007","Subject":"Math","Unit":"General Math Teaching","Level":1,"Chinese":"设 x 表示未知量。","English":"Let x represent the unknown quantity.","Keywords":"","Example":""},{"ID":"M008","Subject":"Math","Unit":"General Math Teaching","Level":1,"Chinese":"根据题意列方程。","English":"Set up an equation based on the problem.","Keywords":"","Example":""},{"ID":"M009","Subject":"Math","Unit":"General Math Teaching","Level":1,"Chinese":"先估算一下。","English":"Let's estimate first.","Keywords":"","Example":""},{"ID":"M010","Subject":"Math","Unit":"General Math Teaching","Level":1,"Chinese":"这个答案合理吗？","English":"Does this answer make sense?","Keywords":"","Example":""},{"ID":"M011","Subject":"Math","Unit":"General Math Teaching","Level":1,"Chinese":"代回原题检查。","English":"Plug it back into the original problem to check.","Keywords":"","Example":""},{"ID":"M012","Subject":"Math","Unit":"General Math Teaching","Level":1,"Chinese":"注意单位。","English":"Pay attention to the units.","Keywords":"","Example":""},{"ID":"M013","Subject":"Math","Unit":"General Math Teaching","Level":1,"Chinese":"把单位统一。","English":"Make the units consistent.","Keywords":"","Example":""},{"ID":"M014","Subject":"Math","Unit":"General Math Teaching","Level":1,"Chinese":"一步一步写清楚。","English":"Write each step clearly.","Keywords":"","Example":""},{"ID":"M015","Subject":"Math","Unit":"General Math Teaching","Level":1,"Chinese":"不要跳步。","English":"Don't skip steps.","Keywords":"","Example":""},{"ID":"M016","Subject":"Math","Unit":"General Math Teaching","Level":1,"Chinese":"这里最简单的方法是什么？","English":"What is the simplest method here?","Keywords":"","Example":""},{"ID":"M017","Subject":"Math","Unit":"General Math Teaching","Level":1,"Chinese":"还有别的方法吗？","English":"Is there another way to solve it?","Keywords":"","Example":""},{"ID":"M018","Subject":"Math","Unit":"General Math Teaching","Level":1,"Chinese":"这个方法更快。","English":"This method is faster.","Keywords":"","Example":""},{"ID":"M019","Subject":"Math","Unit":"General Math Teaching","Level":1,"Chinese":"这个方法更稳。","English":"This method is more reliable.","Keywords":"","Example":""},{"ID":"M020","Subject":"Math","Unit":"General Math Teaching","Level":1,"Chinese":"先排除明显错误的选项。","English":"Eliminate the obviously wrong choices first.","Keywords":"","Example":""},{"ID":"M021","Subject":"Math","Unit":"Linear Equations","Level":1,"Chinese":"解这个方程。","English":"Solve the equation.","Keywords":"","Example":""},{"ID":"M022","Subject":"Math","Unit":"Linear Equations","Level":1,"Chinese":"两边同时加 5。","English":"Add 5 to both sides.","Keywords":"","Example":""},{"ID":"M023","Subject":"Math","Unit":"Linear Equations","Level":1,"Chinese":"两边同时减 5。","English":"Subtract 5 from both sides.","Keywords":"","Example":""},{"ID":"M024","Subject":"Math","Unit":"Linear Equations","Level":1,"Chinese":"两边同时乘以 2。","English":"Multiply both sides by 2.","Keywords":"","Example":""},{"ID":"M025","Subject":"Math","Unit":"Linear Equations","Level":1,"Chinese":"两边同时除以 3。","English":"Divide both sides by 3.","Keywords":"","Example":""},{"ID":"M026","Subject":"Math","Unit":"Linear Equations","Level":1,"Chinese":"合并同类项。","English":"Combine like terms.","Keywords":"","Example":""},{"ID":"M027","Subject":"Math","Unit":"Linear Equations","Level":1,"Chinese":"展开括号。","English":"Distribute across the parentheses.","Keywords":"","Example":""},{"ID":"M028","Subject":"Math","Unit":"Linear Equations","Level":1,"Chinese":"把 x 项移到左边。","English":"Move the x-terms to the left side.","Keywords":"","Example":""},{"ID":"M029","Subject":"Math","Unit":"Linear Equations","Level":1,"Chinese":"把常数项移到右边。","English":"Move the constant terms to the right side.","Keywords":"","Example":""},{"ID":"M030","Subject":"Math","Unit":"Linear Equations","Level":1,"Chinese":"隔离变量。","English":"Isolate the variable.","Keywords":"","Example":""},{"ID":"M031","Subject":"Math","Unit":"Linear Equations","Level":1,"Chinese":"这个方程没有解。","English":"This equation has no solution.","Keywords":"","Example":""},{"ID":"M032","Subject":"Math","Unit":"Linear Equations","Level":1,"Chinese":"这个方程有无穷多解。","English":"This equation has infinitely many solutions.","Keywords":"","Example":""},{"ID":"M033","Subject":"Math","Unit":"Linear Equations","Level":1,"Chinese":"两边化简后相同。","English":"Both sides simplify to the same expression.","Keywords":"","Example":""},{"ID":"M034","Subject":"Math","Unit":"Linear Equations","Level":1,"Chinese":"两边化简后矛盾。","English":"Both sides simplify to a contradiction.","Keywords":"","Example":""},{"ID":"M035","Subject":"Math","Unit":"Linear Equations","Level":1,"Chinese":"斜率是变化率。","English":"Slope is the rate of change.","Keywords":"","Example":""},{"ID":"M036","Subject":"Math","Unit":"Linear Equations","Level":2,"Chinese":"斜率等于 rise over run。","English":"Slope equals rise over run.","Keywords":"","Example":""},{"ID":"M037","Subject":"Math","Unit":"Linear Equations","Level":2,"Chinese":"y 截距是图像与 y 轴的交点。","English":"The y-intercept is where the graph crosses the y-axis.","Keywords":"","Example":""},{"ID":"M038","Subject":"Math","Unit":"Linear Equations","Level":1,"Chinese":"写成斜截式。","English":"Write it in slope-intercept form.","Keywords":"","Example":""},{"ID":"M039","Subject":"Math","Unit":"Linear Equations","Level":1,"Chinese":"写成标准式。","English":"Write it in standard form.","Keywords":"","Example":""},{"ID":"M040","Subject":"Math","Unit":"Linear Equations","Level":1,"Chinese":"这条直线斜率为负。","English":"This line has a negative slope.","Keywords":"","Example":""},{"ID":"M041","Subject":"Math","Unit":"Systems of Equations","Level":1,"Chinese":"这是一个方程组。","English":"This is a system of equations.","Keywords":"","Example":""},{"ID":"M042","Subject":"Math","Unit":"Systems of Equations","Level":1,"Chinese":"用代入法。","English":"Use substitution.","Keywords":"","Example":""},{"ID":"M043","Subject":"Math","Unit":"Systems of Equations","Level":1,"Chinese":"用消元法。","English":"Use elimination.","Keywords":"","Example":""},{"ID":"M044","Subject":"Math","Unit":"Systems of Equations","Level":1,"Chinese":"把这个表达式代入另一个方程。","English":"Substitute this expression into the other equation.","Keywords":"","Example":""},{"ID":"M045","Subject":"Math","Unit":"Systems of Equations","Level":1,"Chinese":"消去 x。","English":"Eliminate x.","Keywords":"","Example":""},{"ID":"M046","Subject":"Math","Unit":"Systems of Equations","Level":1,"Chinese":"消去 y。","English":"Eliminate y.","Keywords":"","Example":""},{"ID":"M047","Subject":"Math","Unit":"Systems of Equations","Level":1,"Chinese":"两个方程相加。","English":"Add the two equations.","Keywords":"","Example":""},{"ID":"M048","Subject":"Math","Unit":"Systems of Equations","Level":1,"Chinese":"两个方程相减。","English":"Subtract the two equations.","Keywords":"","Example":""},{"ID":"M049","Subject":"Math","Unit":"Systems of Equations","Level":1,"Chinese":"先让系数相同。","English":"Make the coefficients the same first.","Keywords":"","Example":""},{"ID":"M050","Subject":"Math","Unit":"Systems of Equations","Level":1,"Chinese":"交点就是解。","English":"The point of intersection is the solution.","Keywords":"","Example":""},{"ID":"M051","Subject":"Math","Unit":"Systems of Equations","Level":2,"Chinese":"两条直线平行，所以无解。","English":"The lines are parallel, so there is no solution.","Keywords":"","Example":""},{"ID":"M052","Subject":"Math","Unit":"Systems of Equations","Level":2,"Chinese":"两条直线重合，所以有无穷多解。","English":"The lines are the same line, so there are infinitely many solutions.","Keywords":"","Example":""},{"ID":"M053","Subject":"Math","Unit":"Systems of Equations","Level":1,"Chinese":"这个点满足两个方程。","English":"This point satisfies both equations.","Keywords":"","Example":""},{"ID":"M054","Subject":"Math","Unit":"Systems of Equations","Level":1,"Chinese":"把这个点代入两个方程。","English":"Substitute this point into both equations.","Keywords":"","Example":""},{"ID":"M055","Subject":"Math","Unit":"Systems of Equations","Level":2,"Chinese":"解出一个变量后，再代回去。","English":"After solving for one variable, substitute it back in.","Keywords":"","Example":""},{"ID":"M056","Subject":"Math","Unit":"Functions","Level":1,"Chinese":"这是函数题。","English":"This is a function question.","Keywords":"","Example":""},{"ID":"M057","Subject":"Math","Unit":"Functions","Level":1,"Chinese":"输入值是什么？","English":"What is the input value?","Keywords":"","Example":""},{"ID":"M058","Subject":"Math","Unit":"Functions","Level":1,"Chinese":"输出值是什么？","English":"What is the output value?","Keywords":"","Example":""},{"ID":"M059","Subject":"Math","Unit":"Functions","Level":1,"Chinese":"求 f(3)。","English":"Evaluate f of 3.","Keywords":"","Example":""},{"ID":"M060","Subject":"Math","Unit":"Functions","Level":1,"Chinese":"把 3 代入函数。","English":"Plug 3 into the function.","Keywords":"","Example":""},{"ID":"M061","Subject":"Math","Unit":"Functions","Level":1,"Chinese":"定义域是允许的输入值。","English":"The domain is the set of allowed input values.","Keywords":"","Example":""},{"ID":"M062","Subject":"Math","Unit":"Functions","Level":1,"Chinese":"值域是可能的输出值。","English":"The range is the set of possible output values.","Keywords":"","Example":""},{"ID":"M063","Subject":"Math","Unit":"Functions","Level":1,"Chinese":"函数值增加。","English":"The function value increases.","Keywords":"","Example":""},{"ID":"M064","Subject":"Math","Unit":"Functions","Level":1,"Chinese":"函数值减少。","English":"The function value decreases.","Keywords":"","Example":""},{"ID":"M065","Subject":"Math","Unit":"Functions","Level":1,"Chinese":"这是线性函数。","English":"This is a linear function.","Keywords":"","Example":""},{"ID":"M066","Subject":"Math","Unit":"Functions","Level":1,"Chinese":"这是二次函数。","English":"This is a quadratic function.","Keywords":"","Example":""},{"ID":"M067","Subject":"Math","Unit":"Functions","Level":1,"Chinese":"这是指数函数。","English":"This is an exponential function.","Keywords":"","Example":""},{"ID":"M068","Subject":"Math","Unit":"Functions","Level":1,"Chinese":"函数图像向上平移。","English":"The graph shifts up.","Keywords":"","Example":""},{"ID":"M069","Subject":"Math","Unit":"Functions","Level":1,"Chinese":"函数图像向下平移。","English":"The graph shifts down.","Keywords":"","Example":""},{"ID":"M070","Subject":"Math","Unit":"Functions","Level":1,"Chinese":"函数图像向左平移。","English":"The graph shifts left.","Keywords":"","Example":""},{"ID":"M071","Subject":"Math","Unit":"Functions","Level":1,"Chinese":"函数图像向右平移。","English":"The graph shifts right.","Keywords":"","Example":""},{"ID":"M072","Subject":"Math","Unit":"Functions","Level":1,"Chinese":"斜率表示平均变化率。","English":"The slope represents the average rate of change.","Keywords":"","Example":""},{"ID":"M073","Subject":"Math","Unit":"Functions","Level":1,"Chinese":"求平均变化率。","English":"Find the average rate of change.","Keywords":"","Example":""},{"ID":"M074","Subject":"Math","Unit":"Functions","Level":1,"Chinese":"比较两个函数。","English":"Compare the two functions.","Keywords":"","Example":""},{"ID":"M075","Subject":"Math","Unit":"Functions","Level":1,"Chinese":"表格给出了输入和输出。","English":"The table gives the inputs and outputs.","Keywords":"","Example":""},{"ID":"M076","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"这是二次方程。","English":"This is a quadratic equation.","Keywords":"","Example":""},{"ID":"M077","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"这是二次函数。","English":"This is a quadratic function.","Keywords":"","Example":""},{"ID":"M078","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"把表达式因式分解。","English":"Factor the expression.","Keywords":"","Example":""},{"ID":"M079","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"使用平方差公式。","English":"Use the difference of squares.","Keywords":"","Example":""},{"ID":"M080","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"使用完全平方公式。","English":"Use the perfect square pattern.","Keywords":"","Example":""},{"ID":"M081","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"令每个因式等于零。","English":"Set each factor equal to zero.","Keywords":"","Example":""},{"ID":"M082","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"求 x 截距。","English":"Find the x-intercepts.","Keywords":"","Example":""},{"ID":"M083","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"求零点。","English":"Find the zeros.","Keywords":"","Example":""},{"ID":"M084","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"求解。","English":"Find the solutions.","Keywords":"","Example":""},{"ID":"M085","Subject":"Math","Unit":"Quadratics","Level":2,"Chinese":"判别式是 b squared minus 4ac。","English":"The discriminant is b squared minus 4ac.","Keywords":"","Example":""},{"ID":"M086","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"判别式大于零。","English":"The discriminant is greater than zero.","Keywords":"","Example":""},{"ID":"M087","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"判别式等于零。","English":"The discriminant is equal to zero.","Keywords":"","Example":""},{"ID":"M088","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"判别式小于零。","English":"The discriminant is less than zero.","Keywords":"","Example":""},{"ID":"M089","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"所以有两个实数解。","English":"So there are two real solutions.","Keywords":"","Example":""},{"ID":"M090","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"所以有一个实数解。","English":"So there is one real solution.","Keywords":"","Example":""},{"ID":"M091","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"所以没有实数解。","English":"So there are no real solutions.","Keywords":"","Example":""},{"ID":"M092","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"顶点是最大值或最小值。","English":"The vertex is the maximum or minimum point.","Keywords":"","Example":""},{"ID":"M093","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"抛物线开口向上。","English":"The parabola opens upward.","Keywords":"","Example":""},{"ID":"M094","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"抛物线开口向下。","English":"The parabola opens downward.","Keywords":"","Example":""},{"ID":"M095","Subject":"Math","Unit":"Quadratics","Level":2,"Chinese":"对称轴是 x 等于某个值。","English":"The axis of symmetry is x equals a certain value.","Keywords":"","Example":""},{"ID":"M096","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"把它写成顶点式。","English":"Write it in vertex form.","Keywords":"","Example":""},{"ID":"M097","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"把它写成标准式。","English":"Write it in standard form.","Keywords":"","Example":""},{"ID":"M098","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"平方完成。","English":"Complete the square.","Keywords":"","Example":""},{"ID":"M099","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"这个二次函数有最小值。","English":"This quadratic function has a minimum value.","Keywords":"","Example":""},{"ID":"M100","Subject":"Math","Unit":"Quadratics","Level":1,"Chinese":"这个二次函数有最大值。","English":"This quadratic function has a maximum value.","Keywords":"","Example":""},{"ID":"M101","Subject":"Math","Unit":"Exponents and Radicals","Level":1,"Chinese":"这是指数题。","English":"This is an exponent question.","Keywords":"","Example":""},{"ID":"M102","Subject":"Math","Unit":"Exponents and Radicals","Level":1,"Chinese":"底数相同，指数相加。","English":"When the bases are the same, add the exponents.","Keywords":"","Example":""},{"ID":"M103","Subject":"Math","Unit":"Exponents and Radicals","Level":1,"Chinese":"底数相同，指数相减。","English":"When the bases are the same, subtract the exponents.","Keywords":"","Example":""},{"ID":"M104","Subject":"Math","Unit":"Exponents and Radicals","Level":1,"Chinese":"幂的幂，指数相乘。","English":"For a power raised to a power, multiply the exponents.","Keywords":"","Example":""},{"ID":"M105","Subject":"Math","Unit":"Exponents and Radicals","Level":1,"Chinese":"负指数表示倒数。","English":"A negative exponent means reciprocal.","Keywords":"","Example":""},{"ID":"M106","Subject":"Math","Unit":"Exponents and Radicals","Level":1,"Chinese":"零次方等于 1。","English":"Anything to the zero power is 1.","Keywords":"","Example":""},{"ID":"M107","Subject":"Math","Unit":"Exponents and Radicals","Level":1,"Chinese":"平方根表示开方。","English":"A square root represents taking the root.","Keywords":"","Example":""},{"ID":"M108","Subject":"Math","Unit":"Exponents and Radicals","Level":1,"Chinese":"化简根式。","English":"Simplify the radical.","Keywords":"","Example":""},{"ID":"M109","Subject":"Math","Unit":"Exponents and Radicals","Level":1,"Chinese":"把完全平方数提出来。","English":"Take out the perfect square factor.","Keywords":"","Example":""},{"ID":"M110","Subject":"Math","Unit":"Exponents and Radicals","Level":1,"Chinese":"有理化分母。","English":"Rationalize the denominator.","Keywords":"","Example":""},{"ID":"M111","Subject":"Math","Unit":"Exponents and Radicals","Level":2,"Chinese":"指数形式和根式形式可以互换。","English":"Exponential form and radical form are interchangeable.","Keywords":"","Example":""},{"ID":"M112","Subject":"Math","Unit":"Exponents and Radicals","Level":2,"Chinese":"二分之一次方就是平方根。","English":"The one-half power means square root.","Keywords":"","Example":""},{"ID":"M113","Subject":"Math","Unit":"Exponents and Radicals","Level":2,"Chinese":"三分之一次方就是立方根。","English":"The one-third power means cube root.","Keywords":"","Example":""},{"ID":"M114","Subject":"Math","Unit":"Exponents and Radicals","Level":1,"Chinese":"保持底数不变。","English":"Keep the base the same.","Keywords":"","Example":""},{"ID":"M115","Subject":"Math","Unit":"Exponents and Radicals","Level":1,"Chinese":"先化简指数。","English":"Simplify the exponents first.","Keywords":"","Example":""},{"ID":"M116","Subject":"Math","Unit":"Absolute Value","Level":1,"Chinese":"这是绝对值题。","English":"This is an absolute value question.","Keywords":"","Example":""},{"ID":"M117","Subject":"Math","Unit":"Absolute Value","Level":1,"Chinese":"绝对值表示距离。","English":"Absolute value represents distance.","Keywords":"","Example":""},{"ID":"M118","Subject":"Math","Unit":"Absolute Value","Level":1,"Chinese":"绝对值不能为负。","English":"An absolute value cannot be negative.","Keywords":"","Example":""},{"ID":"M119","Subject":"Math","Unit":"Absolute Value","Level":2,"Chinese":"去绝对值需要分情况讨论。","English":"To remove the absolute value, consider two cases.","Keywords":"","Example":""},{"ID":"M120","Subject":"Math","Unit":"Absolute Value","Level":2,"Chinese":"第一种情况，里面的表达式为正。","English":"In the first case, the expression inside is positive.","Keywords":"","Example":""},{"ID":"M121","Subject":"Math","Unit":"Absolute Value","Level":2,"Chinese":"第二种情况，里面的表达式为负。","English":"In the second case, the expression inside is negative.","Keywords":"","Example":""},{"ID":"M122","Subject":"Math","Unit":"Absolute Value","Level":1,"Chinese":"两边同时平方。","English":"Square both sides.","Keywords":"","Example":""},{"ID":"M123","Subject":"Math","Unit":"Absolute Value","Level":1,"Chinese":"检查增根。","English":"Check for extraneous solutions.","Keywords":"","Example":""},{"ID":"M124","Subject":"Math","Unit":"Absolute Value","Level":1,"Chinese":"这个解不满足原方程。","English":"This solution does not satisfy the original equation.","Keywords":"","Example":""},{"ID":"M125","Subject":"Math","Unit":"Absolute Value","Level":1,"Chinese":"这个解要舍去。","English":"This solution must be rejected.","Keywords":"","Example":""},{"ID":"M126","Subject":"Math","Unit":"Absolute Value","Level":2,"Chinese":"绝对值方程可能有两个解。","English":"An absolute value equation may have two solutions.","Keywords":"","Example":""},{"ID":"M127","Subject":"Math","Unit":"Absolute Value","Level":2,"Chinese":"绝对值不等式可以表示区间。","English":"An absolute value inequality can represent an interval.","Keywords":"","Example":""},{"ID":"M128","Subject":"Math","Unit":"Absolute Value","Level":2,"Chinese":"距离小于某个数，表示在中间。","English":"If the distance is less than a number, the solution is between two values.","Keywords":"","Example":""},{"ID":"M129","Subject":"Math","Unit":"Absolute Value","Level":2,"Chinese":"距离大于某个数，表示在两边。","English":"If the distance is greater than a number, the solution is outside the interval.","Keywords":"","Example":""},{"ID":"M130","Subject":"Math","Unit":"Absolute Value","Level":1,"Chinese":"先把绝对值单独隔离出来。","English":"Isolate the absolute value first.","Keywords":"","Example":""},{"ID":"M131","Subject":"Math","Unit":"Geometry","Level":1,"Chinese":"这是几何题。","English":"This is a geometry question.","Keywords":"","Example":""},{"ID":"M132","Subject":"Math","Unit":"Geometry","Level":1,"Chinese":"画一个图。","English":"Draw a diagram.","Keywords":"","Example":""},{"ID":"M133","Subject":"Math","Unit":"Geometry","Level":1,"Chinese":"标出已知量。","English":"Label the given values.","Keywords":"","Example":""},{"ID":"M134","Subject":"Math","Unit":"Geometry","Level":1,"Chinese":"半径是直径的一半。","English":"The radius is half the diameter.","Keywords":"","Example":""},{"ID":"M135","Subject":"Math","Unit":"Geometry","Level":1,"Chinese":"直径是半径的两倍。","English":"The diameter is twice the radius.","Keywords":"","Example":""},{"ID":"M136","Subject":"Math","Unit":"Geometry","Level":1,"Chinese":"圆周长公式是 2πr。","English":"The circumference formula is 2 pi r.","Keywords":"","Example":""},{"ID":"M137","Subject":"Math","Unit":"Geometry","Level":2,"Chinese":"圆面积公式是 πr squared。","English":"The area of a circle is pi r squared.","Keywords":"","Example":""},{"ID":"M138","Subject":"Math","Unit":"Geometry","Level":2,"Chinese":"三角形面积是底乘高除以二。","English":"The area of a triangle is base times height divided by two.","Keywords":"","Example":""},{"ID":"M139","Subject":"Math","Unit":"Geometry","Level":1,"Chinese":"矩形面积是长乘宽。","English":"The area of a rectangle is length times width.","Keywords":"","Example":""},{"ID":"M140","Subject":"Math","Unit":"Geometry","Level":1,"Chinese":"勾股定理。","English":"Use the Pythagorean theorem.","Keywords":"","Example":""},{"ID":"M141","Subject":"Math","Unit":"Geometry","Level":1,"Chinese":"这是直角三角形。","English":"This is a right triangle.","Keywords":"","Example":""},{"ID":"M142","Subject":"Math","Unit":"Geometry","Level":1,"Chinese":"斜边是最长边。","English":"The hypotenuse is the longest side.","Keywords":"","Example":""},{"ID":"M143","Subject":"Math","Unit":"Geometry","Level":2,"Chinese":"相似三角形对应边成比例。","English":"Corresponding sides of similar triangles are proportional.","Keywords":"","Example":""},{"ID":"M144","Subject":"Math","Unit":"Geometry","Level":1,"Chinese":"对应角相等。","English":"Corresponding angles are equal.","Keywords":"","Example":""},{"ID":"M145","Subject":"Math","Unit":"Geometry","Level":1,"Chinese":"比例关系是什么？","English":"What is the proportion?","Keywords":"","Example":""},{"ID":"M146","Subject":"Math","Unit":"Geometry","Level":1,"Chinese":"内角和是 180 度。","English":"The sum of the interior angles is 180 degrees.","Keywords":"","Example":""},{"ID":"M147","Subject":"Math","Unit":"Geometry","Level":1,"Chinese":"圆心角对应的弧长。","English":"The central angle determines the arc length.","Keywords":"","Example":""},{"ID":"M148","Subject":"Math","Unit":"Geometry","Level":1,"Chinese":"弧长是圆周长的一部分。","English":"Arc length is a fraction of the circumference.","Keywords":"","Example":""},{"ID":"M149","Subject":"Math","Unit":"Geometry","Level":2,"Chinese":"扇形面积是圆面积的一部分。","English":"Sector area is a fraction of the area of the circle.","Keywords":"","Example":""},{"ID":"M150","Subject":"Math","Unit":"Geometry","Level":1,"Chinese":"体积公式是什么？","English":"What is the volume formula?","Keywords":"","Example":""},{"ID":"M151","Subject":"Math","Unit":"Statistics and Probability","Level":1,"Chinese":"这是统计题。","English":"This is a statistics question.","Keywords":"","Example":""},{"ID":"M152","Subject":"Math","Unit":"Statistics and Probability","Level":1,"Chinese":"平均数是总和除以数量。","English":"The mean is the total divided by the number of values.","Keywords":"","Example":""},{"ID":"M153","Subject":"Math","Unit":"Statistics and Probability","Level":2,"Chinese":"中位数是排序后中间的数。","English":"The median is the middle value after ordering the data.","Keywords":"","Example":""},{"ID":"M154","Subject":"Math","Unit":"Statistics and Probability","Level":2,"Chinese":"众数是出现次数最多的数。","English":"The mode is the value that appears most often.","Keywords":"","Example":""},{"ID":"M155","Subject":"Math","Unit":"Statistics and Probability","Level":1,"Chinese":"极差是最大值减最小值。","English":"The range is the maximum minus the minimum.","Keywords":"","Example":""},{"ID":"M156","Subject":"Math","Unit":"Statistics and Probability","Level":2,"Chinese":"标准差表示数据的离散程度。","English":"Standard deviation measures how spread out the data are.","Keywords":"","Example":""},{"ID":"M157","Subject":"Math","Unit":"Statistics and Probability","Level":2,"Chinese":"标准差越大，数据越分散。","English":"A larger standard deviation means the data are more spread out.","Keywords":"","Example":""},{"ID":"M158","Subject":"Math","Unit":"Statistics and Probability","Level":2,"Chinese":"标准差越小，数据越集中。","English":"A smaller standard deviation means the data are more clustered.","Keywords":"","Example":""},{"ID":"M159","Subject":"Math","Unit":"Statistics and Probability","Level":1,"Chinese":"样本是总体的一部分。","English":"A sample is part of a population.","Keywords":"","Example":""},{"ID":"M160","Subject":"Math","Unit":"Statistics and Probability","Level":1,"Chinese":"随机抽样更可靠。","English":"A random sample is more reliable.","Keywords":"","Example":""},{"ID":"M161","Subject":"Math","Unit":"Statistics and Probability","Level":2,"Chinese":"概率是有利结果数除以总结果数。","English":"Probability is favorable outcomes divided by total outcomes.","Keywords":"","Example":""},{"ID":"M162","Subject":"Math","Unit":"Statistics and Probability","Level":1,"Chinese":"不放回抽样会改变概率。","English":"Sampling without replacement changes the probability.","Keywords":"","Example":""},{"ID":"M163","Subject":"Math","Unit":"Statistics and Probability","Level":1,"Chinese":"放回抽样不会改变概率。","English":"Sampling with replacement does not change the probability.","Keywords":"","Example":""},{"ID":"M164","Subject":"Math","Unit":"Statistics and Probability","Level":2,"Chinese":"注意百分比和小数的转换。","English":"Pay attention to conversions between percentages and decimals.","Keywords":"","Example":""},{"ID":"M165","Subject":"Math","Unit":"Statistics and Probability","Level":1,"Chinese":"增加百分之十。","English":"Increase by ten percent.","Keywords":"","Example":""},{"ID":"M166","Subject":"Math","Unit":"Statistics and Probability","Level":1,"Chinese":"减少百分之十。","English":"Decrease by ten percent.","Keywords":"","Example":""},{"ID":"M167","Subject":"Math","Unit":"Statistics and Probability","Level":1,"Chinese":"百分比变化是多少？","English":"What is the percent change?","Keywords":"","Example":""},{"ID":"M168","Subject":"Math","Unit":"Statistics and Probability","Level":1,"Chinese":"相关性不等于因果关系。","English":"Correlation does not imply causation.","Keywords":"","Example":""},{"ID":"M169","Subject":"Math","Unit":"Statistics and Probability","Level":1,"Chinese":"这个结论不能推广到整个总体。","English":"This conclusion cannot be generalized to the entire population.","Keywords":"","Example":""},{"ID":"M170","Subject":"Math","Unit":"Statistics and Probability","Level":1,"Chinese":"这个图表显示的是趋势。","English":"This graph shows a trend.","Keywords":"","Example":""},{"ID":"M171","Subject":"Math","Unit":"Data and Word Problems","Level":1,"Chinese":"这是应用题。","English":"This is a word problem.","Keywords":"","Example":""},{"ID":"M172","Subject":"Math","Unit":"Data and Word Problems","Level":1,"Chinese":"把文字信息转化成方程。","English":"Turn the verbal information into an equation.","Keywords":"","Example":""},{"ID":"M173","Subject":"Math","Unit":"Data and Word Problems","Level":2,"Chinese":"more than 表示加。","English":"More than means addition.","Keywords":"","Example":""},{"ID":"M174","Subject":"Math","Unit":"Data and Word Problems","Level":2,"Chinese":"less than 表示减。","English":"Less than means subtraction.","Keywords":"","Example":""},{"ID":"M175","Subject":"Math","Unit":"Data and Word Problems","Level":2,"Chinese":"times as many 表示倍数。","English":"Times as many indicates multiplication.","Keywords":"","Example":""},{"ID":"M176","Subject":"Math","Unit":"Data and Word Problems","Level":2,"Chinese":"per 表示每一个单位。","English":"Per means for each unit.","Keywords":"","Example":""},{"ID":"M177","Subject":"Math","Unit":"Data and Word Problems","Level":2,"Chinese":"rate 表示单位变化量。","English":"Rate means change per unit.","Keywords":"","Example":""},{"ID":"M178","Subject":"Math","Unit":"Data and Word Problems","Level":1,"Chinese":"总量等于单价乘数量。","English":"Total equals unit price times quantity.","Keywords":"","Example":""},{"ID":"M179","Subject":"Math","Unit":"Data and Word Problems","Level":1,"Chinese":"距离等于速度乘时间。","English":"Distance equals rate times time.","Keywords":"","Example":""},{"ID":"M180","Subject":"Math","Unit":"Data and Word Problems","Level":2,"Chinese":"工作总量等于效率乘时间。","English":"Work equals rate times time.","Keywords":"","Example":""},{"ID":"M181","Subject":"Math","Unit":"Data and Word Problems","Level":1,"Chinese":"混合问题要追踪总量。","English":"For mixture problems, track the total amount.","Keywords":"","Example":""},{"ID":"M182","Subject":"Math","Unit":"Data and Word Problems","Level":1,"Chinese":"表格能帮助整理信息。","English":"A table can help organize the information.","Keywords":"","Example":""},{"ID":"M183","Subject":"Math","Unit":"Data and Word Problems","Level":1,"Chinese":"先定义变量。","English":"Define the variable first.","Keywords":"","Example":""},{"ID":"M184","Subject":"Math","Unit":"Data and Word Problems","Level":1,"Chinese":"然后列方程。","English":"Then set up the equation.","Keywords":"","Example":""},{"ID":"M185","Subject":"Math","Unit":"Data and Word Problems","Level":1,"Chinese":"最后回答题目问的问题。","English":"Finally, answer what the question asks.","Keywords":"","Example":""},{"ID":"R001","Subject":"Reading","Unit":"General Reading Teaching","Level":1,"Chinese":"先读题目。","English":"Let's start with the question.","Keywords":"","Example":""},{"ID":"R002","Subject":"Reading","Unit":"General Reading Teaching","Level":1,"Chinese":"题目问什么？","English":"What is the question asking?","Keywords":"","Example":""},{"ID":"R003","Subject":"Reading","Unit":"General Reading Teaching","Level":1,"Chinese":"不要先读选项。","English":"Don't start with the answer choices.","Keywords":"","Example":""},{"ID":"R004","Subject":"Reading","Unit":"General Reading Teaching","Level":2,"Chinese":"回到原文。","English":"Let's go back to the passage.","Keywords":"","Example":""},{"ID":"R005","Subject":"Reading","Unit":"General Reading Teaching","Level":2,"Chinese":"定位相关信息。","English":"Locate the relevant information.","Keywords":"","Example":""},{"ID":"R006","Subject":"Reading","Unit":"General Reading Teaching","Level":2,"Chinese":"划出关键词。","English":"Underline the key words.","Keywords":"","Example":""},{"ID":"R007","Subject":"Reading","Unit":"General Reading Teaching","Level":2,"Chinese":"找证据。","English":"Look for evidence.","Keywords":"","Example":""},{"ID":"R008","Subject":"Reading","Unit":"General Reading Teaching","Level":2,"Chinese":"答案必须被原文支持。","English":"The answer must be supported by the passage.","Keywords":"","Example":""},{"ID":"R009","Subject":"Reading","Unit":"General Reading Teaching","Level":1,"Chinese":"不要凭常识做题。","English":"Do not answer based on outside knowledge.","Keywords":"","Example":""},{"ID":"R010","Subject":"Reading","Unit":"General Reading Teaching","Level":2,"Chinese":"只根据文本判断。","English":"Judge only based on the text.","Keywords":"","Example":""},{"ID":"R011","Subject":"Reading","Unit":"General Reading Teaching","Level":1,"Chinese":"先理解句子字面意思。","English":"First, understand the literal meaning of the sentence.","Keywords":"","Example":""},{"ID":"R012","Subject":"Reading","Unit":"General Reading Teaching","Level":2,"Chinese":"然后判断它的作用。","English":"Then determine its function.","Keywords":"","Example":""},{"ID":"R013","Subject":"Reading","Unit":"General Reading Teaching","Level":2,"Chinese":"我们需要关注上下文。","English":"We need to pay attention to the context.","Keywords":"","Example":""},{"ID":"R014","Subject":"Reading","Unit":"General Reading Teaching","Level":2,"Chinese":"读前一句和后一句。","English":"Read the sentence before and the sentence after.","Keywords":"","Example":""},{"ID":"R015","Subject":"Reading","Unit":"General Reading Teaching","Level":1,"Chinese":"先排除明显错误选项。","English":"Eliminate the obviously wrong choices first.","Keywords":"","Example":""},{"ID":"R016","Subject":"Reading","Unit":"Main Idea and Purpose","Level":1,"Chinese":"这道题考察主旨。","English":"This question tests the main idea.","Keywords":"","Example":""},{"ID":"R017","Subject":"Reading","Unit":"Main Idea and Purpose","Level":2,"Chinese":"作者的主要观点是什么？","English":"What is the author's main point?","Keywords":"","Example":""},{"ID":"R018","Subject":"Reading","Unit":"Main Idea and Purpose","Level":2,"Chinese":"这段主要在讲什么？","English":"What is this paragraph mainly about?","Keywords":"","Example":""},{"ID":"R019","Subject":"Reading","Unit":"Main Idea and Purpose","Level":1,"Chinese":"不要选太具体的选项。","English":"Do not choose an answer that is too specific.","Keywords":"","Example":""},{"ID":"R020","Subject":"Reading","Unit":"Main Idea and Purpose","Level":1,"Chinese":"不要选太宽泛的选项。","English":"Do not choose an answer that is too broad.","Keywords":"","Example":""},{"ID":"R021","Subject":"Reading","Unit":"Main Idea and Purpose","Level":2,"Chinese":"正确答案应该概括全文。","English":"The correct answer should summarize the whole passage.","Keywords":"","Example":""},{"ID":"R022","Subject":"Reading","Unit":"Main Idea and Purpose","Level":2,"Chinese":"这只是一个细节，不是主旨。","English":"This is a detail, not the main idea.","Keywords":"","Example":""},{"ID":"R023","Subject":"Reading","Unit":"Main Idea and Purpose","Level":1,"Chinese":"这道题考察作者目的。","English":"This question tests the author's purpose.","Keywords":"","Example":""},{"ID":"R024","Subject":"Reading","Unit":"Main Idea and Purpose","Level":2,"Chinese":"作者为什么提到这个例子？","English":"Why does the author mention this example?","Keywords":"","Example":""},{"ID":"R025","Subject":"Reading","Unit":"Main Idea and Purpose","Level":2,"Chinese":"这个例子支持前面的观点。","English":"This example supports the previous claim.","Keywords":"","Example":""},{"ID":"R026","Subject":"Reading","Unit":"Main Idea and Purpose","Level":2,"Chinese":"这个句子的作用是引出转折。","English":"The function of this sentence is to introduce a contrast.","Keywords":"","Example":""},{"ID":"R027","Subject":"Reading","Unit":"Main Idea and Purpose","Level":2,"Chinese":"这个句子的作用是提供背景。","English":"The function of this sentence is to provide background.","Keywords":"","Example":""},{"ID":"R028","Subject":"Reading","Unit":"Main Idea and Purpose","Level":2,"Chinese":"这个句子的作用是解释概念。","English":"The function of this sentence is to explain a concept.","Keywords":"","Example":""},{"ID":"R029","Subject":"Reading","Unit":"Main Idea and Purpose","Level":2,"Chinese":"这个句子的作用是提出问题。","English":"The function of this sentence is to raise a question.","Keywords":"","Example":""},{"ID":"R030","Subject":"Reading","Unit":"Main Idea and Purpose","Level":2,"Chinese":"这个句子的作用是总结观点。","English":"The function of this sentence is to summarize the point.","Keywords":"","Example":""},{"ID":"R031","Subject":"Reading","Unit":"Inference and Evidence","Level":1,"Chinese":"这道题考察推断。","English":"This question tests inference.","Keywords":"","Example":""},{"ID":"R032","Subject":"Reading","Unit":"Inference and Evidence","Level":2,"Chinese":"推断必须基于证据。","English":"An inference must be based on evidence.","Keywords":"","Example":""},{"ID":"R033","Subject":"Reading","Unit":"Inference and Evidence","Level":2,"Chinese":"原文没有直接说，但可以推出。","English":"The passage does not state it directly, but we can infer it.","Keywords":"","Example":""},{"ID":"R034","Subject":"Reading","Unit":"Inference and Evidence","Level":2,"Chinese":"哪句话支持这个推断？","English":"Which sentence supports this inference?","Keywords":"","Example":""},{"ID":"R035","Subject":"Reading","Unit":"Inference and Evidence","Level":2,"Chinese":"这个选项缺少证据。","English":"This choice lacks evidence.","Keywords":"","Example":""},{"ID":"R036","Subject":"Reading","Unit":"Inference and Evidence","Level":2,"Chinese":"这个选项过度推断。","English":"This choice goes too far.","Keywords":"","Example":""},{"ID":"R037","Subject":"Reading","Unit":"Inference and Evidence","Level":2,"Chinese":"这个选项和原文矛盾。","English":"This choice contradicts the passage.","Keywords":"","Example":""},{"ID":"R038","Subject":"Reading","Unit":"Inference and Evidence","Level":2,"Chinese":"这个选项只是部分正确。","English":"This choice is only partially correct.","Keywords":"","Example":""},{"ID":"R039","Subject":"Reading","Unit":"Inference and Evidence","Level":2,"Chinese":"这个选项混合了正确和错误信息。","English":"This choice mixes correct and incorrect information.","Keywords":"","Example":""},{"ID":"R040","Subject":"Reading","Unit":"Inference and Evidence","Level":2,"Chinese":"我们需要更精确的答案。","English":"We need a more precise answer.","Keywords":"","Example":""},{"ID":"R041","Subject":"Reading","Unit":"Inference and Evidence","Level":2,"Chinese":"证据在哪里？","English":"Where is the evidence?","Keywords":"","Example":""},{"ID":"R042","Subject":"Reading","Unit":"Inference and Evidence","Level":2,"Chinese":"你能用原文证明吗？","English":"Can you prove it from the passage?","Keywords":"","Example":""},{"ID":"R043","Subject":"Reading","Unit":"Inference and Evidence","Level":2,"Chinese":"这个推断太强了。","English":"This inference is too strong.","Keywords":"","Example":""},{"ID":"R044","Subject":"Reading","Unit":"Inference and Evidence","Level":2,"Chinese":"这个说法太绝对。","English":"This statement is too absolute.","Keywords":"","Example":""},{"ID":"R045","Subject":"Reading","Unit":"Inference and Evidence","Level":2,"Chinese":"正确答案通常更温和。","English":"The correct answer is often more moderate.","Keywords":"","Example":""},{"ID":"R046","Subject":"Reading","Unit":"Function and Structure","Level":1,"Chinese":"这道题考察句子功能。","English":"This question tests sentence function.","Keywords":"","Example":""},{"ID":"R047","Subject":"Reading","Unit":"Function and Structure","Level":2,"Chinese":"这句话在段落中起什么作用？","English":"What role does this sentence play in the paragraph?","Keywords":"","Example":""},{"ID":"R048","Subject":"Reading","Unit":"Function and Structure","Level":2,"Chinese":"这句话解释前面的观点。","English":"This sentence explains the previous point.","Keywords":"","Example":""},{"ID":"R049","Subject":"Reading","Unit":"Function and Structure","Level":2,"Chinese":"这句话提供一个例子。","English":"This sentence provides an example.","Keywords":"","Example":""},{"ID":"R050","Subject":"Reading","Unit":"Function and Structure","Level":2,"Chinese":"这句话提出一个反驳。","English":"This sentence presents an objection.","Keywords":"","Example":""},{"ID":"R051","Subject":"Reading","Unit":"Function and Structure","Level":2,"Chinese":"这句话回应一个反驳。","English":"This sentence responds to an objection.","Keywords":"","Example":""},{"ID":"R052","Subject":"Reading","Unit":"Function and Structure","Level":2,"Chinese":"这句话引入一个新观点。","English":"This sentence introduces a new idea.","Keywords":"","Example":""},{"ID":"R053","Subject":"Reading","Unit":"Function and Structure","Level":2,"Chinese":"这句话连接两个观点。","English":"This sentence connects two ideas.","Keywords":"","Example":""},{"ID":"R054","Subject":"Reading","Unit":"Function and Structure","Level":2,"Chinese":"这句话强化作者观点。","English":"This sentence strengthens the author's claim.","Keywords":"","Example":""},{"ID":"R055","Subject":"Reading","Unit":"Function and Structure","Level":2,"Chinese":"这句话限定了前面的说法。","English":"This sentence qualifies the previous statement.","Keywords":"","Example":""},{"ID":"R056","Subject":"Reading","Unit":"Function and Structure","Level":2,"Chinese":"注意 however 后面的转折。","English":"Pay attention to the contrast after however.","Keywords":"","Example":""},{"ID":"R057","Subject":"Reading","Unit":"Function and Structure","Level":2,"Chinese":"注意 for example 后面的例子。","English":"Pay attention to the example after for example.","Keywords":"","Example":""},{"ID":"R058","Subject":"Reading","Unit":"Function and Structure","Level":2,"Chinese":"注意 because 后面的原因。","English":"Pay attention to the reason after because.","Keywords":"","Example":""},{"ID":"R059","Subject":"Reading","Unit":"Function and Structure","Level":2,"Chinese":"注意 therefore 后面的结论。","English":"Pay attention to the conclusion after therefore.","Keywords":"","Example":""},{"ID":"R060","Subject":"Reading","Unit":"Function and Structure","Level":2,"Chinese":"结构信号词很重要。","English":"Structural signal words are important.","Keywords":"","Example":""},{"ID":"R061","Subject":"Reading","Unit":"Vocabulary in Context","Level":1,"Chinese":"这道题考察语境词义。","English":"This question tests vocabulary in context.","Keywords":"","Example":""},{"ID":"R062","Subject":"Reading","Unit":"Vocabulary in Context","Level":1,"Chinese":"不要只看这个词的常见意思。","English":"Do not rely only on the common meaning of the word.","Keywords":"","Example":""},{"ID":"R063","Subject":"Reading","Unit":"Vocabulary in Context","Level":2,"Chinese":"根据上下文判断意思。","English":"Use the context to determine the meaning.","Keywords":"","Example":""},{"ID":"R064","Subject":"Reading","Unit":"Vocabulary in Context","Level":2,"Chinese":"把选项代回原句。","English":"Plug the choice back into the sentence.","Keywords":"","Example":""},{"ID":"R065","Subject":"Reading","Unit":"Vocabulary in Context","Level":2,"Chinese":"哪个意思最符合语境？","English":"Which meaning best fits the context?","Keywords":"","Example":""},{"ID":"R066","Subject":"Reading","Unit":"Vocabulary in Context","Level":2,"Chinese":"这个词在这里是比喻义。","English":"This word is used figuratively here.","Keywords":"","Example":""},{"ID":"R067","Subject":"Reading","Unit":"Vocabulary in Context","Level":2,"Chinese":"这个词在这里是学术语境。","English":"This word is used in an academic context here.","Keywords":"","Example":""},{"ID":"R068","Subject":"Reading","Unit":"Vocabulary in Context","Level":2,"Chinese":"这个选项语气不对。","English":"This choice has the wrong tone.","Keywords":"","Example":""},{"ID":"R069","Subject":"Reading","Unit":"Vocabulary in Context","Level":2,"Chinese":"这个选项太强。","English":"This choice is too strong.","Keywords":"","Example":""},{"ID":"R070","Subject":"Reading","Unit":"Vocabulary in Context","Level":2,"Chinese":"这个选项太弱。","English":"This choice is too weak.","Keywords":"","Example":""},{"ID":"R071","Subject":"Reading","Unit":"Vocabulary in Context","Level":2,"Chinese":"这个词和上下文不匹配。","English":"This word does not fit the context.","Keywords":"","Example":""},{"ID":"R072","Subject":"Reading","Unit":"Vocabulary in Context","Level":2,"Chinese":"我们要找最精准的意思。","English":"We are looking for the most precise meaning.","Keywords":"","Example":""},{"ID":"R073","Subject":"Reading","Unit":"Vocabulary in Context","Level":2,"Chinese":"四个选项语法都对，区别在意思。","English":"All four choices may be grammatically possible; the difference is meaning.","Keywords":"","Example":""},{"ID":"R074","Subject":"Reading","Unit":"Vocabulary in Context","Level":1,"Chinese":"不要用中文直译。","English":"Do not translate it mechanically into Chinese.","Keywords":"","Example":""},{"ID":"R075","Subject":"Reading","Unit":"Vocabulary in Context","Level":2,"Chinese":"看这个词前后的逻辑。","English":"Look at the logic around the word.","Keywords":"","Example":""},{"ID":"R076","Subject":"Reading","Unit":"Wrong Answer Analysis","Level":2,"Chinese":"这个选项原文没有提到。","English":"The passage does not mention this.","Keywords":"","Example":""},{"ID":"R077","Subject":"Reading","Unit":"Wrong Answer Analysis","Level":2,"Chinese":"这个选项和原文相反。","English":"This choice says the opposite of the passage.","Keywords":"","Example":""},{"ID":"R078","Subject":"Reading","Unit":"Wrong Answer Analysis","Level":2,"Chinese":"这个选项范围太大。","English":"This choice is too broad.","Keywords":"","Example":""},{"ID":"R079","Subject":"Reading","Unit":"Wrong Answer Analysis","Level":2,"Chinese":"这个选项范围太小。","English":"This choice is too narrow.","Keywords":"","Example":""},{"ID":"R080","Subject":"Reading","Unit":"Wrong Answer Analysis","Level":2,"Chinese":"这个选项偷换概念。","English":"This choice changes the concept.","Keywords":"","Example":""},{"ID":"R081","Subject":"Reading","Unit":"Wrong Answer Analysis","Level":2,"Chinese":"这个选项过于绝对。","English":"This choice is too absolute.","Keywords":"","Example":""},{"ID":"R082","Subject":"Reading","Unit":"Wrong Answer Analysis","Level":2,"Chinese":"这个选项只是重复了一个细节。","English":"This choice only repeats a detail.","Keywords":"","Example":""},{"ID":"R083","Subject":"Reading","Unit":"Wrong Answer Analysis","Level":1,"Chinese":"这个选项没有回答题目。","English":"This choice does not answer the question.","Keywords":"","Example":""},{"ID":"R084","Subject":"Reading","Unit":"Wrong Answer Analysis","Level":2,"Chinese":"这个选项看起来相关，但不是答案。","English":"This choice looks relevant, but it is not the answer.","Keywords":"","Example":""},{"ID":"R085","Subject":"Reading","Unit":"Wrong Answer Analysis","Level":2,"Chinese":"这是一个干扰项。","English":"This is a distractor.","Keywords":"","Example":""},{"ID":"R086","Subject":"Reading","Unit":"Wrong Answer Analysis","Level":2,"Chinese":"这个选项加入了新信息。","English":"This choice adds new information.","Keywords":"","Example":""},{"ID":"R087","Subject":"Reading","Unit":"Wrong Answer Analysis","Level":2,"Chinese":"这个选项改变了作者态度。","English":"This choice changes the author's attitude.","Keywords":"","Example":""},{"ID":"R088","Subject":"Reading","Unit":"Wrong Answer Analysis","Level":2,"Chinese":"这个选项混淆了原因和结果。","English":"This choice confuses cause and effect.","Keywords":"","Example":""},{"ID":"R089","Subject":"Reading","Unit":"Wrong Answer Analysis","Level":2,"Chinese":"这个选项混淆了观点和证据。","English":"This choice confuses claim and evidence.","Keywords":"","Example":""},{"ID":"R090","Subject":"Reading","Unit":"Wrong Answer Analysis","Level":2,"Chinese":"这个选项无法由原文推出。","English":"This choice cannot be inferred from the passage.","Keywords":"","Example":""},{"ID":"R091","Subject":"Reading","Unit":"Paired Texts and Data","Level":2,"Chinese":"这是双篇题。","English":"This is a paired-passage question.","Keywords":"","Example":""},{"ID":"R092","Subject":"Reading","Unit":"Paired Texts and Data","Level":1,"Chinese":"先分别理解两篇文章的观点。","English":"First, understand each passage's point separately.","Keywords":"","Example":""},{"ID":"R093","Subject":"Reading","Unit":"Paired Texts and Data","Level":2,"Chinese":"两位作者同意什么？","English":"What do the two authors agree on?","Keywords":"","Example":""},{"ID":"R094","Subject":"Reading","Unit":"Paired Texts and Data","Level":2,"Chinese":"两位作者分歧在哪里？","English":"Where do the two authors disagree?","Keywords":"","Example":""},{"ID":"R095","Subject":"Reading","Unit":"Paired Texts and Data","Level":2,"Chinese":"第二篇如何回应第一篇？","English":"How does the second passage respond to the first?","Keywords":"","Example":""},{"ID":"R096","Subject":"Reading","Unit":"Paired Texts and Data","Level":2,"Chinese":"这是图表题。","English":"This is a data question.","Keywords":"","Example":""},{"ID":"R097","Subject":"Reading","Unit":"Paired Texts and Data","Level":1,"Chinese":"先读图表标题。","English":"Read the title of the graph first.","Keywords":"","Example":""},{"ID":"R098","Subject":"Reading","Unit":"Paired Texts and Data","Level":2,"Chinese":"看横轴和纵轴。","English":"Look at the x-axis and the y-axis.","Keywords":"","Example":""},{"ID":"R099","Subject":"Reading","Unit":"Paired Texts and Data","Level":2,"Chinese":"这个数据支持哪个说法？","English":"Which claim does this data support?","Keywords":"","Example":""},{"ID":"R100","Subject":"Reading","Unit":"Paired Texts and Data","Level":2,"Chinese":"这个数据削弱哪个说法？","English":"Which claim does this data weaken?","Keywords":"","Example":""},{"ID":"R101","Subject":"Reading","Unit":"Paired Texts and Data","Level":1,"Chinese":"不要忽略单位。","English":"Do not ignore the units.","Keywords":"","Example":""},{"ID":"R102","Subject":"Reading","Unit":"Paired Texts and Data","Level":2,"Chinese":"比较趋势，而不是单个数字。","English":"Compare the trend, not just one number.","Keywords":"","Example":""},{"ID":"R103","Subject":"Reading","Unit":"Paired Texts and Data","Level":2,"Chinese":"这个选项和图表不一致。","English":"This choice is inconsistent with the graph.","Keywords":"","Example":""},{"ID":"R104","Subject":"Reading","Unit":"Paired Texts and Data","Level":2,"Chinese":"图表支持原文中的观点。","English":"The graph supports the claim in the passage.","Keywords":"","Example":""},{"ID":"R105","Subject":"Reading","Unit":"Paired Texts and Data","Level":2,"Chinese":"图表和原文形成对比。","English":"The graph contrasts with the passage.","Keywords":"","Example":""}];
+const CARDS = SOURCE_CARDS.map((c, i) => ({
+  id: i + 1,
+  code: c.ID,
+  subject: c.Subject,
+  unit: c.Unit,
+  level: Number(c.Level) || 0,
+  term: c.Chinese,
+  meaning: c.English,
+  note: c.Subject + " · " + c.Unit + " · Level " + c.Level + " · " + c.ID
+}));
+const STORAGE_KEY = "sat_teacher_language_state_v1";
+let state = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{"known":[],"wrong":[],"favorite":[],"idx":0,"correctCounts":{},"review":{}}');
+state.known ||= [];
+state.wrong ||= [];
+state.favorite ||= [];
+state.idx ||= 0;
+state.correctCounts ||= {};
+state.review ||= {};
+
+function save(){localStorage.setItem(STORAGE_KEY, JSON.stringify(state));}
+function byId(id){return document.getElementById(id);}
+function escapeHtml(str){return String(str || "").replace(/[&<>"']/g, function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m];});}
+function enc(str){return encodeURIComponent(str);}
+function dec(str){return decodeURIComponent(str);}
+function sample(arr,n){return [...arr].sort(function(){return Math.random() - 0.5;}).slice(0,n);}
+function uniqueByMeaning(arr){const seen = new Set(); return arr.filter(function(w){if(seen.has(w.meaning)) return false; seen.add(w.meaning); return true;});}
+function subjects(){return [...new Set(CARDS.map(function(w){return w.subject;}))];}
+function unitsForSubject(subject){return [...new Set(CARDS.filter(function(w){return w.subject === subject;}).map(function(w){return w.unit;}))];}
+
+function speakEnglish(text, silent){
+  if(!("speechSynthesis" in window)){if(!silent) alert("当前浏览器不支持发音功能"); return;}
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "en-US";
+  u.rate = 0.86;
+  speechSynthesis.speak(u);
+}
+function speakButton(text){return '<button class="speakBtn" type="button" data-speak="' + escapeHtml(text) + '">朗读英文</button>';}
+
+function scopeOptions(sel){
+  let html = '<option value="all">全部表达</option><option value="level:1">Level 1 必须会</option><option value="level:2">Level 2 高频补充</option><option value="favorite">收藏句</option><option value="wrong">错题本</option><option value="due">今日复习</option>';
+  subjects().forEach(function(subject){
+    html += '<optgroup label="' + escapeHtml(subject) + '">';
+    html += '<option value="subject:' + enc(subject) + '">' + escapeHtml(subject) + ' 全部</option>';
+    unitsForSubject(subject).forEach(function(unit){
+      html += '<option value="unit:' + enc(subject) + '|' + enc(unit) + '">' + escapeHtml(subject + ' · ' + unit) + '</option>';
+    });
+    html += '</optgroup>';
+  });
+  sel.innerHTML = html;
+}
+["scope","quizScope","listScope"].forEach(function(id){scopeOptions(byId(id));});
+
+function baseFiltered(scope){
+  let arr = CARDS;
+  if(scope === "favorite") arr = CARDS.filter(function(w){return state.favorite.includes(w.id);});
+  else if(scope === "wrong") arr = CARDS.filter(function(w){return state.wrong.includes(w.id);});
+  else if(scope === "due") arr = dueReviewCards();
+  else if(scope && scope.indexOf("level:") === 0){
+    const level = Number(scope.split(":")[1]);
+    arr = CARDS.filter(function(w){return w.level === level;});
+  } else if(scope && scope.indexOf("subject:") === 0){
+    const subject = dec(scope.slice(8));
+    arr = CARDS.filter(function(w){return w.subject === subject;});
+  } else if(scope && scope.indexOf("unit:") === 0){
+    const parts = scope.slice(5).split("|");
+    const subject = dec(parts[0]);
+    const unit = dec(parts[1] || "");
+    arr = CARDS.filter(function(w){return w.subject === subject && w.unit === unit;});
+  }
+  return arr;
+}
+function filtered(scope){return baseFiltered(scope);}
+function practiceFiltered(scope){return baseFiltered(scope).filter(function(w){return !state.known.includes(w.id);});}
+function correctCount(id){return Math.min(state.correctCounts[id] || 0, 5);}
+const REVIEW_INTERVALS = [1,3,7,15,30];
+function todayStart(){const d = new Date(); d.setHours(0,0,0,0); return d.getTime();}
+function addDays(days){const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + days); return d.getTime();}
+function reviewInfo(id){return state.review[id] || null;}
+function isDue(w){const r = reviewInfo(w.id); return r && r.due <= todayStart() && state.known.includes(w.id);}
+function dueReviewCards(){return CARDS.filter(isDue);}
+function scheduleReview(id, stage){const safeStage = stage || 0; const interval = REVIEW_INTERVALS[Math.min(safeStage, REVIEW_INTERVALS.length - 1)]; state.review[id] = {stage:safeStage,due:addDays(interval),last:Date.now()};}
+function markKnown(id){state.known = [...new Set([...state.known,id])]; state.correctCounts[id] = 5; state.wrong = state.wrong.filter(function(x){return x !== id;}); if(!state.review[id]) scheduleReview(id,0);}
+function failReview(id){state.wrong = [...new Set([...state.wrong,id])]; state.known = state.known.filter(function(x){return x !== id;}); state.correctCounts[id] = 0; delete state.review[id];}
+function chip(w){
+  return '<span class="pill">' + escapeHtml(w.subject) + '</span><span class="pill">' + escapeHtml(w.unit) + '</span><span class="pill">Level ' + w.level + '</span><span class="pill">' + escapeHtml(w.code) + '</span>' +
+    (state.favorite.includes(w.id) ? '<span class="pill">已收藏</span>' : '') +
+    (state.known.includes(w.id) ? '<span class="pill">已掌握</span>' : '<span class="pill">正确 ' + correctCount(w.id) + '/5</span>') +
+    (isDue(w) ? '<span class="pill">今日复习</span>' : '');
+}
+function updateStats(){
+  const scope = byId("scope").value;
+  const arr = filtered(scope);
+  byId("totalN").textContent = practiceFiltered(scope).length;
+  byId("knownN").textContent = arr.filter(function(w){return state.known.includes(w.id);}).length;
+  byId("wrongN").textContent = state.wrong.length;
+  byId("dueN").textContent = dueReviewCards().length;
+}
+
+let current = null;
+function pickStudy(){
+  const arr = practiceFiltered(byId("scope").value);
+  if(!arr.length){
+    current = null;
+    byId("cardMeta").innerHTML = "";
+    byId("studyTerm").textContent = "当前范围没有待练表达";
+    byId("studyMeaning").textContent = "";
+    byId("studyNote").textContent = "已掌握的表达不会再显示。";
+    byId("answerBox").classList.add("hidden");
+    updateStats();
+    return;
+  }
+  state.idx = (state.idx || 0) % arr.length;
+  current = arr[state.idx++];
+  save();
+  byId("cardMeta").innerHTML = chip(current);
+  byId("studyTerm").textContent = current.term;
+  byId("studyMeaning").textContent = current.meaning;
+  byId("studySpeakBtn").onclick = function(){speakEnglish(current.meaning);};
+  byId("studyNote").textContent = current.note;
+  byId("answerBox").classList.add("hidden");
+  updateStats();
+}
+byId("showBtn").onclick = function(){byId("answerBox").classList.remove("hidden");};
+byId("nextBtn").onclick = pickStudy;
+byId("scope").onchange = function(){state.idx = 0; pickStudy(); renderWrong();};
+byId("knowBtn").onclick = function(){if(current){markKnown(current.id); save(); pickStudy(); renderWrong(); renderReview(); renderList();}};
+byId("dontKnowBtn").onclick = function(){if(current){state.wrong = [...new Set([...state.wrong,current.id])]; save(); pickStudy(); renderWrong(); updateStats(); renderList();}};
+
+let quizCurrent = null;
+let quizAutoTimer = null;
+function optionMeaningsFor(card){
+  let pool = uniqueByMeaning(CARDS.filter(function(w){return w.id !== card.id && w.meaning !== card.meaning && w.subject === card.subject;}));
+  if(pool.length < 3) pool = uniqueByMeaning(CARDS.filter(function(w){return w.id !== card.id && w.meaning !== card.meaning;}));
+  return sample([card.meaning].concat(sample(pool,3).map(function(w){return w.meaning;})),4);
+}
+function updateQuizActionButtons(){
+  if(!quizCurrent){byId("favQuizBtn").textContent = "收藏"; return;}
+  byId("favQuizBtn").textContent = state.favorite.includes(quizCurrent.id) ? "取消收藏" : "收藏";
+}
+function startQuiz(){
+  if(quizAutoTimer){clearTimeout(quizAutoTimer); quizAutoTimer = null;}
+  const arr = practiceFiltered(byId("quizScope").value);
+  if(arr.length < 2){
+    byId("quizTerm").textContent = "待测表达不足";
+    byId("quizMeta").innerHTML = "已掌握的表达不会再显示。";
+    byId("options").innerHTML = "";
+    byId("quizFeedback").classList.add("hidden");
+    return;
+  }
+  quizCurrent = sample(arr,1)[0];
+  byId("quizMeta").innerHTML = chip(quizCurrent);
+  byId("quizTerm").textContent = quizCurrent.term;
+  updateQuizActionButtons();
+  const opts = optionMeaningsFor(quizCurrent);
+  byId("options").innerHTML = opts.map(function(o){return '<button class="option">' + escapeHtml(o) + '</button>';}).join("");
+  byId("quizFeedback").classList.add("hidden");
+  byId("quizFeedback").innerHTML = "";
+  [...document.querySelectorAll(".option")].forEach(function(b){
+    b.onclick = function(){
+      const ok = b.textContent === quizCurrent.meaning;
+      [...document.querySelectorAll(".option")].forEach(function(x){x.disabled = true;});
+      b.classList.add(ok ? "correct" : "wrong");
+      if(!ok){
+        state.wrong = [...new Set([...state.wrong,quizCurrent.id])];
+        [...document.querySelectorAll(".option")].forEach(function(x){if(x.textContent === quizCurrent.meaning)x.classList.add("correct");});
+      } else {
+        state.correctCounts[quizCurrent.id] = (state.correctCounts[quizCurrent.id] || 0) + 1;
+        if(state.correctCounts[quizCurrent.id] >= 5) markKnown(quizCurrent.id);
+      }
+      save();
+      byId("quizFeedback").classList.remove("hidden");
+      if(ok){
+        const c = correctCount(quizCurrent.id);
+        byId("quizFeedback").innerHTML = (c >= 5 ? "正确，已累计 5/5，自动标记为已掌握。" : "正确，已累计 " + c + "/5。") + " " + speakButton(quizCurrent.meaning);
+        quizAutoTimer = setTimeout(startQuiz, 850);
+      } else {
+        byId("quizFeedback").innerHTML = "正确答案：" + escapeHtml(quizCurrent.meaning) + " " + speakButton(quizCurrent.meaning);
+      }
+      renderWrong();
+      renderList();
+      updateStats();
+    };
+  });
+}
+byId("startQuiz").onclick = startQuiz;
+byId("favQuizBtn").onclick = function(){
+  if(!quizCurrent) return;
+  if(state.favorite.includes(quizCurrent.id)) state.favorite = state.favorite.filter(function(x){return x !== quizCurrent.id;});
+  else state.favorite = [...new Set([...state.favorite,quizCurrent.id])];
+  save();
+  updateQuizActionButtons();
+  byId("quizMeta").innerHTML = chip(quizCurrent);
+  renderList();
+};
+byId("knownQuizBtn").onclick = function(){
+  if(!quizCurrent) return;
+  markKnown(quizCurrent.id);
+  save();
+  renderWrong();
+  renderList();
+  updateStats();
+  startQuiz();
+};
+
+let reviewCurrent = null;
+function startReview(){
+  const arr = dueReviewCards();
+  if(!arr.length){
+    reviewCurrent = null;
+    byId("reviewTerm").textContent = "今天没有到期复习表达";
+    byId("reviewMeta").innerHTML = "";
+    byId("reviewOptions").innerHTML = "";
+    byId("reviewFeedback").classList.add("hidden");
+    renderReview();
+    updateStats();
+    return;
+  }
+  reviewCurrent = sample(arr,1)[0];
+  byId("reviewMeta").innerHTML = chip(reviewCurrent);
+  byId("reviewTerm").textContent = reviewCurrent.term;
+  const opts = optionMeaningsFor(reviewCurrent);
+  byId("reviewOptions").innerHTML = opts.map(function(o){return '<button class="option reviewOption">' + escapeHtml(o) + '</button>';}).join("");
+  byId("reviewFeedback").classList.add("hidden");
+  [...document.querySelectorAll(".reviewOption")].forEach(function(b){
+    b.onclick = function(){
+      const ok = b.textContent === reviewCurrent.meaning;
+      [...document.querySelectorAll(".reviewOption")].forEach(function(x){x.disabled = true;});
+      b.classList.add(ok ? "correct" : "wrong");
+      if(ok){
+        const r = reviewInfo(reviewCurrent.id) || {stage:0};
+        const nextStage = Math.min((r.stage || 0) + 1, REVIEW_INTERVALS.length - 1);
+        scheduleReview(reviewCurrent.id, nextStage);
+        byId("reviewFeedback").innerHTML = "复习正确，下次间隔：" + REVIEW_INTERVALS[nextStage] + " 天。 " + speakButton(reviewCurrent.meaning);
+        setTimeout(startReview, 900);
+      } else {
+        failReview(reviewCurrent.id);
+        [...document.querySelectorAll(".reviewOption")].forEach(function(x){if(x.textContent === reviewCurrent.meaning)x.classList.add("correct");});
+        byId("reviewFeedback").innerHTML = "复习错误，已放回错题本。正确答案：" + escapeHtml(reviewCurrent.meaning) + " " + speakButton(reviewCurrent.meaning);
+      }
+      byId("reviewFeedback").classList.remove("hidden");
+      save();
+      renderWrong();
+      renderReview();
+      updateStats();
+      renderList();
+    };
+  });
+}
+function renderReview(){
+  const arr = dueReviewCards();
+  byId("reviewList").innerHTML = arr.length ? '<div class="small">今日到期 ' + arr.length + ' 张</div>' + arr.map(function(w){return '<div class="listItem">' + chip(w) + '<div><b>' + escapeHtml(w.term) + '</b></div><div>' + escapeHtml(w.meaning) + '</div>' + speakButton(w.meaning) + '</div>';}).join("") : '<div class="small">今天没有到期复习表达。</div>';
+}
+byId("startReview").onclick = startReview;
+
+function renderWrong(){
+  const arr = CARDS.filter(function(w){return state.wrong.includes(w.id);});
+  byId("wrongList").innerHTML = arr.length ? arr.map(function(w){return '<div class="listItem">' + chip(w) + '<div><b>' + escapeHtml(w.term) + '</b></div><div>' + escapeHtml(w.meaning) + '</div>' + speakButton(w.meaning) + '<div class="small">' + escapeHtml(w.note) + '</div></div>';}).join("") : "暂无错题。";
+}
+byId("clearWrong").onclick = function(){state.wrong = []; save(); renderWrong(); updateStats(); renderList();};
+byId("wrongQuizBtn").onclick = function(){
+  byId("quizScope").value = "wrong";
+  document.querySelectorAll(".tab,.panel").forEach(function(x){x.classList.remove("active");});
+  document.querySelector('[data-tab="quiz"]').classList.add("active");
+  byId("quiz").classList.add("active");
+  startQuiz();
+};
+
+function renderList(){
+  const scope = byId("listScope").value;
+  const kw = byId("search").value.trim().toLowerCase();
+  const arr = filtered(scope).filter(function(w){return (w.term + " " + w.meaning + " " + w.subject + " " + w.unit + " " + w.code).toLowerCase().includes(kw);});
+  byId("cardList").innerHTML = '<div class="small">显示 ' + arr.length + ' 张</div>' + arr.map(function(w){return '<div class="listItem">' + chip(w) + '<div><b>' + escapeHtml(w.term) + '</b></div><div>' + escapeHtml(w.meaning) + '</div>' + speakButton(w.meaning) + '<div class="small">' + escapeHtml(w.note) + '</div></div>';}).join("");
+}
+byId("search").oninput = renderList;
+byId("listScope").onchange = renderList;
+document.querySelectorAll(".tab").forEach(function(t){
+  t.onclick = function(){
+    document.querySelectorAll(".tab,.panel").forEach(function(x){x.classList.remove("active");});
+    t.classList.add("active");
+    byId(t.dataset.tab).classList.add("active");
+    renderList();
+    renderWrong();
+    renderReview();
+    updateStats();
+  };
+});
+document.addEventListener("click", function(e){
+  const btn = e.target.closest("[data-speak]");
+  if(btn){e.preventDefault(); speakEnglish(btn.dataset.speak);}
+});
+pickStudy();
+renderList();
+renderWrong();
+renderReview();
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("./service-worker.js").catch(function(){});
+  });
+}
+</script>
+</body></html>
