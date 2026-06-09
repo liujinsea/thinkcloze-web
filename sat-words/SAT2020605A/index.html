@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="5月SAT A卷阅读词汇" />
+<meta name="theme-color" content="#3157d5" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../config.js"></script>
+<title>5月SAT A卷阅读词汇</title>
+<style>
+:root{--bg:#f7f7fb;--card:#fff;--text:#171827;--muted:#70758a;--line:#e6e7ef;--primary:#3157d5;--good:#0a8f5a;--bad:#ce2f45;--chip:#eef2ff;}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;}
+.app{max-width:760px;margin:0 auto;padding:18px 14px 40px;} header{position:sticky;top:0;z-index:5;background:rgba(247,247,251,.92);backdrop-filter:blur(10px);padding:10px 0 12px;border-bottom:1px solid var(--line)}
+h1{font-size:22px;margin:4px 0 6px} .sub{color:var(--muted);font-size:13px;line-height:1.45}.top-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:14px 0 10px}.lang-control{display:flex;align-items:center;justify-content:flex-end}.lang-control select{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;margin:0;padding:0}.lang-toggle{display:inline-grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:999px;background:#fff;padding:3px;box-shadow:0 1px 0 rgba(0,0,0,.04)}.lang-btn{border:0;background:transparent;color:var(--muted);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:750}.lang-btn.active{background:var(--primary);color:#fff}
+.home-link{display:inline-flex;align-items:center;width:fit-content;margin:2px 0 6px;color:var(--primary);font-size:13px;font-weight:700;text-decoration:none}
+button,select,input{font:inherit} .tab,.btn{border:0;border-radius:14px;padding:11px 10px;background:#fff;color:var(--text);box-shadow:0 1px 0 rgba(0,0,0,.04);}
+.tab.active,.btn.primary{background:var(--primary);color:white} .btn{width:100%;margin:6px 0;font-weight:650} .btn.ghost{background:#fff;border:1px solid var(--line)} .btn.good{background:var(--good);color:white} .btn.bad{background:var(--bad);color:white}
+.panel{display:none} .panel.active{display:block} .card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;margin:14px 0;box-shadow:0 8px 22px rgba(28,32,54,.05)}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap} .pill{display:inline-flex;align-items:center;gap:4px;border-radius:999px;background:var(--chip);padding:5px 9px;font-size:12px;color:#293b8f;margin:3px}
+.word{font-size:34px;font-weight:800;line-height:1.15;margin:24px 0 18px;word-break:break-word} .meaning{font-size:22px;line-height:1.45;margin:16px 0} .note{color:var(--muted);font-size:14px;line-height:1.55;background:#fafafd;border-radius:14px;padding:10px;margin-top:10px}
+select,input{width:100%;padding:12px;border-radius:14px;border:1px solid var(--line);background:#fff;margin:6px 0 10px} .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px} .stat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px;text-align:center} .num{font-size:22px;font-weight:800} .label{font-size:12px;color:var(--muted)}
+.option{width:100%;text-align:left;margin:8px 0;padding:14px;border-radius:16px;border:1px solid var(--line);background:#fff} .option.correct{border-color:var(--good);background:#eefaf5} .option.wrong{border-color:var(--bad);background:#fff0f2}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.quiz-actions{grid-template-columns:repeat(3,minmax(0,1fr))}.btn.star{background:#fff8df;border:1px solid #f0d36a;color:#765a00}.btn.done{background:#eefaf5;border:1px solid #9dddbf;color:#075f3b}
+.listItem{padding:12px 0;border-bottom:1px solid var(--line)} .small{font-size:12px;color:var(--muted)} .hidden{display:none!important} .center{text-align:center} a{color:var(--primary)} .phonetic{color:var(--muted);font-size:16px;margin:-8px 0 10px;line-height:1.35}.speakBtn{width:auto;display:inline-flex;align-items:center;justify-content:center;padding:7px 11px;border-radius:999px;font-size:13px;background:#fff;border:1px solid var(--line);box-shadow:none;margin:2px 0 8px}
+.auth-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0 2px;padding:9px 10px;border:1px solid var(--line);border-radius:14px;background:#fff}.auth-status{font-size:12px;color:var(--muted);line-height:1.35}.auth-actions{display:flex;gap:8px;flex-shrink:0}.auth-btn{border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--text);padding:7px 11px;font-size:12px;font-weight:700}.auth-btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}.auth-modal{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(23,24,39,.45);backdrop-filter:blur(6px)}.auth-modal.hidden{display:none}.auth-card{width:min(420px,100%);background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 18px 44px rgba(23,24,39,.22)}.auth-card h2{font-size:20px;margin:0}.auth-close{width:34px;height:34px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:20px;line-height:1}.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}.auth-tab{border:1px solid var(--line);border-radius:12px;background:#fff;padding:9px;font-weight:700}.auth-tab.active{background:var(--primary);border-color:var(--primary);color:#fff}.auth-field label{display:block;margin:10px 0 4px;font-size:13px;color:var(--muted)}.auth-message{min-height:20px;margin:8px 0;font-size:13px;color:var(--bad);line-height:1.4}.auth-message.success{color:var(--good)}
+.study-toolbar{display:none}.quiz-toolbar{display:grid;grid-template-columns:auto auto minmax(150px,260px) auto;gap:8px;align-items:center;margin:0 0 6px;padding:6px 0;border-bottom:1px solid var(--line)}.quiz-back,.study-back{width:auto;margin:0;border:1px solid var(--line);border-radius:999px;background:#fff;padding:7px 11px;font-weight:750;color:var(--text)}.quiz-toolbar label{margin:0;color:var(--muted);font-size:12px}.quiz-toolbar select,.quiz-toolbar .btn{margin:0;padding:8px 10px;font-size:14px}.quiz-card,.study-card{text-align:center}
+body.study-mode header{display:none}body.study-mode .app{max-width:760px;min-height:100vh;padding:8px 12px 14px}body.study-mode #study{display:block}body.study-mode #study .study-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px;padding:6px 0;border-bottom:1px solid var(--line)}body.study-mode #study .study-setup{display:none}body.study-mode #study .study-card{box-shadow:none;min-height:calc(100vh - 86px);display:flex;flex-direction:column;justify-content:center;padding:18px;margin:8px 0}body.study-mode #study .word{font-size:clamp(38px,7vw,62px);line-height:1.05;margin:12px 0 8px;overflow-wrap:anywhere}body.study-mode #study .phonetic{font-size:15px;margin:0 0 8px}body.study-mode #study .meaning{font-size:20px;line-height:1.35;margin:10px 0}body.study-mode #study .note{font-size:13px;line-height:1.4;padding:8px;margin-top:8px}body.study-mode #study .btn{font-size:14px;padding:9px 10px;margin:5px 0}body.study-mode #study .actions{gap:8px}
+body.quiz-mode header{display:none}body.quiz-mode .app{max-width:920px;min-height:100vh;padding:6px 10px 10px}body.quiz-mode #quiz{display:block}body.quiz-mode #quiz .card{box-shadow:none}body.quiz-mode #quiz .quiz-card{min-height:auto;display:block;padding:10px 14px;margin:6px 0}body.quiz-mode #quiz .pill{font-size:10px;padding:3px 7px;margin:2px}body.quiz-mode #quiz .word{font-size:clamp(34px,4.2vw,54px);line-height:1.04;margin:8px 0 4px;overflow-wrap:anywhere}body.quiz-mode #quiz .phonetic{font-size:12px;margin:0 0 4px}body.quiz-mode #quiz .speakBtn{padding:4px 8px;margin:0 0 6px;font-size:12px}body.quiz-mode #quiz .option{font-size:14px;padding:7px 10px;margin:5px 0;line-height:1.18;border-radius:12px}body.quiz-mode #quiz .actions{max-width:480px;width:100%;margin:5px auto 0;gap:6px}body.quiz-mode #quiz .actions .btn{font-size:13px;padding:7px 8px;margin:3px 0}body.quiz-mode #quiz .note{font-size:12px;line-height:1.35;padding:7px;margin-top:5px}
+
+@media (min-width: 900px){
+  .app{max-width:980px;padding:14px 18px 28px;}
+  h1{font-size:20px;margin:2px 0 4px;}
+  .sub{font-size:12px;}
+  .home-link{font-size:12px;margin:0 0 4px}
+  .tabs{gap:8px;margin:10px 0 8px;}
+  .tab,.btn{border-radius:12px;padding:8px 9px;font-size:14px;}
+  .card{border-radius:18px;padding:14px;margin:10px 0;}
+  .word{font-size:26px;margin:14px 0 12px;line-height:1.12;}
+  .meaning{font-size:18px;margin:10px 0;}
+  .note{font-size:13px;line-height:1.4;padding:8px;margin-top:8px;}
+  select,input{padding:9px;border-radius:12px;margin:4px 0 8px;font-size:14px;}
+  .stats{gap:8px;}
+  .stat{border-radius:14px;padding:8px;}
+  .num{font-size:18px;}
+  .label{font-size:11px;}
+  .option{margin:6px 0;padding:10px 12px;border-radius:13px;font-size:15px;line-height:1.3;}
+  .phonetic{font-size:14px;margin:-6px 0 8px}.speakBtn{font-size:12px;padding:6px 10px;}
+  .actions{gap:8px;margin-top:8px}.actions .btn{font-size:14px;padding:8px 9px;}
+  .pill{font-size:11px;padding:4px 8px;}
+  .listItem{padding:9px 0;}
+  .auth-bar{margin:8px 0 2px;padding:8px 10px}.auth-btn{padding:6px 10px}
+  body.study-mode .app{max-width:760px;padding:8px 14px 12px}body.study-mode #study .study-card{padding:16px 18px}body.study-mode #study .word{font-size:clamp(38px,5vw,58px)}body.quiz-mode .app{max-width:960px;padding:6px 14px 10px}body.quiz-mode #quiz .quiz-card{padding:9px 14px}body.quiz-mode #quiz .word{font-size:clamp(34px,3.8vw,52px)}body.quiz-mode #quiz .option{font-size:13.5px;padding:7px 10px}
+}
+@media (max-width: 480px){
+  .word{font-size:30px;}
+  .meaning{font-size:20px;}
+  .option{padding:13px;font-size:16px;}
+  .auth-bar{align-items:flex-start;flex-direction:column}.auth-actions{width:100%}.auth-actions .auth-btn{flex:1}
+  .top-row{align-items:flex-start}.lang-btn{padding:6px 9px;font-size:12px}.quiz-toolbar{grid-template-columns:1fr auto;gap:6px}.quiz-toolbar label{display:none}.quiz-toolbar select{grid-column:1 / -1}.quiz-back,.quiz-toolbar .btn{padding:7px 9px;font-size:13px}body.study-mode .app{padding:7px 9px 12px}body.study-mode #study .study-card{min-height:calc(100vh - 78px);padding:14px 12px}body.study-mode #study .word{font-size:clamp(34px,12vw,50px)}body.study-mode #study .meaning{font-size:18px}body.study-mode #study .btn{font-size:13px;padding:8px 9px}body.quiz-mode .app{padding:6px 8px 10px}body.quiz-mode #quiz .quiz-card{padding:9px 10px}body.quiz-mode #quiz .word{font-size:clamp(30px,10vw,46px)}body.quiz-mode #quiz .option{font-size:13.5px;padding:8px 9px;margin:4px 0}body.quiz-mode #quiz .actions .btn{font-size:12px;padding:6px 7px}
+}
+
+</style>
+</head>
+<body><div class="app">
+<header><div class="top-row"><a class="home-link" id="homeLink" href="/sat-words/">← Vocabulary Lists</a><div class="lang-control"><select id="meaningLang" aria-label="Definition and option language"><option value="zh">中文</option><option value="en">English</option></select><div class="lang-toggle" role="group" aria-label="Definition and option language"><button class="lang-btn" type="button" data-lang-choice="zh">中文</button><button class="lang-btn" type="button" data-lang-choice="en">English</button></div></div></div><h1>5月SAT A卷阅读词汇</h1><div class="sub">共 206 个词 / 短语，优先背诵 29 个。数据保存在本机浏览器，不上传。</div>
+<div class="auth-bar"><span class="auth-status" id="authStatus">Checking login...</span><div class="auth-actions"><button class="auth-btn primary" id="authLoginBtn" type="button">Log In</button><button class="auth-btn hidden" id="authLogoutBtn" type="button">Sign Out</button></div></div>
+<div class="tabs"><button class="tab active" data-tab="study">背词</button><button class="tab" data-tab="quiz">测验</button><button class="tab" data-tab="review">复习</button><button class="tab" data-tab="wrong">错题</button><button class="tab" data-tab="list">词表</button></div></header>
+
+<div class="auth-modal hidden" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+<div class="auth-card">
+<div class="row"><h2 id="authTitle">Log in to save progress</h2><button class="auth-close" id="authClose" type="button" aria-label="Close">×</button></div>
+<p class="small" id="authIntro">Quizzes, mistakes, and review are saved to your account after login.</p>
+<div class="auth-tabs"><button class="auth-tab active" id="authModeLogin" type="button">Log In</button><button class="auth-tab" id="authModeRegister" type="button">Register</button></div>
+<form id="authForm">
+<div class="auth-field"><label id="authEmailLabel" for="authEmail">Email</label><input id="authEmail" type="email" autocomplete="email" required></div>
+<div class="auth-field"><label id="authPasswordLabel" for="authPassword">Password</label><input id="authPassword" type="password" autocomplete="current-password" required minlength="6"></div>
+<div class="auth-message" id="authMessage"></div>
+<div class="actions"><button class="btn primary" id="authSubmit" type="submit">Log In</button><button class="btn ghost" id="authCancel" type="button">Cancel</button></div>
+</form>
+</div>
+</div>
+
+<section id="study" class="panel active">
+<div class="study-toolbar"><button class="study-back" id="exitStudyBtn" type="button">← 返回</button><div class="lang-toggle" role="group" aria-label="Definition language"><button class="lang-btn" type="button" data-lang-choice="zh">中文</button><button class="lang-btn" type="button" data-lang-choice="en">English</button></div></div>
+<div class="card study-setup"><label>选择范围</label><select id="scope"></select><div class="stats"><div class="stat"><div class="num" id="totalN">0</div><div class="label">当前词数</div></div><div class="stat"><div class="num" id="knownN">0</div><div class="label">已掌握</div></div><div class="stat"><div class="num" id="wrongN">0</div><div class="label">错题</div></div><div class="stat"><div class="num" id="dueN">0</div><div class="label">今日复习</div></div></div></div>
+<div class="card center study-card"><div id="cardMeta"></div><div class="word" id="studyTerm">—</div><div class="phonetic" id="studyPhonetic"></div><button class="speakBtn" id="studySpeakBtn" type="button">🔊 发音</button><button class="btn primary" id="showBtn">显示答案</button><div id="answerBox" class="hidden"><div class="meaning" id="studyMeaning"></div><div class="note" id="studyNote"></div><button class="btn good" id="knowBtn">认识 / 掌握</button><button class="btn bad" id="dontKnowBtn">不认识 / 加入错题</button></div><button class="btn ghost" id="nextBtn">下一个</button></div>
+</section>
+
+<section id="quiz" class="panel">
+<div class="quiz-toolbar"><button class="quiz-back" id="exitQuizBtn" type="button">← 返回</button><label for="quizScope">测验范围</label><select id="quizScope"></select><button class="btn primary" id="startQuiz">开始 / 下一题</button></div>
+<div class="card quiz-card"><div id="quizMeta"></div><div class="word" id="quizTerm">点击开始</div><div class="phonetic" id="quizPhonetic"></div><button class="speakBtn hidden" id="quizSpeakBtn" type="button">🔊 发音</button><div id="options"></div><div class="actions quiz-actions"><button class="btn star" id="favQuizBtn">☆ 收藏</button><button class="btn bad" id="unknownQuizBtn">不认识</button><button class="btn done" id="knownQuizBtn">认识 / 不再显示</button></div><div id="quizFeedback" class="note hidden"></div></div>
+</section>
+
+
+<section id="review" class="panel">
+<div class="card"><div class="row"><strong>艾宾浩斯复习</strong><button class="btn primary" style="width:auto;padding:9px 12px" id="startReview">开始今日复习</button></div><div class="small">单词达到“已掌握”后，会按 1 天、3 天、7 天、15 天、30 天的间隔进入复习。复习答对进入下一轮；答错会回到错题本并重新计算。</div></div>
+<div class="card"><div id="reviewMeta"></div><div class="word" id="reviewTerm">今日到期词会显示在这里</div><div class="phonetic" id="reviewPhonetic"></div><button class="speakBtn hidden" id="reviewSpeakBtn" type="button">🔊 发音</button><div id="reviewOptions"></div><div id="reviewFeedback" class="note hidden"></div></div>
+<div class="card" id="reviewList"></div>
+</section>
+<section id="wrong" class="panel"><div class="card"><div class="row"><strong>错题本</strong><button class="btn primary" style="width:auto;padding:9px 12px" id="wrongQuizBtn">错题集中测验</button><button class="btn ghost" style="width:auto;padding:9px 12px" id="clearWrong">清空</button></div><div class="small">答错或点“不认识”的词会自动出现在这里；点击“错题集中测验”可以只练错题。手动标记已掌握，或测试正确累计 5 次后，该词会从后续测试中排除。</div></div><div class="card" id="wrongList"></div></section>
+<section id="list" class="panel"><div class="card"><input id="search" placeholder="搜索单词、中文意思、题号…"/><select id="listScope"></select></div><div class="card" id="wordList"></div></section>
+</div>
+<script>
+const WORDS = [{"id":1,"question":"M1-Q1","term":"domesticate","meaning":"v. 驯化；人工培育","note":"植物、动物被人类长期培育","priority":false},{"id":2,"question":"M1-Q1","term":"descend from","meaning":"源自；是……的后代","note":"SAT常考“来源/演化”表达","priority":false},{"id":3,"question":"M1-Q1","term":"rind","meaning":"n. 果皮；硬壳","note":"常见于植物类文章","priority":false},{"id":4,"question":"M1-Q1","term":"bitter flesh","meaning":"苦味果肉","note":"flesh 在植物语境中指“果肉”","priority":false},{"id":5,"question":"M1-Q1","term":"derive from","meaning":"起源于；来自","note":"选项词，SAT高频","priority":false},{"id":6,"question":"M1-Q2","term":"surrounding text","meaning":"周围文本","note":"指上下文","priority":false},{"id":7,"question":"M1-Q2","term":"suggest","meaning":"v. 暗示；表明","note":"这里不是“建议”","priority":false},{"id":8,"question":"M1-Q3","term":"tenaciously","meaning":"adv. 顽强地；坚持不懈地","note":"抽象品质词","priority":false},{"id":9,"question":"M1-Q3","term":"independent streak","meaning":"独立倾向；独立个性","note":"streak 指“性格中的某种倾向”","priority":false},{"id":10,"question":"M1-Q3","term":"temperament","meaning":"n. 性情；气质","note":"文学类常见","priority":false},{"id":11,"question":"M1-Q3","term":"inherit","meaning":"v. 继承","note":"可指性格、品质","priority":false},{"id":12,"question":"M1-Q3","term":"nonconformity","meaning":"n. 不墨守成规；不从众","note":"高级抽象名词","priority":true},{"id":13,"question":"M1-Q3","term":"demonstrate","meaning":"v. 表现出；证明","note":"文中对应 exhibit","priority":true},{"id":14,"question":"M1-Q4","term":"mutable","meaning":"adj. 易变的；可变的","note":"高于托福难度，SAT常见","priority":true},{"id":15,"question":"M1-Q4","term":"constantly evolving","meaning":"不断变化的","note":"学术描述常用","priority":false},{"id":16,"question":"M1-Q4","term":"sedimentary particles","meaning":"沉积颗粒","note":"地理/地质词汇","priority":false},{"id":17,"question":"M1-Q4","term":"homogeneous","meaning":"adj. 同质的；均一的","note":"SAT高频抽象词","priority":true},{"id":18,"question":"M1-Q5","term":"microgenre","meaning":"n. 微流派；小众细分流派","note":"学术定义类词","priority":false},{"id":19,"question":"M1-Q5","term":"exponent","meaning":"n. 代表人物；倡导者","note":"文中指 early representative","priority":false},{"id":20,"question":"M1-Q5","term":"lush","meaning":"adj. 丰富华丽的","note":"可形容音乐、植被","priority":false},{"id":21,"question":"M1-Q5","term":"synthesizer arrangement","meaning":"合成器编曲","note":"音乐术语","priority":false},{"id":22,"question":"M1-Q5","term":"propulsive beats","meaning":"有推动感的节拍","note":"propulsive = 有推进力的","priority":false},{"id":23,"question":"M1-Q5","term":"exemplify","meaning":"v. 作为……的典型例子","note":"SAT高频","priority":false},{"id":24,"question":"M1-Q6","term":"projected images","meaning":"投影图像","note":"科研实验语境","priority":false},{"id":25,"question":"M1-Q6","term":"reaction to","meaning":"对……的反应","note":"注意搭配","priority":false},{"id":26,"question":"M1-Q6","term":"confirm","meaning":"v. 证实","note":"科研类高频","priority":false},{"id":27,"question":"M1-Q7","term":"supercontinent","meaning":"n. 超大陆","note":"地质学词","priority":false},{"id":28,"question":"M1-Q7","term":"clade","meaning":"n. 演化支；生物分支","note":"生物进化类难词","priority":false},{"id":29,"question":"M1-Q7","term":"biota","meaning":"n. 生物群","note":"高级学术词","priority":false},{"id":30,"question":"M1-Q7","term":"take refuge","meaning":"避难；躲避","note":"文中指物种暂时存活于附近岛屿","priority":false},{"id":31,"question":"M1-Q7","term":"submergence","meaning":"n. 淹没；沉没","note":"地质/生态语境","priority":false},{"id":32,"question":"M1-Q7","term":"crown age","meaning":"冠群年龄","note":"生物进化术语","priority":false},{"id":33,"question":"M1-Q7","term":"common ancestor","meaning":"共同祖先","note":"生物进化核心词","priority":false},{"id":34,"question":"M1-Q7","term":"inhabit","meaning":"v. 居住于；栖息于","note":"学术阅读常见","priority":false},{"id":35,"question":"M1-Q8","term":"conservation","meaning":"n. 保护；生态保护","note":"环境类高频","priority":false},{"id":36,"question":"M1-Q8","term":"tribal nations","meaning":"部落民族/部落国家","note":"北美语境常见","priority":false},{"id":37,"question":"M1-Q8","term":"withstand","meaning":"v. 承受；经受住","note":"比 endure 更正式","priority":false},{"id":38,"question":"M1-Q8","term":"natural-resource management","meaning":"自然资源管理","note":"学术/政策类短语","priority":false},{"id":39,"question":"M1-Q9","term":"province","meaning":"n. 领域；专属范围","note":"文中不是“省份”，指“她负责/使用的空间”","priority":false},{"id":40,"question":"M1-Q9","term":"salon","meaning":"n. 沙龙；思想交流聚会","note":"文学文化词","priority":false},{"id":41,"question":"M1-Q9","term":"disperse","meaning":"v. 散开；散去","note":"文中指客人离开","priority":false},{"id":42,"question":"M1-Q9","term":"ready the space","meaning":"准备好空间","note":"ready 作动词","priority":false},{"id":43,"question":"M1-Q10","term":"pollinator","meaning":"n. 传粉者","note":"生物生态词","priority":false},{"id":44,"question":"M1-Q10","term":"target species","meaning":"目标物种","note":"实验研究常用","priority":false},{"id":45,"question":"M1-Q10","term":"neighboring species","meaning":"邻近物种","note":"生态研究表达","priority":false},{"id":46,"question":"M1-Q11","term":"temporary escape","meaning":"暂时逃离","note":"文学主题表达","priority":false},{"id":47,"question":"M1-Q11","term":"circumstances","meaning":"n. 境况；处境","note":"文学阅读常见","priority":false},{"id":48,"question":"M1-Q11","term":"consternation","meaning":"n. 惊愕；恐慌","note":"高级文学词","priority":false},{"id":49,"question":"M1-Q12","term":"lullaby","meaning":"n. 摇篮曲","note":"","priority":false},{"id":50,"question":"M1-Q12","term":"universally calming","meaning":"普遍具有安抚作用的","note":"学术假设表达","priority":false},{"id":51,"question":"M1-Q12","term":"pupil size","meaning":"瞳孔大小","note":"科研类","priority":false},{"id":52,"question":"M1-Q12","term":"relaxation","meaning":"n. 放松状态","note":"","priority":false},{"id":53,"question":"M1-Q12","term":"stimulus","meaning":"n. 刺激物；刺激因素","note":"心理学/实验类高频","priority":false},{"id":54,"question":"M1-Q13","term":"high-entropy alloy","meaning":"高熵合金","note":"材料科学术语","priority":false},{"id":55,"question":"M1-Q13","term":"fracture toughness","meaning":"断裂韧性","note":"工程学术语","priority":false},{"id":56,"question":"M1-Q13","term":"crack propagation","meaning":"裂纹扩展","note":"工程学术语","priority":false},{"id":57,"question":"M1-Q13","term":"constitute","meaning":"v. 构成；组成","note":"SAT高频","priority":false},{"id":58,"question":"M1-Q14","term":"genus","meaning":"n. 属","note":"生物分类词","priority":false},{"id":59,"question":"M1-Q14","term":"precipitation","meaning":"n. 降水；降水量","note":"地理/生态常见","priority":false},{"id":60,"question":"M1-Q14","term":"vegetation","meaning":"n. 植被","note":"","priority":false},{"id":61,"question":"M1-Q14","term":"inaccessible","meaning":"adj. 难以进入的；难以到达的","note":"学术描述词","priority":false},{"id":62,"question":"M1-Q14","term":"perceived absence","meaning":"被认为不存在","note":"perceived = 被感知到的/被认为的","priority":false},{"id":63,"question":"M1-Q15","term":"native to","meaning":"原产于","note":"","priority":false},{"id":64,"question":"M1-Q15","term":"extinction","meaning":"n. 灭绝","note":"","priority":false},{"id":65,"question":"M1-Q15","term":"non-native","meaning":"adj. 非本土的；外来的","note":"生态类高频","priority":false},{"id":66,"question":"M1-Q15","term":"vulnerable","meaning":"adj. 脆弱的；易受伤害的","note":"SAT高频","priority":false},{"id":67,"question":"M1-Q16","term":"cardiac","meaning":"adj. 心脏的","note":"生物词","priority":false},{"id":68,"question":"M1-Q16","term":"skeletal","meaning":"adj. 骨骼的","note":"生物词","priority":false},{"id":69,"question":"M1-Q18","term":"executable code","meaning":"可执行代码","note":"计算机术语","priority":false},{"id":70,"question":"M1-Q18","term":"compiler","meaning":"n. 编译器","note":"计算机术语","priority":false},{"id":71,"question":"M1-Q19","term":"protolanguage","meaning":"n. 原始语言；祖语","note":"语言学术语","priority":false},{"id":72,"question":"M1-Q19","term":"ancestral language","meaning":"祖先语言","note":"语言学表达","priority":false},{"id":73,"question":"M1-Q20","term":"pioneer","meaning":"v. 开创；率先使用","note":"作动词","priority":false},{"id":74,"question":"M1-Q20","term":"documented uses","meaning":"有记录的用法","note":"","priority":false},{"id":75,"question":"M1-Q21","term":"execution","meaning":"n. 完成；执行","note":"文中指完成滑板动作","priority":false},{"id":76,"question":"M1-Q21","term":"revere","meaning":"v. 崇敬；尊崇","note":"高级动词","priority":true},{"id":77,"question":"M1-Q21","term":"titan","meaning":"n. 巨擘；杰出人物","note":"比喻用法","priority":false},{"id":78,"question":"M1-Q22","term":"visually distinguish","meaning":"从视觉上区分","note":"","priority":false},{"id":79,"question":"M1-Q22","term":"confound","meaning":"v. 使困惑；难倒","note":"SAT高频","priority":true},{"id":80,"question":"M1-Q22","term":"seasoned","meaning":"adj. 经验丰富的","note":"不是“调味的”","priority":false},{"id":81,"question":"M1-Q22","term":"virtually identical","meaning":"几乎完全一样","note":"","priority":false},{"id":82,"question":"M1-Q22","term":"differentiating feature","meaning":"区分特征","note":"","priority":false},{"id":83,"question":"M1-Q23","term":"celebrated","meaning":"adj. 著名的；广受赞誉的","note":"","priority":false},{"id":84,"question":"M1-Q23","term":"sculpture","meaning":"n. 雕塑","note":"","priority":false},{"id":85,"question":"M1-Q23","term":"print","meaning":"n. 版画","note":"艺术语境","priority":false},{"id":86,"question":"M1-Q24","term":"automation","meaning":"n. 自动化","note":"","priority":false},{"id":87,"question":"M1-Q24","term":"lighthouse keeper","meaning":"灯塔看守人","note":"","priority":false},{"id":88,"question":"M1-Q25","term":"pendulum","meaning":"n. 摆；钟摆","note":"物理词","priority":false},{"id":89,"question":"M1-Q25","term":"fixed point","meaning":"固定点","note":"","priority":false},{"id":90,"question":"M1-Q25","term":"swing path","meaning":"摆动路径","note":"","priority":false},{"id":91,"question":"M1-Q26","term":"empower","meaning":"v. 赋权；使有能力","note":"政策/社会类常见","priority":false},{"id":92,"question":"M1-Q26","term":"realise one’s potential","meaning":"实现潜力","note":"英式拼写 realise","priority":false},{"id":93,"question":"M1-Q27","term":"botanist","meaning":"n. 植物学家","note":"","priority":false},{"id":94,"question":"M1-Q27","term":"botanical sample","meaning":"植物样本","note":"","priority":false},{"id":95,"question":"M1-Q27","term":"specimen","meaning":"n. 标本","note":"学术词","priority":false},{"id":96,"question":"M2-Q1","term":"unassisted","meaning":"adj. 无协助的","note":"","priority":false},{"id":97,"question":"M2-Q1","term":"circumnavigate","meaning":"v. 环航；绕……航行","note":"高级词","priority":false},{"id":98,"question":"M2-Q1","term":"historical memory","meaning":"历史记忆","note":"","priority":false},{"id":99,"question":"M2-Q1","term":"prevail over","meaning":"胜过；压倒","note":"选项词","priority":false},{"id":100,"question":"M2-Q2","term":"counterintuitive","meaning":"adj. 反直觉的","note":"SAT高频","priority":true},{"id":101,"question":"M2-Q2","term":"elicit","meaning":"v. 引出；激发","note":"选项词，常考","priority":true},{"id":102,"question":"M2-Q2","term":"throng","meaning":"v. 蜂拥而至","note":"文学/新闻表达","priority":false},{"id":103,"question":"M2-Q3","term":"publication","meaning":"n. 发表物；出版物","note":"","priority":false},{"id":104,"question":"M2-Q3","term":"innovation","meaning":"n. 创新","note":"","priority":false},{"id":105,"question":"M2-Q3","term":"cite","meaning":"v. 引用","note":"学术词","priority":false},{"id":106,"question":"M2-Q3","term":"underscore","meaning":"v. 强调；突显","note":"SAT高频","priority":true},{"id":107,"question":"M2-Q3","term":"belie","meaning":"v. 掩饰；与……不符","note":"高级词","priority":true},{"id":108,"question":"M2-Q3","term":"forestall","meaning":"v. 预先阻止","note":"高级词","priority":true},{"id":109,"question":"M2-Q3","term":"overshadow","meaning":"v. 使黯然失色","note":"高级词","priority":true},{"id":110,"question":"M2-Q4","term":"shed light on","meaning":"阐明；使……更清楚","note":"学术表达","priority":false},{"id":111,"question":"M2-Q4","term":"thermal biology","meaning":"热生物学","note":"","priority":false},{"id":112,"question":"M2-Q4","term":"hypothermic state","meaning":"低温状态","note":"生物学术语","priority":false},{"id":113,"question":"M2-Q4","term":"evaporative cooling","meaning":"蒸发冷却","note":"","priority":false},{"id":114,"question":"M2-Q4","term":"thermoregulation","meaning":"n. 体温调节；温度调节","note":"高级学术词","priority":false},{"id":115,"question":"M2-Q4","term":"fruiting body","meaning":"子实体","note":"真菌学术语","priority":false},{"id":116,"question":"M2-Q4","term":"hyphae","meaning":"n. 菌丝","note":"真菌学术语","priority":false},{"id":117,"question":"M2-Q4","term":"prototype","meaning":"n. 原型","note":"","priority":false},{"id":118,"question":"M2-Q4","term":"bolster","meaning":"v. 支持；加强","note":"SAT高频","priority":true},{"id":119,"question":"M2-Q4","term":"tangential","meaning":"adj. 关系不大的；离题的","note":"高级词","priority":true},{"id":120,"question":"M2-Q5","term":"solid fuel","meaning":"固体燃料","note":"","priority":false},{"id":121,"question":"M2-Q5","term":"mediated by","meaning":"由……调节/影响","note":"学术表达","priority":false},{"id":122,"question":"M2-Q5","term":"displace","meaning":"v. 取代","note":"","priority":false},{"id":123,"question":"M2-Q5","term":"reductive","meaning":"adj. 过于简化的","note":"高级学术词","priority":true},{"id":124,"question":"M2-Q5","term":"heterogeneous","meaning":"adj. 异质的；多样化的","note":"SAT高频","priority":true},{"id":125,"question":"M2-Q5","term":"viable model","meaning":"可行模型","note":"","priority":false},{"id":126,"question":"M2-Q6","term":"respondent","meaning":"n. 受访者","note":"","priority":false},{"id":127,"question":"M2-Q6","term":"proximity","meaning":"n. 接近；邻近","note":"SAT高频","priority":true},{"id":128,"question":"M2-Q6","term":"proportion","meaning":"n. 比例","note":"","priority":false},{"id":129,"question":"M2-Q7","term":"multidisciplinary","meaning":"adj. 跨学科的","note":"SAT学术高频","priority":true},{"id":130,"question":"M2-Q7","term":"interrogate","meaning":"v. 深入探究；质询","note":"文中不是“审问”","priority":false},{"id":131,"question":"M2-Q7","term":"incorporate","meaning":"v. 纳入；包含","note":"","priority":false},{"id":132,"question":"M2-Q7","term":"core sample","meaning":"岩芯样本；核心样本","note":"科研词","priority":false},{"id":133,"question":"M2-Q7","term":"archival information","meaning":"档案资料","note":"","priority":false},{"id":134,"question":"M2-Q8","term":"vicinity","meaning":"n. 附近；邻近区域","note":"高级词","priority":false},{"id":135,"question":"M2-Q8","term":"predator","meaning":"n. 捕食者","note":"","priority":false},{"id":136,"question":"M2-Q8","term":"scatter into vegetation","meaning":"散入植被中","note":"","priority":false},{"id":137,"question":"M2-Q8","term":"associate A with B","meaning":"将A与B联系起来","note":"","priority":false},{"id":138,"question":"M2-Q9","term":"computational model","meaning":"计算模型","note":"","priority":false},{"id":139,"question":"M2-Q9","term":"aesthetic pleasure","meaning":"审美愉悦","note":"","priority":false},{"id":140,"question":"M2-Q9","term":"correlation","meaning":"n. 相关性","note":"","priority":false},{"id":141,"question":"M2-Q10","term":"quintessential","meaning":"adj. 典型的；精髓的","note":"高级词","priority":true},{"id":142,"question":"M2-Q10","term":"brand extension","meaning":"品牌延伸","note":"商科术语","priority":false},{"id":143,"question":"M2-Q10","term":"leverage","meaning":"v. 利用","note":"商业语境常见","priority":true},{"id":144,"question":"M2-Q10","term":"product category","meaning":"产品类别","note":"","priority":false},{"id":145,"question":"M2-Q10","term":"perceived category similarity","meaning":"被感知到的类别相似性","note":"商科/心理学表达","priority":false},{"id":146,"question":"M2-Q10","term":"representative sample","meaning":"代表性样本","note":"研究方法词","priority":false},{"id":147,"question":"M2-Q10","term":"correlate with","meaning":"与……相关","note":"","priority":false},{"id":148,"question":"M2-Q11","term":"nanoparticle","meaning":"n. 纳米颗粒","note":"科技词","priority":false},{"id":149,"question":"M2-Q11","term":"leach into","meaning":"渗入；滤入","note":"环境科学词","priority":false},{"id":150,"question":"M2-Q11","term":"wastewater","meaning":"n. 废水","note":"","priority":false},{"id":151,"question":"M2-Q11","term":"accumulate","meaning":"v. 积累","note":"","priority":false},{"id":152,"question":"M2-Q11","term":"bioaccumulation","meaning":"n. 生物积累","note":"高级生态词","priority":false},{"id":153,"question":"M2-Q11","term":"inherently","meaning":"adv. 本质上；内在地","note":"","priority":false},{"id":154,"question":"M2-Q11","term":"proxy role","meaning":"替代指标作用","note":"学术研究词","priority":false},{"id":155,"question":"M2-Q11","term":"obviate","meaning":"v. 消除；避免","note":"高级词","priority":true},{"id":156,"question":"M2-Q11","term":"regulatory compliance","meaning":"法规合规","note":"高级短语","priority":false},{"id":157,"question":"M2-Q11","term":"vertebrate / invertebrate","meaning":"脊椎动物 / 无脊椎动物","note":"生物分类词","priority":false},{"id":158,"question":"M2-Q12","term":"dissolved organic carbon","meaning":"溶解性有机碳","note":"环境科学术语","priority":false},{"id":159,"question":"M2-Q12","term":"mercury","meaning":"n. 汞","note":"","priority":false},{"id":160,"question":"M2-Q12","term":"association","meaning":"n. 关联","note":"科研语境","priority":false},{"id":161,"question":"M2-Q12","term":"hypothesize","meaning":"v. 假设","note":"学术高频","priority":false},{"id":162,"question":"M2-Q13","term":"parasite taxa","meaning":"寄生虫分类群","note":"高级生物词","priority":false},{"id":163,"question":"M2-Q13","term":"complex life cycle parasite","meaning":"复杂生命周期寄生虫","note":"","priority":false},{"id":164,"question":"M2-Q13","term":"directly transmitted parasite","meaning":"直接传播型寄生虫","note":"","priority":false},{"id":165,"question":"M2-Q13","term":"confer","meaning":"v. 赋予；带来","note":"SAT高频","priority":true},{"id":166,"question":"M2-Q13","term":"offset","meaning":"v. 抵消","note":"","priority":true},{"id":167,"question":"M2-Q14","term":"anthropogenic noise","meaning":"人为噪声","note":"高级环境词","priority":false},{"id":168,"question":"M2-Q14","term":"meta-analysis","meaning":"n. 元分析；荟萃分析","note":"学术研究词","priority":false},{"id":169,"question":"M2-Q14","term":"observably different","meaning":"可观察到不同的","note":"","priority":false},{"id":170,"question":"M2-Q14","term":"detrimental","meaning":"adj. 有害的","note":"高级词","priority":true},{"id":171,"question":"M2-Q14","term":"pronounced","meaning":"adj. 明显的；显著的","note":"学术表达","priority":true},{"id":172,"question":"M2-Q15","term":"muse","meaning":"n. 灵感来源；缪斯","note":"文学艺术词","priority":false},{"id":173,"question":"M2-Q15","term":"craft of writing","meaning":"写作技艺","note":"","priority":false},{"id":174,"question":"M2-Q16","term":"compelling narrative","meaning":"引人入胜的叙事","note":"文学评论常见","priority":false},{"id":175,"question":"M2-Q17","term":"deposits","meaning":"n. 沉积物","note":"地质语境","priority":false},{"id":176,"question":"M2-Q17","term":"hue","meaning":"n. 色调","note":"艺术/描述类词","priority":false},{"id":177,"question":"M2-Q18","term":"signature elements","meaning":"标志性元素","note":"","priority":false},{"id":178,"question":"M2-Q18","term":"terse","meaning":"adj. 简洁有力的","note":"高级词","priority":true},{"id":179,"question":"M2-Q18","term":"vivid imagery","meaning":"生动意象","note":"文学词","priority":false},{"id":180,"question":"M2-Q18","term":"syncopated rhythms","meaning":"切分节奏","note":"音乐/诗歌术语","priority":false},{"id":181,"question":"M2-Q19","term":"neoclassical economic model","meaning":"新古典经济模型","note":"经济学术语","priority":false},{"id":182,"question":"M2-Q19","term":"behavioral economist","meaning":"行为经济学家","note":"","priority":false},{"id":183,"question":"M2-Q19","term":"contend","meaning":"v. 主张；认为","note":"学术写作常用","priority":false},{"id":184,"question":"M2-Q20","term":"endangered","meaning":"adj. 濒危的","note":"","priority":false},{"id":185,"question":"M2-Q20","term":"conservation efforts","meaning":"保护工作","note":"","priority":false},{"id":186,"question":"M2-Q21","term":"electrification","meaning":"n. 电气化","note":"","priority":false},{"id":187,"question":"M2-Q21","term":"finalized","meaning":"v. 最终确定","note":"","priority":false},{"id":188,"question":"M2-Q22","term":"extant","meaning":"adj. 现存的","note":"高级学术词","priority":true},{"id":189,"question":"M2-Q22","term":"antiquarian","meaning":"n. 古物研究者","note":"高级词","priority":false},{"id":190,"question":"M2-Q23","term":"visual cohesion","meaning":"视觉统一性","note":"建筑/艺术语境","priority":false},{"id":191,"question":"M2-Q23","term":"enduring nickname","meaning":"持久流传的昵称","note":"","priority":false},{"id":192,"question":"M2-Q24","term":"sessile","meaning":"adj. 固着的；不能移动的","note":"高级生物词","priority":false},{"id":193,"question":"M2-Q24","term":"adhere to","meaning":"附着于","note":"","priority":false},{"id":194,"question":"M2-Q24","term":"passive displacement","meaning":"被动位移","note":"科研词","priority":false},{"id":195,"question":"M2-Q24","term":"prevailing water flow","meaning":"主导水流","note":"","priority":false},{"id":196,"question":"M2-Q24","term":"self-initiated locomotion","meaning":"自发移动","note":"高级生物词","priority":false},{"id":197,"question":"M2-Q24","term":"undermine","meaning":"v. 削弱；推翻","note":"SAT高频","priority":true},{"id":198,"question":"M2-Q25","term":"predecessor","meaning":"n. 前身；前任","note":"","priority":false},{"id":199,"question":"M2-Q25","term":"by contrast","meaning":"相比之下","note":"转折连接","priority":false},{"id":200,"question":"M2-Q26","term":"photogrammetry","meaning":"n. 摄影测量法","note":"高级技术词","priority":false},{"id":201,"question":"M2-Q26","term":"polygonal modeling","meaning":"多边形建模","note":"技术词","priority":false},{"id":202,"question":"M2-Q26","term":"geometric shapes","meaning":"几何形状","note":"","priority":false},{"id":203,"question":"M2-Q26","term":"economical","meaning":"adj. 经济的；节省成本的","note":"文中不是“经济学的”","priority":false},{"id":204,"question":"M2-Q26","term":"processor","meaning":"n. 处理器","note":"","priority":false},{"id":205,"question":"M2-Q27","term":"spring up","meaning":"涌现；出现","note":"","priority":false},{"id":206,"question":"M2-Q27","term":"provide a voice to","meaning":"为……发声","note":"社会历史类表达","priority":false}];
+const MEANING_EN = {"1":"v. to tame or cultivate for human use","2":"to come from an earlier source or ancestor","3":"n. a tough outer skin or covering","4":"fruit pulp with a bitter taste","5":"to come from or originate in a source","6":"the words or sentences around a passage","7":"v. to imply, indicate, or make something likely","8":"adv. in a determined and persistent way","9":"a tendency to act independently","10":"n. a person's usual nature or disposition","11":"v. to receive from an ancestor or earlier source","12":"n. refusal to follow accepted customs or norms","13":"v. to show, prove, or make evident","14":"adj. able or likely to change","15":"changing continuously over time","16":"small pieces of material deposited by water, wind, or ice","17":"adj. made up of similar parts or elements","18":"n. a very small or specialized genre","19":"n. a person who represents or strongly supports an idea","20":"adj. rich, abundant, or vividly appealing","21":"an arrangement of music using synthesizers","22":"beats that create a strong forward drive","23":"v. to serve as a typical example of something","24":"images shown by projection onto a surface","25":"a response caused by something","26":"v. to show that something is true or correct","27":"n. a very large landmass made of multiple continents","28":"n. a group of organisms with a common ancestor","29":"n. the living organisms of a region or period","30":"to seek safety or protection","31":"n. the act or process of being covered by water","32":"the age of the most recent common ancestor of a living group","33":"an ancestor shared by two or more groups","34":"v. to live in or occupy a place","35":"n. protection and careful management of natural resources","36":"Indigenous political or cultural communities","37":"v. to resist or survive a force, pressure, or difficulty","38":"the management of land, water, minerals, and other natural assets","39":"n. a field, area, or special domain","40":"n. a gathering for artistic or intellectual conversation","41":"v. to spread out or move apart","42":"to prepare a place for use","43":"n. an animal or agent that transfers pollen","44":"the species being studied or acted on","45":"species located near another species","46":"a short period of getting away from a situation","47":"n. conditions or facts affecting a situation","48":"n. sudden anxiety, shock, or confusion","49":"n. a quiet song used to calm a child","50":"calming for people in general","51":"the size of the eye's pupil","52":"n. a state of becoming calm or less tense","53":"n. something that causes a response","54":"an alloy made from several major elements in similar amounts","55":"a material's resistance to cracking and breaking","56":"the growth or spread of a crack","57":"v. to form or make up something","58":"n. a biological classification above species","59":"n. rain, snow, or other water falling from the atmosphere","60":"n. plant life in a place or region","61":"adj. difficult or impossible to reach or enter","62":"an absence that is believed or assumed to exist","63":"naturally occurring in a place","64":"n. the complete disappearance of a species","65":"adj. not naturally from a particular place","66":"adj. easily harmed or affected","67":"adj. related to the heart","68":"adj. related to the skeleton","69":"code that a computer can run","70":"n. software that translates code into executable form","71":"n. an earlier ancestral form of a language","72":"a language from which later languages developed","73":"v. to be among the first to develop or use something","74":"uses that have been recorded or written down","75":"n. the act of carrying out or completing something","76":"v. to deeply respect or admire","77":"n. an exceptionally important or powerful figure","78":"to tell apart by sight","79":"v. to confuse, puzzle, or make hard to distinguish","80":"adj. experienced and skilled","81":"almost exactly the same","82":"a feature that helps distinguish one thing from another","83":"adj. famous and widely admired","84":"n. a three-dimensional work of art","85":"n. an artwork produced from a printed surface","86":"n. the use of technology to operate with little human control","87":"a person who maintains or operates a lighthouse","88":"n. a weight that swings from a fixed point","89":"a point that does not move","90":"the path followed by a swinging object","91":"v. to give power, confidence, or authority","92":"to achieve or fulfill one's abilities","93":"n. a scientist who studies plants","94":"a plant sample used for study","95":"n. a sample used for scientific study","96":"adj. done without help","97":"v. to travel all the way around something","98":"shared memory of past events","99":"to defeat or be stronger than something","100":"adj. contrary to what seems logical at first","101":"v. to draw out or produce a response","102":"v. to gather or move in a large crowd","103":"n. a published work or the act of publishing","104":"n. a new idea, method, or invention","105":"v. to quote or refer to as evidence","106":"v. to emphasize or make more noticeable","107":"v. to give a false impression of or contradict","108":"v. to prevent something before it happens","109":"v. to make something seem less important or impressive","110":"to make something clearer or easier to understand","111":"the study of how organisms deal with heat and temperature","112":"a state of unusually low body temperature","113":"cooling caused by evaporation","114":"n. the control of body temperature","115":"the spore-producing structure of a fungus","116":"n. threadlike fungal filaments","117":"n. an early model or first version","118":"v. to support, strengthen, or improve","119":"adj. only slightly related or not central","120":"fuel in solid form","121":"influenced or brought about through something","122":"v. to replace, move, or force out","123":"adj. too simplified or limiting","124":"adj. made up of different kinds or elements","125":"a model that can work successfully","126":"n. a person who answers a survey or study question","127":"n. nearness in space, time, or relationship","128":"n. a part or share in relation to a whole","129":"adj. involving several fields of study","130":"v. to examine or question closely","131":"v. to include or combine as part of a whole","132":"a cylindrical sample taken from material such as ice or rock","133":"information preserved in records or archives","134":"n. the nearby area","135":"n. an animal that hunts other animals","136":"to spread into plant-covered areas","137":"to connect one thing with another","138":"a model built using computation or simulation","139":"pleasure caused by beauty or artistic form","140":"n. a relationship between two changing things","141":"adj. representing the most typical or perfect example","142":"the use of an existing brand in a new product area","143":"v. to use something to gain an advantage","144":"a group of similar products","145":"how similar consumers think product categories are","146":"a sample that reflects the larger group","147":"to have a relationship or connection with","148":"n. an extremely small particle measured in nanometers","149":"to seep or dissolve into something","150":"n. used water from homes, industry, or agriculture","151":"v. to collect or build up over time","152":"n. buildup of a substance in living organisms","153":"adv. by nature or as an essential quality","154":"a role used as an indirect substitute or indicator","155":"v. to remove a need or avoid a problem","156":"following laws, rules, or official standards","157":"animals with backbones and animals without backbones","158":"organic carbon dissolved in water","159":"n. a toxic metallic element","160":"n. a connection or relationship","161":"v. to propose a possible explanation","162":"groups of parasitic organisms","163":"a parasite with several stages or hosts in its life cycle","164":"a parasite passed directly from one host to another","165":"v. to give or provide a quality or benefit","166":"v. to balance, counteract, or make up for","167":"noise caused by human activity","168":"n. a study combining results from multiple studies","169":"different in a way that can be observed","170":"adj. harmful or damaging","171":"adj. clear, strong, or noticeable","172":"n. a source of artistic inspiration","173":"the skill and technique of writing","174":"a story that is powerful and engaging","175":"n. layers or amounts of material left in a place","176":"n. a shade or quality of color","177":"distinctive or identifying features","178":"adj. brief and sharply expressed","179":"clear and lively mental pictures in writing","180":"rhythms with shifted or unexpected accents","181":"an economic model based on rational choice and market equilibrium","182":"an economist who studies how psychology affects decisions","183":"v. to argue or claim","184":"adj. at risk of extinction","185":"actions taken to protect species or ecosystems","186":"n. the process of making something run on electricity","187":"v. completed or made final","188":"adj. still existing","189":"n. a person who studies or collects old objects","190":"visual unity among parts of a design","191":"a nickname that lasts over time","192":"adj. fixed in one place and unable to move","193":"to stick or attach to something","194":"movement caused by outside forces rather than self-motion","195":"the dominant or most common water movement","196":"movement started by the organism itself","197":"v. to weaken, damage, or challenge","198":"n. something that came before another thing","199":"used to show a difference between two things","200":"n. measurement or modeling using photographs","201":"modeling objects with connected polygons","202":"shapes such as lines, circles, triangles, or polygons","203":"adj. efficient or not wasteful in cost or effort","204":"n. a computer chip or unit that processes data","205":"to appear or develop suddenly","206":"to give someone or a group a way to be heard"};
+const PHONETICS = {"1": "/dʌmˈɛstʌkˌeɪt/", "2": "/dɪsˈɛnd frˈʌm/", "3": "/rˈaɪnd/", "4": "/bˈɪtɝ flˈɛʃ/", "5": "/dɝˈaɪv frˈʌm/", "6": "/sɝˈaʊndɪŋ tˈɛkst/", "7": "/sʌd͡ʒˈɛst/", "8": "/tʌnˈeɪʃʌsli/", "9": "/ˌɪndɪpˈɛndʌnt strˈik/", "10": "/tˈɛmprʌmʌnt/", "11": "/ˌɪnhˈɛrʌt/", "12": "/nˌɑnkʌnfˈɔrmʌti/", "13": "/dˈɛmʌnstrˌeɪt/", "14": "/mjˈutʌbʌl/", "15": "/kˈɑnstʌntli ɪvˈɑlvɪŋ/", "16": "/sˌɛdʌmˈɛntɝi pˈɑrtʌkʌlz/", "17": "/hˌoʊmʌd͡ʒˈiniʌs/", "18": "/ˈmaɪkroʊˌʒɑnrə/", "19": "/ˈɛkspˌoʊnʌnt/", "20": "/lˈʌʃ/", "21": "/ˈsɪnθəˌsaɪzər ɝˈeɪnd͡ʒmʌnt/", "22": "/propulsive bˈits/", "23": "/ɪɡzˈɛmplʌfˌaɪ/", "24": "/prʌd͡ʒˈɛktʌd ˈɪmʌd͡ʒʌz/", "25": "/riˈækʃʌn tˈu/", "26": "/kʌnfˈɝm/", "27": "/supercontinent/", "28": "/kleɪd/", "29": "/baɪˈoʊtə/", "30": "/tˈeɪk rˈɛfjud͡ʒ/", "31": "/sʌbmˈɝd͡ʒʌns/", "32": "/krˈaʊn ˈeɪd͡ʒ/", "33": "/kˈɑmʌn ˈænsˌɛstɝ/", "34": "/ˌɪnhˈæbʌt/", "35": "/ˌkɑnsərˈveɪʃən/", "36": "/trˈaɪbʌl nˈeɪʃʌnz/", "37": "/wɪθstˈænd/", "38": "/nˈæt͡ʃɝʌl-rˈisɔrs mˈænʌd͡ʒmʌnt/", "39": "/prˈɑvʌns/", "40": "/sʌlˈɑn/", "41": "/dɪspˈɝs/", "42": "/rˈɛdi ðʌ spˈeɪs/", "43": "/pollinator/", "44": "/tˈɑrɡʌt spˈiʃiz/", "45": "/nˈeɪbɝɪŋ spˈiʃiz/", "46": "/tˈɛmpɝˌɛri ɪskˈeɪp/", "47": "/sˈɝkʌmstˌænsʌz/", "48": "/kˌɑnstɝnˈeɪʃʌn/", "49": "/lˈʌlʌbˌaɪ/", "50": "/jˌunʌvˈɝsʌli kˈɑmɪŋ/", "51": "/pjˈupʌl sˈaɪz/", "52": "/rˌilæksˈeɪʃʌn/", "53": "/stˈɪmjʌlʌs/", "54": "/hˈaɪ-ˈɛntrʌpi ˈælˌɔɪ/", "55": "/frˈækt͡ʃɝ tˈʌfnʌs/", "56": "/krˈæk prˌɑpʌɡˈeɪʃʌn/", "57": "/kˈɑnstʌtˌut/", "58": "/d͡ʒˈinʌs/", "59": "/prɪsˌɪpɪtˈeɪʃʌn/", "60": "/vˌɛd͡ʒʌtˈeɪʃʌn/", "61": "/ˌɪnʌksˈɛsʌbʌl/", "62": "/pɝsˈivd ˈæbsʌns/", "63": "/nˈeɪtɪv tˈu/", "64": "/ɪkstˈɪŋkʃʌn/", "65": "/nˈɑn-nˈeɪtɪv/", "66": "/vˈʌlnɝʌbʌl/", "67": "/kˈɑrdiˌæk/", "68": "/skˈɛlʌtʌl/", "69": "/executable kˈoʊd/", "70": "/kʌmpˈaɪlɝ/", "71": "/protolanguage/", "72": "/ænsˈɛstrʌl lˈæŋɡwʌd͡ʒ/", "73": "/pˌaɪʌnˈɪr/", "74": "/dˈɑkjʌmˌɛntʌd jˈusʌz/", "75": "/ˌɛksʌkjˈuʃʌn/", "76": "/rɪvˈɪr/", "77": "/tˈaɪtʌn/", "78": "/vˈɪʒwʌli dɪstˈɪŋɡwɪʃ/", "79": "/kɑnfˈaʊnd/", "80": "/sˈizʌnd/", "81": "/vˈɝt͡ʃuʌli aɪdˈɛntɪkʌl/", "82": "/dˌɪfɝˈɛnʃiˌeɪtɪŋ fˈit͡ʃɝ/", "83": "/sˈɛlʌbrˌeɪtɪd/", "84": "/skˈʌlpt͡ʃɝ/", "85": "/prˈɪnt/", "86": "/ɔtʌmˈeɪʃʌn/", "87": "/lˈaɪthˌaʊs kˈipɝ/", "88": "/pˈɛnd͡ʒʌlʌm/", "89": "/fˈɪkst pˈɔɪnt/", "90": "/swˈɪŋ pˈæθ/", "91": "/ɪmpˈaʊɝ/", "92": "/rˈiʌlˌaɪz wˈʌn ˈɛs pʌtˈɛnʃʌl/", "93": "/bˈɑtʌnɪst/", "94": "/bʌtˈænɪkʌl sˈæmpʌl/", "95": "/spˈɛsʌmʌn/", "96": "/ˌʌnʌsˈɪstɪd/", "97": "/sˌɝkʌmnˈævʌɡˌeɪt/", "98": "/hɪstˈɔrɪkʌl mˈɛmɝi/", "99": "/prɪvˈeɪl ˈoʊvɝ/", "100": "/counterintuitive/", "101": "/ɪlˈɪsɪt/", "102": "/θrˈɔŋ/", "103": "/pˌʌblɪkˈeɪʃʌn/", "104": "/ˌɪnʌvˈeɪʃʌn/", "105": "/sˈaɪt/", "106": "/ˌʌndɝskˈɔr/", "107": "/bɪlˈaɪ/", "108": "/fɔrstˈɔl/", "109": "/ˈoʊvɝʃˈædoʊ/", "110": "/ʃˈɛd lˈaɪt ˈɑn/", "111": "/θˈɝmʌl baɪˈɑlʌd͡ʒi/", "112": "/hypothermic stˈeɪt/", "113": "/evaporative kˈulɪŋ/", "114": "/thermoregulation/", "115": "/frˈutɪŋ bˈɑdi/", "116": "/hˈaɪfˌi/", "117": "/prˈoʊtʌtˌaɪp/", "118": "/bˈoʊlstɝ/", "119": "/tænd͡ʒˈɛnʃʌl/", "120": "/sˈɑlʌd fjˈuʌl/", "121": "/mˈidiˌeɪtɪd bˈaɪ/", "122": "/dɪsplˈeɪs/", "123": "/reductive/", "124": "/hˌɛtɝʌd͡ʒˈinjʌs/", "125": "/vˈaɪʌbʌl mˈɑdʌl/", "126": "/rɪspˈɑndʌnt/", "127": "/prɑksˈɪmʌti/", "128": "/prʌpˈɔrʃʌn/", "129": "/multidisciplinary/", "130": "/ˌɪntˈɛrʌɡˌeɪt/", "131": "/ˌɪnkˈɔrpɝˌeɪt/", "132": "/kˈɔr sˈæmpʌl/", "133": "/ɑrkˈaɪvʌl ˌɪnfɝmˈeɪʃʌn/", "134": "/vʌsˈɪnʌti/", "135": "/prˈɛdʌtɝ/", "136": "/skˈætɝ ˈɪntu vˌɛd͡ʒʌtˈeɪʃʌn/", "137": "/ʌsˈoʊsiʌt ʌ wˈɪð bˈi/", "138": "/kˌɑmpjutˈeɪʃʌnʌl mˈɑdʌl/", "139": "/ɛsθˈɛtɪk plˈɛʒɝ/", "140": "/kˌɔrʌlˈeɪʃʌn/", "141": "/kwˌɪntɪsˈɛnʃʌl/", "142": "/brˈænd ɪkstˈɛnʃʌn/", "143": "/lˈɛvɝɪd͡ʒ/", "144": "/prˈɑdʌkt kˈætʌɡˌɔri/", "145": "/pɝsˈivd kˈætʌɡˌɔri sˌɪmʌlˈɛrʌti/", "146": "/rˌɛprʌzˈɛntʌtɪv sˈæmpʌl/", "147": "/kˈɔrʌlˌeɪt wˈɪð/", "148": "/nanoparticle/", "149": "/lˈit͡ʃ ˈɪntu/", "150": "/wˈeɪstwˌɔtɝ/", "151": "/ʌkjˈumjʌlˌeɪt/", "152": "/bioaccumulation/", "153": "/ɪnhˈɪrʌntli/", "154": "/prˈɑksi rˈoʊl/", "155": "/ˈɑbviˌeɪt/", "156": "/rˈɛɡjʌlʌtˌɔri kʌmplˈaɪʌns/", "157": "/vˈɝtʌbrˌeɪt ˌɪnvˈɝtʌbrʌt/", "158": "/dɪzˈɑlvd ɔrɡˈænɪk kˈɑrbʌn/", "159": "/mˈɝkjɝi/", "160": "/ʌsˌoʊsiˈeɪʃʌn/", "161": "/haɪpˈɑθʌsˌaɪz/", "162": "/pˈɛrʌsˌaɪt taxa/", "163": "/kˈɑmplɛks lˈaɪf sˈaɪkʌl pˈɛrʌsˌaɪt/", "164": "/dɝˈɛktli trænsmˈɪtɪd pˈɛrʌsˌaɪt/", "165": "/kʌnfˈɝ/", "166": "/ɔfsˈɛt/", "167": "/ˌænθrʌpʌd͡ʒˈɛnɪk nˈɔɪz/", "168": "/mˈitʌ-ʌnˈælʌsʌs/", "169": "/observably dˈɪfɝʌnt/", "170": "/dˌɛtrʌmˈɛntʌl/", "171": "/prʌnˈaʊnst/", "172": "/mjˈuz/", "173": "/krˈæft ˈʌv rˈaɪtɪŋ/", "174": "/kʌmpˈɛlɪŋ nˈærʌtɪv/", "175": "/dʌpˈɑzɪts/", "176": "/hjˈu/", "177": "/sˈɪɡnʌt͡ʃɝ ˈɛlʌmʌnts/", "178": "/tˈɝs/", "179": "/vˈɪvʌd ˈɪmʌd͡ʒri/", "180": "/sˈɪŋkʌpˌeɪtɪd rˈɪðʌmz/", "181": "/nˌioʊklˈæsɪkʌl ˌɛkʌnˈɑmɪk mˈɑdʌl/", "182": "/bɪhˈeɪvjɝʌl ɪkˈɑnʌmɪst/", "183": "/kʌntˈɛnd/", "184": "/ɪnˈdeɪndʒərd/", "185": "/ˌkɑnsərˈveɪʃən ˈɛfɝts/", "186": "/ɪˌlɛktrəfəˈkeɪʃən/", "187": "/fˈaɪnʌlˌaɪzd/", "188": "/ɪkˈstænt/", "189": "/ˌæntɪˈkwɛriən/", "190": "/vˈɪʒʌwʌl koʊˈhiʒən/", "191": "/ɪnˈdʊrɪŋ ˈnɪkˌneɪm/", "192": "/ˈsɛsaɪl/", "193": "/ʌdhˈɪr tˈu/", "194": "/pˈæsɪv dɪsˈpleɪsmənt/", "195": "/prɪˈveɪlɪŋ wˈɔtɝ flˈoʊ/", "196": "/sˈɛlf-ˌɪnˈɪʃiˌeɪtʌd ˌloʊkəˈmoʊʃən/", "197": "/ˈʌndɝmˌaɪn/", "198": "/prˈɛdʌsˌɛsɝ/", "199": "/bˈaɪ kˈɑntræst/", "200": "/ˌfoʊtoʊˈɡræmətri/", "201": "/pəˈlɪɡənəl mˈɑdʌlˌɪŋ/", "202": "/ˌdʒiəˈmɛtrɪk ʃˈeɪps/", "203": "/ˌɛkəˈnɑmɪkəl/", "204": "/prˈɑsˌɛsɝ/", "205": "/sprˈɪŋ ˈʌp/", "206": "/prʌvˈaɪd ʌ vˈɔɪs tˈu/"};
+const qs = [...new Set(WORDS.map(w=>w.question).filter(Boolean))];
+const WORD_ID_SET = new Set(WORDS.map(w=>w.id));
+const VOCAB_LIST_ID = 'SAT2020605A';
+const STORAGE_KEY = 'sat_vocab_state_v1';
+const DEFAULT_SUPABASE_URL = 'https://ceqdjnljlfrybjyjqgse.supabase.co';
+const DEFAULT_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_YTOBM7PpJ5lq7rWBcby14Q_T1-PtSj6';
+const appConfig = window.THINKCLOZE_CONFIG || {};
+const supabaseUrl = appConfig.SUPABASE_URL || DEFAULT_SUPABASE_URL;
+const supabasePublishableKey = appConfig.SUPABASE_PUBLISHABLE_KEY || DEFAULT_SUPABASE_PUBLISHABLE_KEY;
+const supabaseClient = window.supabase && supabaseUrl && supabasePublishableKey
+  ? window.supabase.createClient(supabaseUrl, supabasePublishableKey, { auth: { persistSession: true, autoRefreshToken: true } })
+  : null;
+const initialParams = new URLSearchParams(location.search);
+const initialLang = initialParams.get('lang');
+function defaultState(){return {known:[],wrong:[],favorite:[],idx:0,correctCounts:{},review:{},tested:[],attempts:[],lang:initialLang || undefined};}
+function safeParse(raw,fallback){try{return raw ? JSON.parse(raw) : fallback;}catch{return fallback;}}
+function uniqueIds(arr){return [...new Set((Array.isArray(arr)?arr:[]).map(Number).filter(id=>WORD_ID_SET.has(id)))];}
+function normalizeState(target=state){
+  target.known=uniqueIds(target.known);
+  target.wrong=uniqueIds(target.wrong);
+  target.favorite=uniqueIds(target.favorite);
+  target.tested=uniqueIds(target.tested);
+  target.idx=Number.isFinite(Number(target.idx)) ? Number(target.idx) : 0;
+  target.correctCounts=Object.entries(target.correctCounts||{}).reduce((acc,[id,count])=>{const n=Number(id); if(WORD_ID_SET.has(n)) acc[n]=Math.max(0,Math.min(5,Number(count)||0)); return acc;},{});
+  target.review=Object.entries(target.review||{}).reduce((acc,[id,info])=>{const n=Number(id); if(WORD_ID_SET.has(n)&&info&&Number.isFinite(Number(info.due))) acc[n]={stage:Math.max(0,Number(info.stage)||0),due:Number(info.due),last:Number(info.last)||0}; return acc;},{});
+  target.attempts=(Array.isArray(target.attempts)?target.attempts:[]).filter(a=>a&&WORD_ID_SET.has(Number(a.id))).map(a=>({mode:String(a.mode||'quiz'),id:Number(a.id),ok:!!a.ok,at:Number(a.at)||Date.now(),lang:a.lang==='en'?'en':'zh'})).slice(-200);
+  return target;
+}
+function loadLocalState(){const parsed=safeParse(localStorage.getItem(STORAGE_KEY),{}); return normalizeState({...defaultState(),...(parsed&&typeof parsed==='object'?parsed:{})});}
+function snapshotState(source=state){const target=normalizeState(source); return {known:[...target.known],wrong:[...target.wrong],favorite:[...target.favorite],idx:target.idx,correctCounts:{...target.correctCounts},review:{...target.review},tested:[...target.tested],attempts:[...target.attempts],lang:target.lang};}
+const state = loadLocalState();
+if (initialLang === 'en' || initialLang === 'zh') state.lang = initialLang;
+state.lang = state.lang === 'zh' ? 'zh' : 'en';
+normalizeState();
+let authMode='login', authReady=false, authSession=null, currentUser=null, cloudStatus='local', cloudSaveTimer=null, cloudSaving=false, cloudDirty=false, pendingProtectedAction=null, authHydrating=false;
+function save(){normalizeState(); localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshotState())); if(!authHydrating) queueCloudSave();}
+function byId(id){return document.getElementById(id)}
+function uiText(zh,en){return state.lang==='en'?en:zh;}
+function entryPath(){return location.pathname.startsWith('/sat-words/') ? '/sat-words/' : '/sat-vocab/';}
+function currentMeaning(w){return state.lang==='en' ? (MEANING_EN[w.id] || w.meaning) : w.meaning;}
+function currentNote(w){return state.lang==='en' ? (w.question ? 'Source: '+w.question : '') : (w.note || '无备注');}
+function phonetic(w){return PHONETICS[w.id] || '';}
+function escapeHtml(str){return String(str||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]));}
+let speechTimer=null, speechToken=0;
+function hardCancelSpeech(){
+  if(!('speechSynthesis' in window)) return;
+  try{speechSynthesis.pause(); speechSynthesis.cancel(); speechSynthesis.resume(); speechSynthesis.cancel();}
+  catch(e){try{speechSynthesis.cancel();}catch(_){}}
+}
+function stopSpeech(options={}){
+  speechToken++;
+  const token=speechToken;
+  if(speechTimer){clearTimeout(speechTimer); speechTimer=null;}
+  hardCancelSpeech();
+  if(options.followup!==false){
+    setTimeout(()=>{if(token===speechToken) hardCancelSpeech();},40);
+    setTimeout(()=>{if(token===speechToken) hardCancelSpeech();},140);
+  }
+}
+function speakTerm(term, silent=false){
+  term=String(term||'').trim();
+  if(!term) return;
+  if(!('speechSynthesis' in window)){if(!silent) alert('当前浏览器不支持发音功能');return;}
+  stopSpeech({followup:false});
+  const token=speechToken;
+  speechTimer=setTimeout(()=>{
+    speechTimer=null;
+    if(token!==speechToken) return;
+    hardCancelSpeech();
+    const u=new SpeechSynthesisUtterance(term);
+    u.lang='en-US';
+    u.rate=0.82;
+    if(token===speechToken) speechSynthesis.speak(u);
+  },60);
+}
+function speakVisibleTerm(id){const el=byId(id); const term=(el?.textContent||'').trim(); if(term && term!=='—') speakTerm(term);}
+function autoSpeakTerm(term){ stopSpeech(); }
+window.addEventListener('beforeunload', stopSpeech);
+document.addEventListener('visibilitychange', ()=>{if(document.hidden) stopSpeech();});
+function speakButton(w){return `<button class="speakBtn" type="button" data-speak="${escapeHtml(w.term)}">${uiText('🔊 发音','🔊 Pronounce')}</button>`;}
+function isAnonymousUser(){return !!currentUser && (currentUser.is_anonymous || !currentUser.email);}
+function isAuthenticated(){return !!currentUser && !!currentUser.email && !isAnonymousUser();}
+function getUserEmail(){return currentUser?.email || authSession?.user?.email || '';}
+function setAuthMessage(message='',type){const el=byId('authMessage'); if(!el) return; el.textContent=message; el.classList.toggle('success',type==='success');}
+function syncLabel(){if(cloudStatus==='syncing') return uiText('同步中','Syncing'); if(cloudStatus==='pending') return uiText('待同步','Pending sync'); if(cloudStatus==='saved') return uiText('已同步','Synced'); if(cloudStatus==='error') return uiText('同步失败，本机仍已保存','Sync failed, saved locally'); return uiText('本机已保存','Saved locally');}
+function renderAuthStatus(){
+  const status=byId('authStatus'), loginBtn=byId('authLoginBtn'), logoutBtn=byId('authLogoutBtn');
+  if(!status||!loginBtn||!logoutBtn) return;
+  if(!supabaseClient){status.textContent=uiText('云端登录暂不可用；背词记录会保存在本机。','Cloud login is unavailable; study progress is saved on this device.'); loginBtn.classList.add('hidden'); logoutBtn.classList.add('hidden'); return;}
+  if(!authReady){status.textContent=uiText('正在检查登录状态...','Checking login...'); loginBtn.classList.add('hidden'); logoutBtn.classList.add('hidden'); return;}
+  if(isAuthenticated()){status.textContent=uiText(`已登录：${getUserEmail()} · ${syncLabel()}`,`Logged in: ${getUserEmail()} · ${syncLabel()}`); loginBtn.classList.add('hidden'); logoutBtn.classList.remove('hidden'); return;}
+  status.textContent=uiText('游客模式：背词记录保存在本机；测验、错题和总复习需要登录。','Guest mode: study progress stays on this device. Log in for quizzes, mistakes, and review.');
+  loginBtn.classList.remove('hidden'); logoutBtn.classList.add('hidden');
+}
+function setAuthMode(mode){
+  authMode=mode==='register'?'register':'login';
+  byId('authModeLogin').classList.toggle('active',authMode==='login');
+  byId('authModeRegister').classList.toggle('active',authMode==='register');
+  byId('authSubmit').textContent=authMode==='register'?uiText('注册','Register'):uiText('登录','Log In');
+  byId('authPassword').autocomplete=authMode==='register'?'new-password':'current-password';
+  setAuthMessage('');
+}
+function authPrompt(feature){
+  const labels={quiz:['测验','quizzes'],review:['复习','review'],wrong:['错题本','mistakes'],overallReview:['总复习','overall review']};
+  const label=labels[feature]||labels.quiz;
+  return uiText(`请先登录后使用${label[0]}，这样可以保存你的答题记录和复习进度。`,`Please log in to use ${label[1]} so your results and review progress can be saved.`);
+}
+function showAuth(options={}){
+  byId('authModal').classList.remove('hidden');
+  setAuthMode(options.mode||authMode||'login');
+  setAuthMessage(options.message||'',options.type);
+  setTimeout(()=>byId('authEmail')?.focus(),60);
+}
+function closeAuth(clearPending=true){byId('authModal').classList.add('hidden'); setAuthMessage(''); if(clearPending) pendingProtectedAction=null;}
+function runPendingProtectedAction(){if(pendingProtectedAction&&isAuthenticated()){const action=pendingProtectedAction; pendingProtectedAction=null; closeAuth(false); action();}}
+function requireLogin(feature,action){
+  if(isAuthenticated()) return true;
+  pendingProtectedAction=action||null;
+  showAuth({mode:'login',message:authPrompt(feature)});
+  return false;
+}
+function progressFromUser(user=currentUser){return user?.user_metadata?.sat_vocab_progress?.[VOCAB_LIST_ID] || null;}
+function mergeProgress(localProgress,remoteProgress){
+  const local=snapshotState({...defaultState(),...(localProgress||{})});
+  const remote=snapshotState({...defaultState(),...(remoteProgress||{})});
+  const correctCounts={...remote.correctCounts};
+  Object.entries(local.correctCounts).forEach(([id,count])=>{correctCounts[id]=Math.max(Number(correctCounts[id])||0,Number(count)||0);});
+  let known=uniqueIds([...remote.known,...local.known,...Object.entries(correctCounts).filter(([,count])=>Number(count)>=5).map(([id])=>Number(id))]);
+  const wrong=uniqueIds([...remote.wrong,...local.wrong]).filter(id=>!known.includes(id)&&(Number(correctCounts[id])||0)<5);
+  const favorite=uniqueIds([...remote.favorite,...local.favorite]);
+  const tested=uniqueIds([...remote.tested,...local.tested,...known,...wrong]);
+  const review={...remote.review};
+  Object.entries(local.review).forEach(([id,info])=>{const current=review[id]; review[id]=!current || (Number(info.last)||0)>=(Number(current.last)||0) ? info : current;});
+  const seenAttempts=new Set();
+  const attempts=[...remote.attempts,...local.attempts].sort((a,b)=>(a.at||0)-(b.at||0)).filter(a=>{const key=`${a.mode}-${a.id}-${a.at}-${a.ok}`; if(seenAttempts.has(key)) return false; seenAttempts.add(key); return true;}).slice(-200);
+  return normalizeState({...local,known,wrong,favorite,tested,correctCounts,review,attempts,lang:state.lang});
+}
+function replaceState(next){Object.keys(state).forEach(k=>delete state[k]); Object.assign(state,snapshotState(next));}
+function renderAll(){refreshScopeOptions(); applyLanguageUI(); current ? renderStudyWord(current) : renderStudyHome(); renderList(); renderWrong(); renderReview(); updateStats();}
+async function handleActiveUser(){
+  if(!isAuthenticated()) {renderAuthStatus(); return;}
+  authHydrating=true;
+  const remote=progressFromUser();
+  if(remote) replaceState(mergeProgress(snapshotState(),remote));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshotState()));
+  renderAll();
+  authHydrating=false;
+  queueCloudSave({immediate:true});
+  runPendingProtectedAction();
+}
+function queueCloudSave(options={}){
+  if(!supabaseClient||!isAuthenticated()) {renderAuthStatus(); return;}
+  cloudStatus='pending'; renderAuthStatus();
+  if(cloudSaveTimer) clearTimeout(cloudSaveTimer);
+  if(options.immediate) syncCloudProgress();
+  else cloudSaveTimer=setTimeout(syncCloudProgress,900);
+}
+async function syncCloudProgress(){
+  if(!supabaseClient||!isAuthenticated()) return;
+  if(cloudSaving){cloudDirty=true; return;}
+  cloudSaving=true; cloudDirty=false; cloudStatus='syncing'; renderAuthStatus();
+  try{
+    const userResult=await supabaseClient.auth.getUser();
+    if(userResult.data?.user) currentUser=userResult.data.user;
+    const metadata=currentUser?.user_metadata || {};
+    const progressStore={...(metadata.sat_vocab_progress||{})};
+    progressStore[VOCAB_LIST_ID]={...snapshotState(),savedAt:new Date().toISOString(),version:1};
+    const {data,error}=await supabaseClient.auth.updateUser({data:{...metadata,sat_vocab_progress:progressStore}});
+    if(error) throw error;
+    currentUser=data.user||currentUser;
+    cloudStatus='saved';
+  }catch(error){
+    console.warn('SAT vocabulary sync failed:', error.message || error);
+    cloudStatus='error';
+  }finally{
+    cloudSaving=false; renderAuthStatus();
+    if(cloudDirty) queueCloudSave({immediate:true});
+  }
+}
+async function initAuth(){
+  if(!supabaseClient){authReady=true; renderAuthStatus(); return;}
+  try{
+    const {data,error}=await supabaseClient.auth.getSession();
+    if(error) throw error;
+    authSession=data.session||null;
+    currentUser=authSession?.user||null;
+    authReady=true;
+    if(currentUser) await handleActiveUser();
+  }catch(error){
+    console.warn('SAT vocabulary auth check failed:', error.message || error);
+    authReady=true; renderAuthStatus();
+  }
+  supabaseClient.auth.onAuthStateChange(async (_event,session)=>{
+    authSession=session||null;
+    currentUser=authSession?.user||null;
+    authReady=true;
+    if(currentUser) await handleActiveUser();
+    else renderAuthStatus();
+  });
+}
+async function handleAuthSubmit(event){
+  event.preventDefault();
+  if(!supabaseClient){setAuthMessage(uiText('云端登录暂不可用。','Cloud login is unavailable.')); return;}
+  const email=byId('authEmail').value.trim().toLowerCase();
+  const password=byId('authPassword').value;
+  if(!email||!password){setAuthMessage(uiText('请输入邮箱和密码。','Please enter an email and password.')); return;}
+  if(password.length<6){setAuthMessage(uiText('密码至少 6 位。','Password must be at least 6 characters.')); return;}
+  byId('authSubmit').disabled=true;
+  setAuthMessage(authMode==='register'?uiText('正在注册并保存记录...','Creating account and saving progress...'):uiText('正在登录...','Logging in...'),'success');
+  try{
+    const result=authMode==='register'&&isAnonymousUser()
+      ? await supabaseClient.auth.updateUser({email,password})
+      : authMode==='register'
+        ? await supabaseClient.auth.signUp({email,password})
+        : await supabaseClient.auth.signInWithPassword({email,password});
+    if(result.error) throw result.error;
+    const sessionResult=await supabaseClient.auth.getSession();
+    if(sessionResult.error) throw sessionResult.error;
+    authSession=sessionResult.data.session||result.data.session||authSession;
+    currentUser=authSession?.user||result.data.user||currentUser;
+    authReady=true;
+    if(!isAuthenticated()){setAuthMessage(uiText('请查看邮箱完成验证；验证后再登录即可同步记录。','Please check your email to verify the account, then log in to sync progress.'),'success'); return;}
+    await handleActiveUser();
+    byId('authForm').reset();
+    closeAuth(false);
+  }catch(error){
+    setAuthMessage(error.message||uiText('登录失败，请稍后再试。','Login failed. Please try again.'));
+  }finally{
+    byId('authSubmit').disabled=false;
+    renderAuthStatus();
+  }
+}
+async function handleSignOut(){if(!supabaseClient) return; await supabaseClient.auth.signOut(); authSession=null; currentUser=null; cloudStatus='local'; authReady=true; renderAuthStatus();}
+function recordAttempt(mode,id,ok){state.attempts=[...(state.attempts||[]),{mode,id,ok,at:Date.now(),lang:state.lang}].slice(-200);}
+function installBackToEntryGuard(){
+  if(!history.pushState) return;
+  const entry=entryPath();
+  history.replaceState({satDetailBase:true}, '', location.href);
+  history.pushState({satDetailGuard:true}, '', location.href);
+  window.addEventListener('popstate', event=>{
+    if(location.pathname.includes('/SAT2020605A/')) location.replace(entry);
+  });
+}
+const DISTRACTOR_BANK = {
+  v: [
+    {en:'v. to reduce or make less intense', zh:'v. 减弱；缓和'},
+    {en:'v. to strengthen or support an idea', zh:'v. 加强；支持'},
+    {en:'v. to separate or tell apart', zh:'v. 区分；辨别'},
+    {en:'v. to spread widely through an area', zh:'v. 扩散；传播'},
+    {en:'v. to delay or prevent something', zh:'v. 延缓；阻止'},
+    {en:'v. to make something unclear or confusing', zh:'v. 使模糊；使困惑'}
+  ],
+  n: [
+    {en:'n. a clear example of a larger pattern', zh:'n. 典型例子；代表'},
+    {en:'n. the process of gradual change', zh:'n. 逐渐变化的过程'},
+    {en:'n. a relationship between two things', zh:'n. 关系；关联'},
+    {en:'n. a state of uncertainty or confusion', zh:'n. 不确定；困惑状态'},
+    {en:'n. a method used in scientific study', zh:'n. 研究方法'},
+    {en:'n. the quality of being accurate or reliable', zh:'n. 准确性；可靠性'}
+  ],
+  adj: [
+    {en:'adj. likely to change over time', zh:'adj. 可能变化的'},
+    {en:'adj. easy to notice or recognize', zh:'adj. 明显的；易识别的'},
+    {en:'adj. made of many different parts', zh:'adj. 多样的；异质的'},
+    {en:'adj. not directly related to the main point', zh:'adj. 关系不大的；偏离主题的'},
+    {en:'adj. especially important or influential', zh:'adj. 重要的；有影响力的'},
+    {en:'adj. difficult to reach or understand', zh:'adj. 难以到达的；难懂的'}
+  ],
+  adv: [
+    {en:'adv. in a careful and deliberate way', zh:'adv. 谨慎地；有意地'},
+    {en:'adv. in a direct and obvious way', zh:'adv. 直接地；明显地'},
+    {en:'adv. by nature or essential quality', zh:'adv. 本质上；固有地'},
+    {en:'adv. in a steady and persistent way', zh:'adv. 稳定地；坚持地'}
+  ],
+  'verb-phrase': [
+    {en:'to result from an earlier source', zh:'源自；由……产生'},
+    {en:'to make something easier to understand', zh:'阐明；使清楚'},
+    {en:'to connect one idea with another', zh:'把一个想法与另一个联系起来'},
+    {en:'to prevent something from happening', zh:'阻止某事发生'},
+    {en:'to become stronger than something else', zh:'胜过；压倒'},
+    {en:'to appear or develop quickly', zh:'迅速出现；突然发展'}
+  ],
+  'noun-phrase': [
+    {en:'a scientific measurement', zh:'科学测量'},
+    {en:'a temporary condition', zh:'暂时状态'},
+    {en:'a shared characteristic', zh:'共同特征'},
+    {en:'a natural process', zh:'自然过程'},
+    {en:'a research method', zh:'研究方法'},
+    {en:'a cultural tradition', zh:'文化传统'}
+  ],
+  'adj-noun': [
+    {en:'a dominant feature', zh:'主要特征'},
+    {en:'a temporary pattern', zh:'暂时模式'},
+    {en:'a representative sample', zh:'代表性样本'},
+    {en:'a distinctive quality', zh:'独特品质'},
+    {en:'a measurable effect', zh:'可测量影响'},
+    {en:'a central assumption', zh:'核心假设'}
+  ]
+};
+function answerType(w){
+  const raw=`${MEANING_EN[w.id]||''} ${w.meaning||''}`.toLowerCase();
+  const pos=raw.match(/(?:^|\s)(v|n|adj|adv)\./);
+  if(pos) return pos[1];
+  const term=(w.term||'').toLowerCase().replace(/[’]/g,"'");
+  const first=term.split(/\s+/)[0] || '';
+  const verbStarts=new Set(['descend','derive','take','ready','exemplify','withstand','inhabit','pioneer','revere','distinguish','confound','empower','realise','circumnavigate','prevail','elicit','cite','underscore','belie','forestall','overshadow','shed','bolster','displace','interrogate','incorporate','scatter','associate','correlate','leach','accumulate','obviate','hypothesize','confer','offset','contend','finalize','adhere','undermine','spring','provide']);
+  const adjStarts=new Set(['bitter','constant','constantly','neighboring','temporary','universally','high-entropy','fracture','common','natural-resource','fixed','historical','solid','viable','archival','computational','aesthetic','brand','product','perceived','representative','organic','dissolved','complex','directly','anthropogenic','vivid','syncopated','neoclassical','behavioral','conservation','visual','enduring','passive','prevailing','self-initiated','geometric']);
+  if(verbStarts.has(first) || /\b(to|from|by|with|into|over|on|up)\b/.test(term) && verbStarts.has(first)) return 'verb-phrase';
+  if(term.split(/\s+/).length > 1 && adjStarts.has(first)) return 'adj-noun';
+  if(term.split(/\s+/).length > 1) return 'noun-phrase';
+  return 'noun-phrase';
+}
+function displayDistractor(item){return state.lang==='en'?item.en:item.zh;}
+function distractorOptionsFor(correct){
+  const answer=currentMeaning(correct);
+  const type=answerType(correct);
+  const options=[];
+  const add=value=>{if(value && value!==answer && !options.includes(value)) options.push(value);};
+  sample(WORDS.filter(w=>w.id!==correct.id && answerType(w)===type),3).forEach(w=>add(currentMeaning(w)));
+  sample(DISTRACTOR_BANK[type]||[],3).forEach(item=>add(displayDistractor(item)));
+  if(options.length<3) sample(WORDS.filter(w=>w.id!==correct.id),WORDS.length).forEach(w=>{if(options.length<3) add(currentMeaning(w));});
+  return sample([answer,...options.slice(0,3)],4);
+}
+function scopeOptions(sel){sel.innerHTML = `<option value="all">${uiText('全部词汇','All Words')}</option><option value="priority">${uiText('优先背诵词','Priority Words')}</option><option value="favorite">${uiText('收藏词','Favorites')}</option><option value="wrong">${uiText('错题本','Mistakes')}</option><option value="overallReview">Overall Review</option>` + qs.map(q=>`<option value="${q}">${q}</option>`).join('');}
+function refreshScopeOptions(){['scope','quizScope','listScope'].forEach(id=>{const sel=byId(id); const value=sel.value || 'all'; scopeOptions(sel); if([...sel.options].some(o=>o.value===value)) sel.value=value;});}
+['scope','quizScope','listScope'].forEach(id=>scopeOptions(byId(id)));
+function baseFiltered(scope){let arr=WORDS;if(scope==='priority') arr=WORDS.filter(w=>w.priority); else if(scope==='wrong') arr=WORDS.filter(w=>state.wrong.includes(w.id)); else if(scope==='overallReview') arr=WORDS.filter(isOverallReviewWord); else if(scope==='favorite') arr=WORDS.filter(w=>state.favorite.includes(w.id)); else if(scope && scope!=='all') arr=WORDS.filter(w=>w.question===scope); return arr;}
+function filtered(scope){return baseFiltered(scope);}
+function practiceFiltered(scope){return baseFiltered(scope).filter(w=>!state.known.includes(w.id));}
+function correctCount(id){return Math.min(state.correctCounts?.[id] || 0, 5);}
+function markTested(id){state.tested=[...new Set([...(state.tested||[]),id])];}
+function isTested(w){return (state.tested||[]).includes(w.id) || correctCount(w.id)>0 || state.wrong.includes(w.id);}
+function isOverallReviewWord(w){return isTested(w) && correctCount(w.id)<5 && !state.known.includes(w.id);}
+const REVIEW_INTERVALS=[1,3,7,15,30];
+function todayStart(){const d=new Date(); d.setHours(0,0,0,0); return d.getTime();}
+function addDays(days){const d=new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()+days); return d.getTime();}
+function reviewInfo(id){return state.review[id] || null;}
+function isDue(w){const r=reviewInfo(w.id); return r && r.due<=todayStart() && state.known.includes(w.id);}
+function dueReviewWords(){return WORDS.filter(isDue);}
+function scheduleReview(id, stage=0){const interval=REVIEW_INTERVALS[Math.min(stage, REVIEW_INTERVALS.length-1)]; state.review[id]={stage, due:addDays(interval), last:Date.now()};}
+function markKnown(id){state.known=[...new Set([...state.known,id])]; state.correctCounts[id]=5; state.wrong=state.wrong.filter(x=>x!==id); if(!state.review[id]) scheduleReview(id,0);}
+function failReview(id){state.wrong=[...new Set([...state.wrong,id])]; state.known=state.known.filter(x=>x!==id); state.correctCounts[id]=0; delete state.review[id];}
+function chip(w){return `<span class="pill">${w.question||'—'}</span>${w.priority?`<span class="pill">${uiText('优先','Priority')}</span>`:''}${state.favorite.includes(w.id)?`<span class="pill">${uiText('已收藏','Favorited')}</span>`:''}${state.known.includes(w.id)?`<span class="pill">${uiText('已掌握','Mastered')}</span>`:`<span class="pill">${uiText('正确','Correct')} ${correctCount(w.id)}/5</span>`}${isDue(w)?`<span class="pill">${uiText('今日复习','Due Today')}</span>`:''}`;}
+function updateStats(){let arr=filtered(byId('scope').value); byId('totalN').textContent=practiceFiltered(byId('scope').value).length; byId('knownN').textContent=arr.filter(w=>state.known.includes(w.id)).length; byId('wrongN').textContent=state.wrong.length; byId('dueN').textContent=dueReviewWords().length;}
+let current=null;
+function renderStudyHome(){
+  current=null;
+  stopSpeech();
+  byId('cardMeta').innerHTML='';
+  byId('studyTerm').textContent=uiText('准备开始背词','Ready to study');
+  byId('studyPhonetic').textContent='';
+  byId('studySpeakBtn').classList.add('hidden');
+  byId('studyMeaning').textContent='';
+  byId('studyNote').textContent='';
+  byId('answerBox').classList.add('hidden');
+  byId('showBtn').classList.add('hidden');
+  byId('nextBtn').textContent=uiText('开始背词','Start Studying');
+  updateStats();
+}
+function renderStudyWord(w){
+  byId('cardMeta').innerHTML=chip(w);
+  byId('studyTerm').textContent=w.term;
+  byId('studyPhonetic').textContent=phonetic(w);
+  byId('studySpeakBtn').classList.remove('hidden');
+  byId('studySpeakBtn').onclick=()=>speakVisibleTerm('studyTerm');
+  byId('studyMeaning').textContent=currentMeaning(w);
+  byId('studyNote').textContent=currentNote(w);
+  byId('answerBox').classList.add('hidden');
+  byId('showBtn').classList.remove('hidden');
+  byId('nextBtn').textContent=uiText('下一个','Next');
+}
+function pickStudy(){
+  enterStudyMode({pick:false});
+  stopSpeech();
+  let arr=practiceFiltered(byId('scope').value);
+  if(!arr.length){
+    current=null;
+    stopSpeech();
+    byId('cardMeta').innerHTML='';
+    byId('studyTerm').textContent=uiText('当前范围没有待背词','No words left in this scope');
+    byId('studyPhonetic').textContent='';
+    byId('studySpeakBtn').classList.add('hidden');
+    byId('studyMeaning').textContent='';
+    byId('studyNote').textContent=uiText('已掌握的词不会再显示。','Mastered words are hidden.');
+    byId('answerBox').classList.add('hidden');
+    byId('showBtn').classList.add('hidden');
+    byId('nextBtn').textContent=uiText('重新选择范围','Change Scope');
+    updateStats();
+    return;
+  }
+  state.idx=(state.idx||0)%arr.length;
+  current=arr[state.idx++];
+  save();
+  renderStudyWord(current);
+  updateStats();
+  autoSpeakTerm(current.term);
+}
+function enterStudyMode(options={pick:true}){
+  document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));
+  const tab=document.querySelector('[data-tab="study"]');
+  if(tab) tab.classList.add('active');
+  byId('study').classList.add('active');
+  document.body.classList.add('study-mode');
+  document.body.classList.remove('quiz-mode');
+  if(options.pick) pickStudy();
+}
+function exitStudyMode(){
+  stopSpeech();
+  document.body.classList.remove('study-mode');
+  renderStudyHome();
+  setActivePanel('study');
+}
+byId('showBtn').onclick=()=>{if(current) byId('answerBox').classList.remove('hidden');}; byId('nextBtn').onclick=()=>{current || document.body.classList.contains('study-mode') ? pickStudy() : enterStudyMode();}; byId('scope').onchange=()=>{state.idx=0;renderStudyHome();renderWrong();};
+byId('knowBtn').onclick=()=>{if(current){markKnown(current.id);save();pickStudy();renderWrong();renderReview();}}
+byId('dontKnowBtn').onclick=()=>{if(current){state.wrong=[...new Set([...state.wrong,current.id])];save();pickStudy();renderWrong();}}
+function sample(arr,n){return [...arr].sort(()=>Math.random()-.5).slice(0,n)}
+let quizCurrent=null;
+let quizAutoTimer=null;
+function setActivePanel(tabName){
+  document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));
+  const tab=document.querySelector(`[data-tab="${tabName}"]`);
+  if(tab) tab.classList.add('active');
+  byId(tabName).classList.add('active');
+  document.body.classList.toggle('quiz-mode', tabName==='quiz');
+  document.body.classList.remove('study-mode');
+  if(tabName!=='quiz'){
+    if(quizAutoTimer){clearTimeout(quizAutoTimer); quizAutoTimer=null;}
+    stopSpeech();
+  }
+  renderList(); renderWrong(); renderReview(); updateStats();
+}
+function enterQuizMode(){setActivePanel('quiz');}
+function exitQuizMode(){setActivePanel('study');}
+function startQuiz(){
+  if(!requireLogin('quiz', startQuiz)) return;
+  enterQuizMode();
+  stopSpeech();
+  if(quizAutoTimer){clearTimeout(quizAutoTimer); quizAutoTimer=null;}
+  let arr=practiceFiltered(byId('quizScope').value);
+  if(arr.length<1){stopSpeech(); byId('quizTerm').textContent=uiText('待测词数不足','Not enough words to quiz'); byId('quizPhonetic').textContent=''; byId('quizSpeakBtn').classList.add('hidden'); byId('quizMeta').innerHTML=uiText('已掌握的词不会再显示。','Mastered words are hidden.'); byId('options').innerHTML=''; byId('quizFeedback').classList.add('hidden'); return}
+  quizCurrent=sample(arr,1)[0];
+  byId('quizMeta').innerHTML=chip(quizCurrent);
+  byId('quizTerm').textContent=quizCurrent.term;
+  byId('quizPhonetic').textContent=phonetic(quizCurrent);
+  byId('quizSpeakBtn').classList.remove('hidden');
+  byId('quizSpeakBtn').onclick=()=>speakVisibleTerm('quizTerm');
+  autoSpeakTerm(quizCurrent.term);
+  updateQuizActionButtons();
+  renderQuizOptions();
+}
+function renderQuizOptions(){
+  if(!quizCurrent) return;
+  let opts=distractorOptionsFor(quizCurrent);
+  byId('options').innerHTML=opts.map(o=>`<button class="option">${o}</button>`).join('');
+  byId('quizFeedback').classList.add('hidden');
+  byId('quizFeedback').textContent='';
+  [...document.querySelectorAll('.option')].forEach(b=>b.onclick=()=>{
+    stopSpeech();
+    markTested(quizCurrent.id);
+    let ok=b.textContent===currentMeaning(quizCurrent);
+    recordAttempt('quiz', quizCurrent.id, ok);
+    [...document.querySelectorAll('.option')].forEach(x=>x.disabled=true);
+    b.classList.add(ok?'correct':'wrong');
+    if(!ok){
+      state.wrong=[...new Set([...state.wrong,quizCurrent.id])];
+      [...document.querySelectorAll('.option')].forEach(x=>{if(x.textContent===currentMeaning(quizCurrent))x.classList.add('correct');});
+    } else {
+      state.correctCounts[quizCurrent.id]=(state.correctCounts[quizCurrent.id]||0)+1;
+      if(state.correctCounts[quizCurrent.id]>=5){
+        markKnown(quizCurrent.id);
+      }
+    }
+    save();
+    byId('quizFeedback').classList.remove('hidden');
+    if(ok){
+      const c=correctCount(quizCurrent.id);
+      byId('quizFeedback').textContent = c>=5 ? uiText('正确！已累计 5/5，自动标记为已掌握。正在进入下一题…','Correct. This word reached 5/5 and is now mastered. Loading the next question...') : uiText(`正确！已累计 ${c}/5。正在进入下一题…`,`Correct. Current score: ${c}/5. Loading the next question...`);
+    } else {
+      byId('quizFeedback').textContent=uiText('正确答案：','Correct answer: ')+currentMeaning(quizCurrent);
+    }
+    renderWrong();
+    updateStats();
+    if(ok){quizAutoTimer=setTimeout(startQuiz,650);}
+  })
+}
+
+function updateQuizActionButtons(){
+  if(!quizCurrent){byId('favQuizBtn').textContent=uiText('☆ 收藏','☆ Favorite'); return;}
+  byId('favQuizBtn').textContent = state.favorite.includes(quizCurrent.id) ? uiText('★ 已收藏','★ Favorited') : uiText('☆ 收藏','☆ Favorite');
+}
+byId('favQuizBtn').onclick=()=>{
+  if(!quizCurrent) return;
+  if(state.favorite.includes(quizCurrent.id)) state.favorite=state.favorite.filter(x=>x!==quizCurrent.id);
+  else state.favorite=[...new Set([...state.favorite,quizCurrent.id])];
+  save(); updateQuizActionButtons(); byId('quizMeta').innerHTML=chip(quizCurrent); renderList();
+};
+byId('knownQuizBtn').onclick=()=>{
+  if(!quizCurrent) return;
+  markKnown(quizCurrent.id);
+  save(); renderWrong(); renderList(); updateStats(); startQuiz();
+};
+byId('unknownQuizBtn').onclick=()=>{
+  if(!quizCurrent) return;
+  stopSpeech();
+  if(quizAutoTimer){clearTimeout(quizAutoTimer); quizAutoTimer=null;}
+  markTested(quizCurrent.id);
+  recordAttempt('quiz', quizCurrent.id, false);
+  state.wrong=[...new Set([...state.wrong,quizCurrent.id])];
+  state.known=state.known.filter(x=>x!==quizCurrent.id);
+  state.correctCounts[quizCurrent.id]=0;
+  delete state.review[quizCurrent.id];
+  save();
+  renderWrong(); renderList(); updateStats();
+  byId('quizScope').value='overallReview';
+  startQuiz();
+};
+byId('startQuiz').onclick=startQuiz;
+
+let reviewCurrent=null;
+function startReview(){
+  if(!requireLogin('review', startReview)) return;
+  stopSpeech();
+  let arr=dueReviewWords();
+  if(arr.length<1){reviewCurrent=null; byId('reviewTerm').textContent='今天没有到期复习词'; byId('reviewPhonetic').textContent=''; byId('reviewSpeakBtn').classList.add('hidden'); byId('reviewMeta').innerHTML=''; byId('reviewOptions').innerHTML=''; byId('reviewFeedback').classList.add('hidden'); renderReview(); updateStats(); return;}
+  reviewCurrent=sample(arr,1)[0];
+  byId('reviewMeta').innerHTML=chip(reviewCurrent);
+  byId('reviewTerm').textContent=reviewCurrent.term;
+  byId('reviewPhonetic').textContent=phonetic(reviewCurrent);
+  byId('reviewSpeakBtn').classList.remove('hidden');
+  byId('reviewSpeakBtn').onclick=()=>speakVisibleTerm('reviewTerm');
+  autoSpeakTerm(reviewCurrent.term);
+  renderReviewOptions();
+}
+function renderReviewOptions(){
+  if(!reviewCurrent) return;
+  let opts=distractorOptionsFor(reviewCurrent);
+  byId('reviewOptions').innerHTML=opts.map(o=>`<button class="option reviewOption">${o}</button>`).join('');
+  byId('reviewFeedback').classList.add('hidden');
+  [...document.querySelectorAll('.reviewOption')].forEach(b=>b.onclick=()=>{
+    stopSpeech();
+    markTested(reviewCurrent.id);
+    let ok=b.textContent===currentMeaning(reviewCurrent);
+    recordAttempt('review', reviewCurrent.id, ok);
+    [...document.querySelectorAll('.reviewOption')].forEach(x=>x.disabled=true);
+    b.classList.add(ok?'correct':'wrong');
+    if(ok){
+      const r=reviewInfo(reviewCurrent.id) || {stage:0};
+      const nextStage=Math.min((r.stage||0)+1, REVIEW_INTERVALS.length-1);
+      scheduleReview(reviewCurrent.id,nextStage);
+      byId('reviewFeedback').textContent=uiText(`复习正确！下次复习间隔：${REVIEW_INTERVALS[nextStage]} 天。正在进入下一题…`,`Correct. Next review interval: ${REVIEW_INTERVALS[nextStage]} days. Loading the next question...`);
+      setTimeout(startReview,750);
+    }else{
+      failReview(reviewCurrent.id);
+      [...document.querySelectorAll('.reviewOption')].forEach(x=>{if(x.textContent===currentMeaning(reviewCurrent))x.classList.add('correct');});
+      byId('reviewFeedback').textContent=uiText('复习错误，已放回错题本。正确答案：','Incorrect. This word is back in Mistakes. Correct answer: ')+currentMeaning(reviewCurrent);
+    }
+    byId('reviewFeedback').classList.remove('hidden');
+    save(); renderWrong(); renderReview(); updateStats(); renderList();
+  });
+}
+function renderReview(){
+  let arr=dueReviewWords();
+  byId('reviewList').innerHTML = arr.length ? `<div class="small">${uiText('今日到期','Due today')} ${arr.length}</div>` + arr.map(w=>`<div class="listItem">${chip(w)}<div><b>${w.term}</b></div><div class="phonetic">${phonetic(w)}</div>${speakButton(w)}<div>${currentMeaning(w)}</div></div>`).join('') : `<div class="small">${uiText('今天没有到期复习词。已掌握词会按 1/3/7/15/30 天自动进入这里。','No words are due today. Mastered words will return here on a 1/3/7/15/30-day schedule.')}</div>`;
+}
+byId('startReview').onclick=startReview;
+
+function setText(selector,text){const el=document.querySelector(selector); if(el) el.textContent=text;}
+function applyLanguageUI(){
+  const en=state.lang==='en';
+  const homeLink=byId('homeLink'); if(homeLink){homeLink.href=entryPath(); homeLink.textContent=uiText('← SAT 词汇首页','← Vocabulary Lists');}
+  byId('meaningLang').value=state.lang;
+  document.querySelectorAll('[data-lang-choice]').forEach(btn=>{
+    const active=btn.dataset.langChoice===state.lang;
+    btn.classList.toggle('active',active);
+    btn.setAttribute('aria-pressed',active?'true':'false');
+  });
+  document.documentElement.lang=en?'en':'zh-CN';
+  document.title=en?'SAT2020605A Vocabulary':'5月SAT A卷阅读词汇';
+  setText('header h1', en?'SAT2020605A Vocabulary':'5月SAT A卷阅读词汇');
+  setText('header .sub', en?'206 words and phrases. Progress is saved in this browser.':'共 206 个词 / 短语，优先背诵 29 个。数据保存在本机浏览器，不上传。');
+  const tabs={study:['背词','Study'],quiz:['测验','Quiz'],review:['复习','Review'],wrong:['错题','Mistakes'],list:['词表','Word List']};
+  Object.entries(tabs).forEach(([key,labels])=>setText(`[data-tab="${key}"]`, uiText(labels[0],labels[1])));
+  const statLabels=document.querySelectorAll('.stat .label');
+  [uiText('当前词数','Current'),uiText('已掌握','Mastered'),uiText('错题','Mistakes'),uiText('今日复习','Due Today')].forEach((text,i)=>{if(statLabels[i]) statLabels[i].textContent=text;});
+  const studyLabel=document.querySelector('#study label'); if(studyLabel) studyLabel.textContent=uiText('选择范围','Scope');
+  const quizLabel=document.querySelector('#quiz label'); if(quizLabel) quizLabel.textContent=uiText('测验范围','Quiz Scope');
+  byId('exitStudyBtn').textContent=uiText('← 返回首页','← Back');
+  byId('exitQuizBtn').textContent=uiText('← 返回背词','← Back');
+  byId('showBtn').textContent=uiText('显示答案','Show Answer');
+  byId('knowBtn').textContent=uiText('认识 / 掌握','Know / Master');
+  byId('dontKnowBtn').textContent=uiText('不认识 / 加入错题','Do Not Know / Add to Mistakes');
+  byId('nextBtn').textContent=current?uiText('下一个','Next'):uiText('开始背词','Start Studying');
+  byId('studySpeakBtn').textContent=uiText('🔊 发音','🔊 Pronounce');
+  byId('startQuiz').textContent=uiText('开始 / 下一题','Start / Next');
+  byId('quizSpeakBtn').textContent=uiText('🔊 发音','🔊 Pronounce');
+  byId('unknownQuizBtn').textContent=uiText('不认识',"Don't Know");
+  byId('knownQuizBtn').textContent=uiText('认识 / 不再显示','Know / Hide');
+  updateQuizActionButtons();
+  setText('#review strong', uiText('艾宾浩斯复习','Spaced Review'));
+  byId('startReview').textContent=uiText('开始今日复习',"Start Today's Review");
+  byId('reviewSpeakBtn').textContent=uiText('🔊 发音','🔊 Pronounce');
+  setText('#wrong strong', uiText('错题本','Mistakes'));
+  byId('wrongQuizBtn').textContent=uiText('错题集中测验','Quiz Mistakes');
+  byId('clearWrong').textContent=uiText('清空','Clear');
+  byId('search').placeholder=uiText('搜索单词、中文意思、题号…','Search words, meanings, or question IDs...');
+  byId('authLoginBtn').textContent=uiText('登录 / 注册','Log In / Register');
+  byId('authLogoutBtn').textContent=uiText('退出','Sign Out');
+  byId('authTitle').textContent=uiText('登录后保存进度','Log in to save progress');
+  byId('authIntro').textContent=uiText('测验、错题本和复习进度会保存到你的账号。','Quizzes, mistakes, and review progress are saved to your account.');
+  byId('authModeLogin').textContent=uiText('登录','Log In');
+  byId('authModeRegister').textContent=uiText('注册','Register');
+  byId('authEmailLabel').textContent=uiText('邮箱','Email');
+  byId('authPasswordLabel').textContent=uiText('密码','Password');
+  byId('authCancel').textContent=uiText('取消','Cancel');
+  setAuthMode(authMode);
+  renderAuthStatus();
+  refreshScopeOptions();
+}
+
+function rerenderLanguageSensitiveContent(){
+  current?renderStudyWord(current):renderStudyHome();
+  if(quizCurrent){
+    byId('quizMeta').innerHTML=chip(quizCurrent);
+    renderQuizOptions();
+  }
+  if(reviewCurrent){
+    byId('reviewMeta').innerHTML=chip(reviewCurrent);
+    renderReviewOptions();
+  }
+  renderList(); renderWrong(); renderReview(); updateStats();
+}
+function setDefinitionLanguage(lang){
+  const next=lang==='en'?'en':'zh';
+  stopSpeech();
+  state.lang=next;
+  byId('meaningLang').value=next;
+  save();
+  refreshScopeOptions();
+  applyLanguageUI();
+  rerenderLanguageSensitiveContent();
+}
+
+function renderWrong(){let arr=WORDS.filter(w=>state.wrong.includes(w.id)); byId('wrongList').innerHTML=arr.length?arr.map(w=>`<div class="listItem">${chip(w)}<div><b>${w.term}</b></div><div class="phonetic">${phonetic(w)}</div>${speakButton(w)}<div>${currentMeaning(w)}</div><div class="small">${currentNote(w)}</div></div>`).join(''):uiText('暂无错题。','No mistakes yet.');}
+byId('clearWrong').onclick=()=>{if(!requireLogin('wrong',()=>byId('clearWrong').click())) return; state.wrong=[];save();renderWrong();updateStats();}
+function startWrongQuiz(){if(!requireLogin('wrong',startWrongQuiz)) return; byId('quizScope').value='wrong'; enterQuizMode(); startQuiz();}
+byId('wrongQuizBtn').onclick=startWrongQuiz;
+function openOverallReview(){if(!requireLogin('overallReview',openOverallReview)) return; byId('quizScope').value='overallReview'; enterQuizMode(); startQuiz();}
+function renderList(){let scope=byId('listScope').value, kw=byId('search').value.trim().toLowerCase(); let arr=filtered(scope).filter(w=>(w.term+w.meaning+(MEANING_EN[w.id]||'')+w.question+w.note).toLowerCase().includes(kw)); byId('wordList').innerHTML=`<div class="small">${uiText('显示','Showing')} ${arr.length}</div>`+arr.map(w=>`<div class="listItem">${chip(w)}<div><b>${w.term}</b></div><div class="phonetic">${phonetic(w)}</div>${speakButton(w)}<div>${currentMeaning(w)}</div><div class="small">${currentNote(w)}</div></div>`).join('');}
+byId('search').oninput=renderList; byId('listScope').onchange=renderList; byId('meaningLang').onchange=()=>setDefinitionLanguage(byId('meaningLang').value);
+document.querySelectorAll('[data-lang-choice]').forEach(btn=>btn.onclick=()=>setDefinitionLanguage(btn.dataset.langChoice));
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{const target=t.dataset.tab; if(['quiz','review','wrong'].includes(target)&&!requireLogin(target,()=>t.click())) return; if(target==='quiz') enterQuizMode(); else setActivePanel(target);});
+byId('exitStudyBtn').onclick=exitStudyMode;
+byId('exitQuizBtn').onclick=exitQuizMode;
+byId('authLoginBtn').onclick=()=>showAuth({mode:'login'});
+byId('authLogoutBtn').onclick=handleSignOut;
+byId('authModeLogin').onclick=()=>setAuthMode('login');
+byId('authModeRegister').onclick=()=>setAuthMode('register');
+byId('authForm').onsubmit=handleAuthSubmit;
+byId('authCancel').onclick=()=>closeAuth();
+byId('authClose').onclick=()=>closeAuth();
+byId('authModal').addEventListener('click',e=>{if(e.target===byId('authModal')) closeAuth();});
+document.addEventListener('click', e=>{const btn=e.target.closest('[data-speak]'); if(btn){e.preventDefault(); speakTerm(btn.dataset.speak);}});
+installBackToEntryGuard();
+applyLanguageUI(); renderStudyHome(); renderList(); renderWrong(); renderReview(); renderAuthStatus();
+initAuth().then(()=>{const params=new URLSearchParams(location.search); if(params.get('auth')&&!isAuthenticated()) showAuth({mode:params.get('auth')==='register'?'register':'login'}); if(params.get('mode')==='overall-review') openOverallReview();});
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+  });
+}
+
+</script>
+</body></html>

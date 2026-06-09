@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <base href="/sat-vocab/">
+  <base href="/sat-words/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SAT 词汇背诵</title>
-  <meta name="description" content="SAT 词汇背诵入口，包含背词、测验、错题、收藏和间隔复习。">
+  <title>SAT Vocabulary</title>
+  <meta name="description" content="SAT Vocabulary practice lists for focused word review, quizzes, favorites, and spaced repetition.">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/config.js"></script>
   <style>
@@ -263,25 +263,25 @@
 <body>
   <div class="auth-modal hidden" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
     <div class="auth-panel">
-      <h2 id="authTitle">登录后保存进度</h2>
-      <p class="intro">登录后，你在词表里的测验、错题本和复习进度会保存到账号。</p>
+      <h2 id="authTitle">Log in to save progress</h2>
+      <p class="intro">After login, quiz results, mistakes, and review progress will be saved to your account.</p>
       <div class="auth-tabs">
-        <button class="auth-tab active" id="loginTab" type="button">登录</button>
-        <button class="auth-tab" id="registerTab" type="button">注册</button>
+        <button class="auth-tab active" id="loginTab" type="button">Log In</button>
+        <button class="auth-tab" id="registerTab" type="button">Register</button>
       </div>
       <form id="authForm">
         <div class="auth-field">
-          <label for="authEmail">邮箱</label>
+          <label for="authEmail">Email</label>
           <input id="authEmail" type="email" autocomplete="email" required>
         </div>
         <div class="auth-field">
-          <label for="authPassword">密码</label>
+          <label for="authPassword">Password</label>
           <input id="authPassword" type="password" autocomplete="current-password" required minlength="6">
         </div>
         <div class="auth-message" id="authMessage"></div>
         <div class="auth-actions">
-          <button class="auth-btn primary" id="authSubmit" type="submit">登录</button>
-          <button class="auth-btn" id="authCancel" type="button">取消</button>
+          <button class="auth-btn primary" id="authSubmit" type="submit">Log In</button>
+          <button class="auth-btn" id="authCancel" type="button">Cancel</button>
         </div>
       </form>
     </div>
@@ -290,34 +290,34 @@
     <header>
       <div class="top-row">
         <div>
-          <h1>SAT 词汇背诵</h1>
-          <p class="intro">选择一个词汇列表开始学习。后续可以继续在这里增加更多 SAT 词表。</p>
+          <h1>SAT Vocabulary</h1>
+          <p class="intro">Choose a vocabulary list to start studying. More SAT word lists can be added here later.</p>
         </div>
         <div class="auth-box">
-          <span id="authStatus">正在检查登录状态...</span>
+          <span id="authStatus">Checking login...</span>
           <div class="auth-actions">
-            <button class="auth-btn primary" id="loginBtn" type="button">登录 / 注册</button>
-            <button class="auth-btn hidden" id="logoutBtn" type="button">退出</button>
+            <button class="auth-btn primary" id="loginBtn" type="button">Log In / Register</button>
+            <button class="auth-btn hidden" id="logoutBtn" type="button">Sign Out</button>
           </div>
         </div>
       </div>
     </header>
 
-    <section class="list-grid" aria-label="词汇列表">
-      <a class="list-card" href="/sat-vocab/SAT2020605A/?mode=overall-review&lang=zh">
+    <section class="list-grid" aria-label="Vocabulary lists">
+      <a class="list-card" href="/sat-words/SAT2020605A/?mode=overall-review&lang=en">
         <div>
-          <h2 class="list-title">总复习</h2>
-          <p class="list-meta">复习已经测过、但还没有连续正确 5 次或没有标记为已掌握的词。</p>
+          <h2 class="list-title">Overall Review</h2>
+          <p class="list-meta">Review tested words that have not reached five correct answers and have not been marked as mastered.</p>
         </div>
-        <span class="start">开始复习</span>
+        <span class="start">Start Review</span>
       </a>
 
-      <a class="list-card" href="/sat-vocab/SAT2020605A/?lang=zh">
+      <a class="list-card" href="/sat-words/SAT2020605A/?lang=en">
         <div>
           <h2 class="list-title">SAT2020605A</h2>
-          <p class="list-meta">206 个词和短语，包含背词、测验、收藏、错题和间隔复习。</p>
+          <p class="list-meta">206 words and phrases with flashcards, quizzes, favorites, mistakes, and spaced repetition.</p>
         </div>
-        <span class="start">开始背诵</span>
+        <span class="start">Start Practice</span>
       </a>
     </section>
   </main>
@@ -343,18 +343,18 @@
     }
     function renderAuthStatus() {
       if (!supabaseClient) {
-        byId("authStatus").textContent = "云端登录暂不可用";
+        byId("authStatus").textContent = "Cloud login is unavailable";
         byId("loginBtn").classList.add("hidden");
         byId("logoutBtn").classList.add("hidden");
         return;
       }
       if (isAuthenticated()) {
-        byId("authStatus").textContent = "已登录：" + currentUser.email;
+        byId("authStatus").textContent = "Logged in: " + currentUser.email;
         byId("loginBtn").classList.add("hidden");
         byId("logoutBtn").classList.remove("hidden");
         return;
       }
-      byId("authStatus").textContent = "游客模式：背词可直接体验，测验记录需登录保存";
+      byId("authStatus").textContent = "Guest mode: study is open; log in to save quiz progress";
       byId("loginBtn").classList.remove("hidden");
       byId("logoutBtn").classList.add("hidden");
     }
@@ -362,7 +362,7 @@
       authMode = mode === "register" ? "register" : "login";
       byId("loginTab").classList.toggle("active", authMode === "login");
       byId("registerTab").classList.toggle("active", authMode === "register");
-      byId("authSubmit").textContent = authMode === "register" ? "注册" : "登录";
+      byId("authSubmit").textContent = authMode === "register" ? "Register" : "Log In";
       byId("authPassword").autocomplete = authMode === "register" ? "new-password" : "current-password";
       setAuthMessage("");
     }
@@ -393,11 +393,11 @@
       const email = byId("authEmail").value.trim().toLowerCase();
       const password = byId("authPassword").value;
       if (!email || !password) {
-        setAuthMessage("请输入邮箱和密码。");
+        setAuthMessage("Please enter an email and password.");
         return;
       }
       byId("authSubmit").disabled = true;
-      setAuthMessage(authMode === "register" ? "正在注册..." : "正在登录...", "success");
+      setAuthMessage(authMode === "register" ? "Creating account..." : "Logging in...", "success");
       try {
         const result = authMode === "register" && isAnonymousUser()
           ? await supabaseClient.auth.updateUser({ email, password })
@@ -408,14 +408,14 @@
         const sessionResult = await supabaseClient.auth.getSession();
         currentUser = sessionResult.data.session ? sessionResult.data.session.user : result.data.user;
         if (!isAuthenticated()) {
-          setAuthMessage("请查看邮箱完成验证；验证后再登录即可保存进度。", "success");
+          setAuthMessage("Please check your email to verify the account, then log in to save progress.", "success");
           return;
         }
         byId("authForm").reset();
         hideAuth();
         renderAuthStatus();
       } catch (error) {
-        setAuthMessage(error.message || "登录失败，请稍后再试。");
+        setAuthMessage(error.message || "Login failed. Please try again.");
       } finally {
         byId("authSubmit").disabled = false;
       }
@@ -437,7 +437,7 @@
 
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", function () {
-        navigator.serviceWorker.register("/sat-vocab/service-worker.js").catch(function () {});
+        navigator.serviceWorker.register("/sat-words/service-worker.js").catch(function () {});
       });
     }
   </script>

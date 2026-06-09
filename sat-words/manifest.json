@@ -1,7 +1,7 @@
 {
-  "name": "SAT 词汇背诵",
-  "short_name": "SAT 词汇",
-  "description": "SAT 词汇背诵列表。",
+  "name": "SAT Vocabulary",
+  "short_name": "SAT Vocabulary",
+  "description": "SAT vocabulary practice lists.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f7f7fb",

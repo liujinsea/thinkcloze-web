@@ -1,13 +1,15 @@
-const CACHE_NAME = 'sat-vocab-index-v5';
-const ASSETS = ['./','./index.html'];
-const OLD_CACHE_NAMES = ['sat-a-vocab-pwa-v1', 'sat-a-vocab-pwa-v2'];
+const CACHE_NAME = 'sat-words-2020605a-pwa-v11';
+const ASSETS = ['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
   self.skipWaiting();
 });
 self.addEventListener('activate', event => {
   event.waitUntil(caches.keys().then(keys => Promise.all(keys
-    .filter(k => OLD_CACHE_NAMES.includes(k) || (k.startsWith('sat-vocab-index-') && k !== CACHE_NAME))
+    .filter(k => (
+      k.startsWith('sat-2020605a-vocab-pwa-') ||
+      k.startsWith('sat-words-2020605a-pwa-')
+    ) && k !== CACHE_NAME)
     .map(k => caches.delete(k)))));
   self.clients.claim();
 });
