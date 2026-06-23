@@ -15,6 +15,15 @@ alter table public.profiles
 alter table public.profiles
   add column if not exists unlocked_sets integer[] not null default array[]::integer[];
 
+create table if not exists public.sat_vocab_progress (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  progress_id text not null default 'sat_vocab_system_v1',
+  progress jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (user_id, progress_id)
+);
+
 create table if not exists public.set_submissions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -92,6 +101,11 @@ create trigger profiles_set_updated_at
 before update on public.profiles
 for each row execute function public.set_updated_at();
 
+drop trigger if exists sat_vocab_progress_set_updated_at on public.sat_vocab_progress;
+create trigger sat_vocab_progress_set_updated_at
+before update on public.sat_vocab_progress
+for each row execute function public.set_updated_at();
+
 drop trigger if exists set_submissions_set_updated_at on public.set_submissions;
 create trigger set_submissions_set_updated_at
 before update on public.set_submissions
@@ -119,6 +133,7 @@ after insert on auth.users
 for each row execute function public.handle_new_user();
 
 alter table public.profiles enable row level security;
+alter table public.sat_vocab_progress enable row level security;
 alter table public.set_submissions enable row level security;
 alter table public.blank_answer_records enable row level security;
 alter table public.user_events enable row level security;
@@ -138,6 +153,22 @@ create policy profiles_update_own
 on public.profiles for update
 using (auth.uid() = id)
 with check (auth.uid() = id);
+
+drop policy if exists sat_vocab_progress_select_own on public.sat_vocab_progress;
+create policy sat_vocab_progress_select_own
+on public.sat_vocab_progress for select
+using (auth.uid() = user_id);
+
+drop policy if exists sat_vocab_progress_insert_own on public.sat_vocab_progress;
+create policy sat_vocab_progress_insert_own
+on public.sat_vocab_progress for insert
+with check (auth.uid() = user_id);
+
+drop policy if exists sat_vocab_progress_update_own on public.sat_vocab_progress;
+create policy sat_vocab_progress_update_own
+on public.sat_vocab_progress for update
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
 
 drop policy if exists set_submissions_select_own on public.set_submissions;
 create policy set_submissions_select_own
@@ -205,3 +236,4 @@ as $$
 $$;
 
 grant execute on function public.get_public_stats() to anon, authenticated;
+grant select, insert, update on public.sat_vocab_progress to authenticated;

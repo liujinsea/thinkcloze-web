@@ -165,17 +165,17 @@
 
     h1 {
       margin: 0;
-      font-size: clamp(34px, 5vw, 56px);
+      font-size: clamp(32px, 4.2vw, 48px);
       line-height: 1.05;
       font-weight: 800;
     }
 
     .intro {
-      max-width: 620px;
+      max-width: 900px;
       margin: 12px 0 0;
       color: var(--muted);
-      font-size: 17px;
-      line-height: 1.55;
+      font-size: 16px;
+      line-height: 1.45;
     }
 
     .list-grid {
@@ -204,6 +204,224 @@
       border-color: rgba(49, 87, 213, 0.45);
       outline: none;
       transform: translateY(-1px);
+    }
+
+    .feature-card {
+      position: relative;
+      overflow: hidden;
+      border: 0;
+      color: #ffffff;
+      isolation: isolate;
+    }
+
+    .feature-card > div {
+      position: relative;
+      z-index: 1;
+      max-width: 72%;
+    }
+
+    .feature-card .list-title,
+    .feature-card .list-meta {
+      color: #ffffff;
+    }
+
+    .feature-card .start {
+      position: relative;
+      z-index: 1;
+      background: rgba(23, 24, 39, 0.92);
+      color: #ffffff;
+    }
+
+    .feature-card:hover .start,
+    .feature-card:focus-visible .start {
+      background: #171827;
+    }
+
+    .feature-art {
+      position: absolute;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .cloze-feature {
+      background:
+        radial-gradient(circle at 84% 22%, rgba(255, 255, 255, 0.95) 0 18px, transparent 19px),
+        radial-gradient(circle at 70% 30%, rgba(255, 255, 255, 0.72) 0 34px, transparent 35px),
+        linear-gradient(135deg, #1f7be8 0%, #39b8ff 58%, #b5efff 100%);
+    }
+
+    .cloze-feature::before,
+    .cloze-feature::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .cloze-feature::before {
+      right: -18px;
+      bottom: -34px;
+      width: 188px;
+      height: 116px;
+      border-radius: 999px 999px 0 0;
+      background:
+        radial-gradient(circle at 22% 64%, rgba(255, 255, 255, 0.58) 0 28px, transparent 29px),
+        radial-gradient(circle at 48% 42%, rgba(255, 255, 255, 0.66) 0 40px, transparent 41px),
+        radial-gradient(circle at 76% 62%, rgba(255, 255, 255, 0.48) 0 34px, transparent 35px);
+    }
+
+    .cloze-feature::after {
+      left: 28px;
+      bottom: 30px;
+      width: 92px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.52);
+      box-shadow: 34px -24px 0 rgba(255, 255, 255, 0.35), 112px 18px 0 rgba(255, 255, 255, 0.4);
+    }
+
+    .cloze-art {
+      right: 28px;
+      bottom: 26px;
+      width: 92px;
+      height: 58px;
+      border-radius: 16px 16px 12px 12px;
+      background: rgba(255, 255, 255, 0.88);
+      box-shadow: 0 12px 28px rgba(16, 83, 154, 0.22);
+      transform: rotate(-5deg);
+    }
+
+    .cloze-art::before {
+      content: "";
+      position: absolute;
+      left: 15px;
+      right: 15px;
+      top: 17px;
+      height: 4px;
+      border-radius: 999px;
+      background: #2f80ed;
+      box-shadow: 0 13px 0 rgba(47, 128, 237, 0.72);
+    }
+
+    .cloze-art::after {
+      content: "";
+      position: absolute;
+      right: -18px;
+      top: -20px;
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: rgba(255, 214, 102, 0.92);
+      box-shadow: 0 0 0 12px rgba(255, 214, 102, 0.16);
+    }
+
+    .match-feature {
+      background:
+        radial-gradient(circle at 88% 18%, rgba(255, 255, 255, 0.92) 0 5px, transparent 6px),
+        radial-gradient(circle at 78% 36%, rgba(255, 255, 255, 0.42) 0 40px, transparent 41px),
+        linear-gradient(135deg, #ff7a18 0%, #ffb52e 54%, #ff5f45 100%);
+    }
+
+    .match-feature::before,
+    .match-feature::after {
+      content: "";
+      position: absolute;
+      border-radius: 999px;
+      pointer-events: none;
+    }
+
+    .match-feature::before {
+      right: 22px;
+      top: 24px;
+      width: 112px;
+      height: 112px;
+      background:
+        repeating-conic-gradient(from 8deg, rgba(255, 255, 255, 0.82) 0 7deg, transparent 7deg 18deg);
+      mask: radial-gradient(circle, transparent 0 24px, #000 25px 56px, transparent 57px);
+      opacity: 0.55;
+    }
+
+    .match-feature::after {
+      right: -34px;
+      bottom: -44px;
+      width: 168px;
+      height: 168px;
+      border: 18px solid rgba(255, 255, 255, 0.24);
+    }
+
+    .match-art {
+      right: 18px;
+      bottom: 20px;
+      width: 96px;
+      height: 96px;
+      background:
+        radial-gradient(circle at 50% 50%, #fff 0 6px, transparent 7px),
+        repeating-conic-gradient(from 0deg, rgba(255, 255, 255, 0.82) 0 5deg, transparent 5deg 16deg);
+      border-radius: 50%;
+      opacity: 0.52;
+    }
+
+    .dungeon-feature {
+      background:
+        radial-gradient(circle at 86% 18%, rgba(202, 255, 148, 0.65) 0 7px, transparent 8px),
+        radial-gradient(circle at 78% 72%, rgba(70, 209, 125, 0.46) 0 42px, transparent 43px),
+        linear-gradient(135deg, #2b1b55 0%, #5b2bc7 58%, #11956d 100%);
+    }
+
+    .dungeon-feature::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(115deg, transparent 0 46%, rgba(255, 255, 255, 0.14) 46% 48%, transparent 48% 100%);
+      background-size: 34px 34px;
+      opacity: 0.42;
+    }
+
+    .dungeon-art {
+      right: 16px;
+      bottom: 14px;
+      width: 120px;
+      height: 112px;
+      opacity: 0.92;
+    }
+
+    .dungeon-art::before {
+      content: "";
+      position: absolute;
+      right: 8px;
+      bottom: 10px;
+      width: 80px;
+      height: 70px;
+      border-radius: 46% 46% 38% 38%;
+      background: linear-gradient(145deg, #7cff8a, #25b86f);
+      box-shadow:
+        -22px -22px 0 -14px #d7ff7a,
+        22px -22px 0 -14px #d7ff7a,
+        0 12px 0 rgba(0, 0, 0, 0.12);
+    }
+
+    .dungeon-art::after {
+      content: "";
+      position: absolute;
+      right: 50px;
+      bottom: 50px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #171827;
+      box-shadow: 34px 0 0 #171827, 17px 25px 0 5px rgba(23, 24, 39, 0.9);
+    }
+
+    .dungeon-art span {
+      position: absolute;
+      right: 70px;
+      bottom: 20px;
+      width: 46px;
+      height: 28px;
+      border-radius: 999px 0 0 999px;
+      border: 12px solid #43d27d;
+      border-right: 0;
+      transform: rotate(-16deg);
     }
 
     .list-title {
@@ -257,6 +475,14 @@
         min-height: 172px;
         padding: 18px;
       }
+
+      .feature-card > div {
+        max-width: 100%;
+      }
+
+      .feature-art {
+        opacity: 0.24;
+      }
     }
   </style>
 </head>
@@ -291,7 +517,7 @@
       <div class="top-row">
         <div>
           <h1>SAT Vocabulary</h1>
-          <p class="intro">Choose a vocabulary list to start studying. More SAT word lists can be added here later.</p>
+          <p class="intro">Choose a vocabulary list to start studying. More SAT word lists would be added here later.</p>
         </div>
         <div class="auth-box">
           <span id="authStatus">Checking login...</span>
@@ -304,7 +530,7 @@
     </header>
 
     <section class="list-grid" aria-label="Vocabulary lists">
-      <a class="list-card" href="/sat-words/SAT2020605A/?mode=overall-review&lang=en">
+      <a class="list-card" href="/sat-words/SAT2020605A/?mode=overall-review&list=all&lang=en">
         <div>
           <h2 class="list-title">Overall Review</h2>
           <p class="list-meta">Review tested words that have not reached five correct answers and have not been marked as mastered.</p>
@@ -312,12 +538,55 @@
         <span class="start">Start Review</span>
       </a>
 
-      <a class="list-card" href="/sat-words/SAT2020605A/?lang=en">
+      <a class="list-card" href="/sat-words/SAT2020605A/?list=202505A&lang=en">
         <div>
           <h2 class="list-title">SAT2020605A</h2>
           <p class="list-meta">206 words and phrases with flashcards, quizzes, favorites, mistakes, and spaced repetition.</p>
         </div>
         <span class="start">Start Practice</span>
+      </a>
+
+      <a class="list-card" href="/sat-words/SAT2020605A/?list=VocabQuestions&lang=en">
+        <div>
+          <h2 class="list-title">SAT Words in Context</h2>
+          <p class="list-meta">644 answer-choice words collected from SAT Words in Context questions.</p>
+        </div>
+        <span class="start">Start Practice</span>
+      </a>
+
+      <a class="list-card" href="/sat-words/SAT2020605A/?list=Barron3500&lang=en">
+        <div>
+          <h2 class="list-title">Barron 3500</h2>
+          <p class="list-meta">3,636 Barron 3500 entries for extended SAT vocabulary practice.</p>
+        </div>
+        <span class="start">Start Practice</span>
+      </a>
+
+      <a class="list-card feature-card cloze-feature" href="/sat-words/SAT2020605A/?list=all&view=cloze&lang=en">
+        <div>
+          <h2 class="list-title">Context Fill-In</h2>
+          <p class="list-meta">Use two-sentence context clues to choose the target word.</p>
+        </div>
+        <span class="start">Start Practice</span>
+        <span class="feature-art cloze-art" aria-hidden="true"></span>
+      </a>
+
+      <a class="list-card feature-card match-feature" href="/sat-words/SAT2020605A/?list=all&view=match&lang=en">
+        <div>
+          <h2 class="list-title">Timed Match</h2>
+          <p class="list-meta">Match words with definitions under time pressure, with pronunciation on word taps.</p>
+        </div>
+        <span class="start">Start Practice</span>
+        <span class="feature-art match-art" aria-hidden="true"></span>
+      </a>
+
+      <a class="list-card feature-card dungeon-feature" href="/sat-words/SAT2020605A/?list=all&view=dungeon&lang=en">
+        <div>
+          <h2 class="list-title">Vocabulary Dungeon</h2>
+          <p class="list-meta">Battle through vocabulary questions, with a boss encounter every 10 questions.</p>
+        </div>
+        <span class="start">Enter Dungeon</span>
+        <span class="feature-art dungeon-art" aria-hidden="true"><span></span></span>
       </a>
     </section>
   </main>

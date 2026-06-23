@@ -5,5 +5,8 @@
   "scripts": {
     "build": "node scripts/build-config.js",
     "serve": "python -m http.server 8000"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
   }
 }

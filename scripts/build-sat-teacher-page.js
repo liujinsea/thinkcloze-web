@@ -68,6 +68,20 @@ select,input{width:100%;padding:12px;border-radius:14px;border:1px solid var(--l
 .hidden{display:none}
 .center{text-align:center}
 .speakBtn{width:auto;display:inline-flex;align-items:center;justify-content:center;padding:7px 11px;border-radius:999px;font-size:13px;background:#fff;color:var(--text);border:1px solid var(--line);box-shadow:none;margin:2px 0 8px}
+.content-top{display:none;align-items:center;gap:12px;margin:0 0 10px;padding:6px 0 10px;border-bottom:1px solid var(--line)}
+.content-top .btn{width:auto;margin:0;padding:8px 12px}
+.content-title{font-weight:800;color:var(--muted)}
+body.menu-view .panel{display:none}
+body.content-view header{display:none}
+body.content-view .content-top{display:flex}
+body.study-view .content-top,body.quiz-view .content-top{display:none}
+body.content-view #study .study-setup{display:none}
+body.menu-view .app{max-width:980px;padding:44px 18px 28px}
+body.menu-view header{position:static;background:transparent;backdrop-filter:none;border-bottom:0;padding:0}
+body.menu-view h1{font-size:34px;line-height:1.08;margin:0 0 10px}
+body.menu-view .sub{font-size:16px;max-width:780px}
+body.menu-view .tabs{grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:28px 0 0}
+body.menu-view .tab{min-height:92px;display:flex;align-items:flex-end;justify-content:flex-start;border:1px solid var(--line);border-radius:18px;padding:18px;font-size:18px;font-weight:800;text-align:left;box-shadow:0 10px 26px rgba(28,32,54,.06)}
 @media (min-width:900px){
   .app{max-width:980px;padding:14px 18px 28px}
   h1{font-size:20px;margin:2px 0 4px}
@@ -88,6 +102,7 @@ select,input{width:100%;padding:12px;border-radius:14px;border:1px solid var(--l
   .actions .btn{font-size:14px;padding:8px 9px}
   .pill{font-size:11px;padding:4px 8px}
   .listItem{padding:9px 0}
+  body.menu-view .app{padding-top:38px}
 }
 @media (max-width:480px){
   .app{padding:14px 12px 36px}
@@ -97,24 +112,30 @@ select,input{width:100%;padding:12px;border-radius:14px;border:1px solid var(--l
   .stats{gap:7px}
   .stat{padding:9px 5px}
   .label{font-size:11px}
+  body.menu-view .app{padding:24px 14px 24px}
+  body.menu-view h1{font-size:28px}
+  body.menu-view .sub{font-size:14px}
+  body.menu-view .tabs{grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+  body.menu-view .tab{min-height:74px;border-radius:16px;padding:14px;font-size:16px}
 }
 </style>
 </head>
-<body><div class="app">
+<body class="menu-view"><div class="app">
 <header>
   <h1>SAT教学语言练习</h1>
   <div class="sub">Grammar / Math / Reading · 410 张课堂表达卡</div>
   <div class="tabs">
-    <button class="tab active" data-tab="study">背诵</button>
+    <button class="tab" data-tab="study">背诵</button>
     <button class="tab" data-tab="quiz">测验</button>
     <button class="tab" data-tab="review">复习</button>
     <button class="tab" data-tab="wrong">错题</button>
     <button class="tab" data-tab="list">句表</button>
   </div>
 </header>
+<div class="content-top"><button class="btn ghost" id="backToMenu" type="button">返回功能菜单</button><div class="content-title" id="contentTitle"></div></div>
 
-<section id="study" class="panel active">
-  <div class="card">
+<section id="study" class="panel">
+  <div class="card study-setup">
     <label for="scope">选择范围</label>
     <select id="scope"></select>
     <div class="stats">
@@ -141,7 +162,7 @@ select,input{width:100%;padding:12px;border-radius:14px;border:1px solid var(--l
 </section>
 
 <section id="quiz" class="panel">
-  <div class="card">
+  <div class="hidden">
     <label for="quizScope">测验范围</label>
     <select id="quizScope"></select>
     <button class="btn primary" id="startQuiz">开始 / 下一题</button>
@@ -152,8 +173,8 @@ select,input{width:100%;padding:12px;border-radius:14px;border:1px solid var(--l
     <div class="term" id="quizTerm">点击开始</div>
     <div id="options"></div>
     <div class="actions">
-      <button class="btn star" id="favQuizBtn">收藏</button>
-      <button class="btn done" id="knownQuizBtn">已掌握 / 不再显示</button>
+      <button class="btn bad" id="favQuizBtn">未掌握</button>
+      <button class="btn done" id="knownQuizBtn">已掌握</button>
     </div>
     <div id="quizFeedback" class="note hidden"></div>
   </div>
@@ -328,63 +349,48 @@ function optionMeaningsFor(card){
   return sample([card.meaning].concat(sample(pool,3).map(function(w){return w.meaning;})),4);
 }
 function updateQuizActionButtons(){
-  if(!quizCurrent){byId("favQuizBtn").textContent = "收藏"; return;}
-  byId("favQuizBtn").textContent = state.favorite.includes(quizCurrent.id) ? "取消收藏" : "收藏";
+  const disabled = !quizCurrent;
+  byId("favQuizBtn").textContent = "未掌握";
+  byId("knownQuizBtn").textContent = "已掌握";
+  byId("favQuizBtn").disabled = disabled;
+  byId("knownQuizBtn").disabled = disabled;
 }
 function startQuiz(){
   if(quizAutoTimer){clearTimeout(quizAutoTimer); quizAutoTimer = null;}
   const arr = practiceFiltered(byId("quizScope").value);
-  if(arr.length < 2){
+  if(arr.length < 1){
+    quizCurrent = null;
     byId("quizTerm").textContent = "待测表达不足";
     byId("quizMeta").innerHTML = "已掌握的表达不会再显示。";
     byId("options").innerHTML = "";
     byId("quizFeedback").classList.add("hidden");
+    updateQuizActionButtons();
     return;
   }
   quizCurrent = sample(arr,1)[0];
   byId("quizMeta").innerHTML = chip(quizCurrent);
   byId("quizTerm").textContent = quizCurrent.term;
-  updateQuizActionButtons();
-  const opts = optionMeaningsFor(quizCurrent);
-  byId("options").innerHTML = opts.map(function(o){return '<button class="option">' + escapeHtml(o) + '</button>';}).join("");
+  byId("options").innerHTML = "";
   byId("quizFeedback").classList.add("hidden");
   byId("quizFeedback").innerHTML = "";
-  [...document.querySelectorAll(".option")].forEach(function(b){
-    b.onclick = function(){
-      const ok = b.textContent === quizCurrent.meaning;
-      [...document.querySelectorAll(".option")].forEach(function(x){x.disabled = true;});
-      b.classList.add(ok ? "correct" : "wrong");
-      if(!ok){
-        state.wrong = [...new Set([...state.wrong,quizCurrent.id])];
-        [...document.querySelectorAll(".option")].forEach(function(x){if(x.textContent === quizCurrent.meaning)x.classList.add("correct");});
-      } else {
-        state.correctCounts[quizCurrent.id] = (state.correctCounts[quizCurrent.id] || 0) + 1;
-        if(state.correctCounts[quizCurrent.id] >= 5) markKnown(quizCurrent.id);
-      }
-      save();
-      byId("quizFeedback").classList.remove("hidden");
-      if(ok){
-        const c = correctCount(quizCurrent.id);
-        byId("quizFeedback").innerHTML = (c >= 5 ? "正确，已累计 5/5，自动标记为已掌握。" : "正确，已累计 " + c + "/5。") + " " + speakButton(quizCurrent.meaning);
-        quizAutoTimer = setTimeout(startQuiz, 850);
-      } else {
-        byId("quizFeedback").innerHTML = "正确答案：" + escapeHtml(quizCurrent.meaning) + " " + speakButton(quizCurrent.meaning);
-      }
-      renderWrong();
-      renderList();
-      updateStats();
-    };
-  });
+  updateQuizActionButtons();
 }
 byId("startQuiz").onclick = startQuiz;
 byId("favQuizBtn").onclick = function(){
   if(!quizCurrent) return;
-  if(state.favorite.includes(quizCurrent.id)) state.favorite = state.favorite.filter(function(x){return x !== quizCurrent.id;});
-  else state.favorite = [...new Set([...state.favorite,quizCurrent.id])];
+  state.wrong = [...new Set([...state.wrong,quizCurrent.id])];
+  state.known = state.known.filter(function(x){return x !== quizCurrent.id;});
+  state.correctCounts[quizCurrent.id] = 0;
+  delete state.review[quizCurrent.id];
   save();
-  updateQuizActionButtons();
+  byId("quizFeedback").innerHTML = "英文：" + escapeHtml(quizCurrent.meaning) + " " + speakButton(quizCurrent.meaning);
+  byId("quizFeedback").classList.remove("hidden");
   byId("quizMeta").innerHTML = chip(quizCurrent);
+  renderWrong();
   renderList();
+  renderReview();
+  updateStats();
+  quizAutoTimer = setTimeout(startQuiz, 1100);
 };
 byId("knownQuizBtn").onclick = function(){
   if(!quizCurrent) return;
@@ -392,6 +398,7 @@ byId("knownQuizBtn").onclick = function(){
   save();
   renderWrong();
   renderList();
+  renderReview();
   updateStats();
   startQuiz();
 };
@@ -452,11 +459,7 @@ function renderWrong(){
 }
 byId("clearWrong").onclick = function(){state.wrong = []; save(); renderWrong(); updateStats(); renderList();};
 byId("wrongQuizBtn").onclick = function(){
-  byId("quizScope").value = "wrong";
-  document.querySelectorAll(".tab,.panel").forEach(function(x){x.classList.remove("active");});
-  document.querySelector('[data-tab="quiz"]').classList.add("active");
-  byId("quiz").classList.add("active");
-  startQuiz();
+  openPanel("quiz", {scope:"wrong"});
 };
 
 function renderList(){
@@ -467,25 +470,58 @@ function renderList(){
 }
 byId("search").oninput = renderList;
 byId("listScope").onchange = renderList;
+const PANEL_TITLES = {study:"背诵",quiz:"测验",review:"复习",wrong:"错题",list:"句表"};
+function openPanel(tabName, opts){
+  opts = opts || {};
+  if(!PANEL_TITLES[tabName]) return;
+  document.body.classList.remove("menu-view");
+  document.body.classList.add("content-view");
+  document.body.classList.toggle("study-view", tabName === "study");
+  document.body.classList.toggle("quiz-view", tabName === "quiz");
+  document.querySelectorAll(".tab,.panel").forEach(function(x){x.classList.remove("active");});
+  const tab = document.querySelector('[data-tab="' + tabName + '"]');
+  if(tab) tab.classList.add("active");
+  byId(tabName).classList.add("active");
+  byId("contentTitle").textContent = PANEL_TITLES[tabName];
+  if(tabName === "study"){
+    byId("scope").value = opts.scope || "all";
+    state.idx = opts.keepPosition ? state.idx : state.idx || 0;
+    pickStudy();
+  }
+  if(tabName === "quiz"){
+    byId("quizScope").value = opts.scope || "all";
+    startQuiz();
+  }
+  renderList();
+  renderWrong();
+  renderReview();
+  updateStats();
+}
+function showMenu(){
+  document.body.classList.add("menu-view");
+  document.body.classList.remove("content-view","study-view","quiz-view");
+  document.querySelectorAll(".tab,.panel").forEach(function(x){x.classList.remove("active");});
+  if(quizAutoTimer){clearTimeout(quizAutoTimer); quizAutoTimer = null;}
+  renderList();
+  renderWrong();
+  renderReview();
+  updateStats();
+}
 document.querySelectorAll(".tab").forEach(function(t){
   t.onclick = function(){
-    document.querySelectorAll(".tab,.panel").forEach(function(x){x.classList.remove("active");});
-    t.classList.add("active");
-    byId(t.dataset.tab).classList.add("active");
-    renderList();
-    renderWrong();
-    renderReview();
-    updateStats();
+    openPanel(t.dataset.tab);
   };
 });
+byId("backToMenu").onclick = showMenu;
 document.addEventListener("click", function(e){
   const btn = e.target.closest("[data-speak]");
   if(btn){e.preventDefault(); speakEnglish(btn.dataset.speak);}
 });
-pickStudy();
 renderList();
 renderWrong();
 renderReview();
+updateStats();
+showMenu();
 
 if("serviceWorker" in navigator){
   window.addEventListener("load", function(){
@@ -514,7 +550,7 @@ function buildManifest() {
 }
 
 function buildServiceWorker() {
-  return `const CACHE_NAME = 'sat-teacher-language-pwa-v2';
+  return `const CACHE_NAME = 'sat-teacher-language-pwa-v3';
 const ASSETS = ['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));

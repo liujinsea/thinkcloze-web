@@ -1,7 +1,7 @@
 {
-  "name": "5月SAT A卷阅读词汇",
-  "short_name": "SAT词汇",
-  "description": "5月SAT A卷阅读词汇背词、测验、错题和艾宾浩斯复习",
+  "name": "SAT Vocabulary",
+  "short_name": "SAT Vocab",
+  "description": "SAT vocabulary flashcards, quizzes, games, mistakes, favorites, and spaced review.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f7f7fb",

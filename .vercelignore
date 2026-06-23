@@ -1,0 +1,10 @@
+.env
+.env.*
+.git
+.vercel
+node_modules
+outputs
+tmp
+MIGRATE_TO_NEW_PC.md
+chrome-preview-profile
+edge-preview-profile
