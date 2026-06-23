@@ -6,6 +6,21 @@ const RAW_PATH = "outputs/thinkcloze-vocab-options-20260623/vocab_question_optio
 const MERGED_PATH = "outputs/thinkcloze-vocab-options-20260623/vocab_question_options_merged.json";
 const ZH_OVERRIDES_PATH = "outputs/thinkcloze-vocab-options-20260623/vocab_question_zh_overrides.json";
 const EXCLUDED_SINGLE_OPTION_TERMS = new Set(["in", "to", "about", "for", "on", "by"]);
+const PLURAL_NOUN_EXCEPTIONS = new Set([
+  "news",
+  "series",
+  "species",
+  "means",
+  "headquarters",
+  "crossroads",
+  "mathematics",
+  "physics",
+  "economics",
+  "politics",
+  "ethics",
+  "aesthetics",
+  "linguistics",
+]);
 
 function readText(path) {
   return fs.readFileSync(path, "utf8");
@@ -99,6 +114,26 @@ function posKeyFromText(text) {
   if (/^adv\./.test(t)) return "adv";
   if (/^prep\./.test(t)) return "prep";
   return "";
+}
+
+function meaningHasNounPos(text) {
+  return /^n(?:\.|\/)/i.test(String(text || "").trim());
+}
+
+function singularizeNounTerm(term) {
+  const normalized = normalizeTerm(term);
+  if (!normalized || normalized.includes(" ") || PLURAL_NOUN_EXCEPTIONS.has(normalized)) return normalized;
+  if (!/^[a-z][a-z'-]*s$/i.test(normalized) || /(?:ss|us|is)$/.test(normalized)) return normalized;
+  if (/[^aeiou]ies$/.test(normalized)) return `${normalized.slice(0, -3)}y`;
+  if (/(?:sses|xes|zes|ches|shes)$/.test(normalized)) return normalized.slice(0, -2);
+  if (/[^s]ses$/.test(normalized)) return normalized.slice(0, -1);
+  return normalized.slice(0, -1);
+}
+
+function canonicalizeOptionTerm(rowTerm, definitionZh = "", definitionEn = "") {
+  if (!meaningHasNounPos(definitionZh) && posKeyFromText(definitionEn) !== "n") return rowTerm;
+  const singular = singularizeNounTerm(rowTerm);
+  return singular && singular !== normalizeTerm(rowTerm) ? singular : rowTerm;
 }
 
 function inferPos(term, meaning = "") {
@@ -261,11 +296,16 @@ function buildMergedWords(raw, dictionaries, zhOverrides = new Map()) {
       continue;
     }
     const found = findDictionaryEntry(dictionaries.byKey, row.term);
-    const canonicalTerm = found?.word?.term || row.term;
+    const preliminaryTerm = found?.word?.term || row.term;
+    const preliminaryKey = normalizeTerm(preliminaryTerm);
+    const rowKey = normalizeTerm(row.term);
+    const preliminaryOverrideZh = zhOverrides.get(preliminaryKey) || zhOverrides.get(rowKey) || "";
+    const preliminaryZh = preliminaryOverrideZh || found?.zh || "";
+    const canonicalTerm = canonicalizeOptionTerm(preliminaryTerm, preliminaryZh, found?.en);
     const key = normalizeTerm(canonicalTerm);
-    const overrideZh = zhOverrides.get(key) || zhOverrides.get(normalizeTerm(row.term)) || "";
+    const overrideZh = zhOverrides.get(key) || zhOverrides.get(preliminaryKey) || zhOverrides.get(rowKey) || "";
     if (!grouped.has(key)) {
-      const en = found?.en || `Definition to review: ${row.term}`;
+      const en = found?.en || `Definition to review: ${canonicalTerm}`;
       const zh = overrideZh || found?.zh || `待补充释义：${row.term}`;
       const posInfo = inferPos(canonicalTerm, en || zh);
       grouped.set(key, {
@@ -290,7 +330,7 @@ function buildMergedWords(raw, dictionaries, zhOverrides = new Map()) {
         ...row,
         canonicalTerm,
         definitionStatus: found ? (found.matchedByLemma ? `matched by lemma: ${found.source}` : `matched: ${found.source}`) : (overrideZh ? "manual zh supplied" : "needs definition review"),
-        englishMeaning: found?.en || `Definition to review: ${row.term}`,
+        englishMeaning: found?.en || `Definition to review: ${canonicalTerm}`,
         chineseMeaning: overrideZh || found?.zh || `待补充释义：${row.term}`,
       });
   }
