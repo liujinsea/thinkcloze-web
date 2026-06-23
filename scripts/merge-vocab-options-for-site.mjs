@@ -437,7 +437,7 @@ function findDictionaryEntry(byKey, term) {
 
 function buildMergedWords(raw, dictionaries, zhOverrides = new Map()) {
   const grouped = new Map();
-  const auditRows = [];
+  const reviewRows = [];
   const excludedRows = [];
   const maxExistingId = Math.max(...dictionaries.existingVocab.map((word) => Number(word.id) || 0), 1000);
   let nextId = maxExistingId + 1;
@@ -454,7 +454,7 @@ function buildMergedWords(raw, dictionaries, zhOverrides = new Map()) {
         exclusionReason: reason,
       };
       excludedRows.push(excluded);
-      auditRows.push(excluded);
+      reviewRows.push(excluded);
       continue;
     }
     const found = findDictionaryEntry(dictionaries.byKey, row.term);
@@ -488,13 +488,13 @@ function buildMergedWords(raw, dictionaries, zhOverrides = new Map()) {
     const entry = grouped.get(key);
     entry.occurrences.push(row);
     entry.originalForms.add(row.originalChoice);
-      auditRows.push({
-        ...row,
-        canonicalTerm,
-        definitionStatus: found ? (found.matchedByLemma ? `matched by lemma: ${found.source}` : `matched: ${found.source}`) : (overrideZh ? "manual zh supplied" : "needs definition review"),
-        englishMeaning: found?.en || `Definition to review: ${canonicalTerm}`,
-        chineseMeaning: overrideZh || found?.zh || `待补充释义：${row.term}`,
-      });
+    reviewRows.push({
+      ...row,
+      canonicalTerm,
+      definitionStatus: found ? (found.matchedByLemma ? `matched by lemma: ${found.source}` : `matched: ${found.source}`) : (overrideZh ? "manual zh supplied" : "needs definition review"),
+      englishMeaning: found?.en || `Definition to review: ${canonicalTerm}`,
+      chineseMeaning: overrideZh || found?.zh || `待补充释义：${row.term}`,
+    });
   }
 
   const words = [...grouped.values()]
@@ -539,23 +539,12 @@ function buildMergedWords(raw, dictionaries, zhOverrides = new Map()) {
       };
     });
 
-  return { words, auditRows, excludedRows };
+  return { words, reviewRows, excludedRows };
 }
 
 function replaceRange(text, marker, openChar, closeChar, replacement) {
   const range = extractBalanced(text, marker, openChar, closeChar);
   return `${text.slice(0, range.start)}${replacement}${text.slice(range.end)}`;
-}
-
-function upsertConstArrayAfter(text, constName, jsonArray, afterMarker, afterOpenChar, afterCloseChar) {
-  const marker = `const ${constName} =`;
-  if (text.includes(marker)) {
-    return replaceRange(text, marker, "[", "]", jsonArray);
-  }
-  const afterRange = extractBalanced(text, afterMarker, afterOpenChar, afterCloseChar);
-  const semicolon = text.indexOf(";", afterRange.end);
-  const insertAt = semicolon >= 0 ? semicolon + 1 : afterRange.end;
-  return `${text.slice(0, insertAt)}\nconst ${constName} = ${jsonArray};${text.slice(insertAt)}`;
 }
 
 function replaceVocabQuestionsBlock(text, words) {
@@ -608,30 +597,9 @@ function siteWordZh(word) {
   };
 }
 
-function auditExcludedRow(row) {
-  return {
-    source: row.source,
-    questionLabel: row.questionLabel,
-    questionCode: row.questionCode,
-    letter: row.letter,
-    originalChoice: row.originalChoice,
-    term: row.term,
-    sourceFile: row.sourceFile.split("/").pop(),
-    reason: row.exclusionReason,
-  };
-}
-
-function updateSatWords(words, excludedRows) {
+function updateSatWords(words) {
   let text = readText("sat-words/SAT2020605A/index.html");
   text = replaceRange(text, "const VOCAB_QUESTION_WORDS =", "[", "]", JSON.stringify(words.map(siteWordEn)));
-  text = upsertConstArrayAfter(
-    text,
-    "VOCAB_QUESTION_EXCLUDED",
-    JSON.stringify(excludedRows.map(auditExcludedRow)),
-    "const VOCAB_QUESTION_WORDS =",
-    "[",
-    "]",
-  );
   text = text.replace(
     /description: "\d+ answer-choice words collected from SAT Words in Context questions\."/,
     `description: "${words.length} answer-choice words collected from SAT Words in Context questions."`,
@@ -639,19 +607,11 @@ function updateSatWords(words, excludedRows) {
   writeText("sat-words/SAT2020605A/index.html", text);
 }
 
-function updateSatVocab(words, excludedRows) {
+function updateSatVocab(words) {
   let text = readText("sat-vocab/SAT2020605A/index.html");
   text = replaceVocabQuestionsBlock(text, words);
   const zhMap = Object.fromEntries(words.map((word) => [word.term, word.meaningZh]));
   text = replaceRange(text, "const VOCAB_QUESTION_ZH =", "{", "}", JSON.stringify(zhMap, null, 2));
-  text = upsertConstArrayAfter(
-    text,
-    "VOCAB_QUESTION_EXCLUDED",
-    JSON.stringify(excludedRows.map(auditExcludedRow), null, 2),
-    "const VOCAB_QUESTION_ZH =",
-    "{",
-    "}",
-  );
   writeText("sat-vocab/SAT2020605A/index.html", text);
 }
 
@@ -660,8 +620,7 @@ function updateIndexCards(count) {
     let text = readText(path);
     text = text.replace(/\d+ answer-choice words collected from SAT Words in Context questions\./g, `${count} answer-choice words collected from SAT Words in Context questions.`);
     text = text.replace(/\d+ 个从 SAT 词汇题选项中整理的词和短语。/g, `${count} 个从 SAT 词汇题选项中整理的词和短语。`);
-    text = text.replace(/\d+ 个从 SAT 词汇题选项中整理的词和短语，包含词性和中文释义审校标记。/g, `${count} 个从 SAT 词汇题选项中整理的词和短语，包含词性和中文释义审校标记。`);
-    text = text.replace(/\d+ 个词和短语，包含筛选后的词汇题选项、词性和中文释义。/g, `${count} 个从 SAT 词汇题选项中整理的词和短语，包含词性和中文释义审校标记。`);
+    text = text.replace(/\d+ 个词和短语，包含筛选后的词汇题选项、词性和中文释义。/g, `${count} 个从 SAT 词汇题选项中整理的词和短语，包含词性和中文释义。`);
     writeText(path, text);
   }
 }
@@ -676,7 +635,7 @@ function main() {
   const raw = JSON.parse(readText(RAW_PATH));
   const dictionaries = buildDictionaries();
   const zhOverrides = readZhOverrides();
-  const { words, auditRows, excludedRows } = buildMergedWords(raw, dictionaries, zhOverrides);
+  const { words, reviewRows, excludedRows } = buildMergedWords(raw, dictionaries, zhOverrides);
   const bySource = words.reduce((acc, word) => {
     acc[word.definitionSource] = (acc[word.definitionSource] || 0) + 1;
     return acc;
@@ -694,13 +653,13 @@ function main() {
     selectedSources: raw.selectedSources,
     words,
     excludedRows,
-    auditRows,
+    reviewRows,
   };
   fs.mkdirSync("outputs/thinkcloze-vocab-options-20260623", { recursive: true });
   writeText(MERGED_PATH, JSON.stringify(merged, null, 2));
 
-  updateSatWords(words, excludedRows);
-  updateSatVocab(words, excludedRows);
+  updateSatWords(words);
+  updateSatVocab(words);
   updateIndexCards(words.length);
   bumpServiceWorker("sat-words/SAT2020605A/service-worker.js");
   bumpServiceWorker("sat-vocab/SAT2020605A/service-worker.js");
