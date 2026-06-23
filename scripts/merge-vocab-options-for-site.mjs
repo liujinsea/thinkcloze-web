@@ -21,6 +21,111 @@ const PLURAL_NOUN_EXCEPTIONS = new Set([
   "aesthetics",
   "linguistics",
 ]);
+const VERB_LEMMA_OVERRIDES = new Map(Object.entries({
+  absorbs: "absorb",
+  adjusted: "adjust",
+  advocated: "advocate",
+  allocating: "allocate",
+  allowed: "allow",
+  altered: "alter",
+  anticipated: "anticipate",
+  anticipating: "anticipate",
+  approved: "approve",
+  argues: "argue",
+  attributed: "attribute",
+  authorized: "authorize",
+  begins: "begin",
+  breaks: "break",
+  bulges: "bulge",
+  categorizing: "categorize",
+  characterizes: "characterize",
+  complains: "complain",
+  condensed: "condense",
+  congratulating: "congratulate",
+  consolidated: "consolidate",
+  contradicted: "contradict",
+  converted: "convert",
+  corresponded: "correspond",
+  corrected: "correct",
+  created: "create",
+  criticized: "criticize",
+  decoupled: "decouple",
+  defeating: "defeat",
+  deferred: "defer",
+  defined: "define",
+  denotes: "denote",
+  detected: "detect",
+  discovered: "discover",
+  discovers: "discover",
+  distorting: "distort",
+  distorts: "distort",
+  employed: "employ",
+  entrusted: "entrust",
+  established: "establish",
+  estimated: "estimate",
+  evaluated: "evaluate",
+  evolving: "evolve",
+  examined: "examine",
+  exceeding: "exceed",
+  excluded: "exclude",
+  exhibited: "exhibit",
+  exposing: "expose",
+  followed: "follow",
+  forestalled: "forestall",
+  forgets: "forget",
+  forgotten: "forget",
+  guaranteed: "guarantee",
+  helps: "help",
+  idealized: "idealize",
+  imagined: "imagine",
+  imposed: "impose",
+  imitated: "imitate",
+  inculcated: "inculcate",
+  intermingled: "intermingle",
+  investigated: "investigate",
+  lauded: "laud",
+  localized: "localize",
+  loses: "lose",
+  magnified: "magnify",
+  mediated: "mediate",
+  misinterpreted: "misinterpret",
+  motivated: "motivate",
+  neglected: "neglect",
+  organized: "organize",
+  overheard: "overhear",
+  overlooked: "overlook",
+  overturning: "overturn",
+  pondered: "ponder",
+  populated: "populate",
+  predicts: "predict",
+  predicated: "predicate",
+  prepared: "prepare",
+  prescribed: "prescribe",
+  produces: "produce",
+  prohibited: "prohibit",
+  promoted: "promote",
+  protested: "protest",
+  punished: "punish",
+  reacts: "react",
+  recognized: "recognize",
+  referred: "refer",
+  reflected: "reflect",
+  rejects: "reject",
+  reinterpreted: "reinterpret",
+  resisted: "resist",
+  respected: "respect",
+  reveals: "reveal",
+  sanitized: "sanitize",
+  scattered: "scatter",
+  shifted: "shift",
+  subverted: "subvert",
+  transformed: "transform",
+  trying: "try",
+  undertaken: "undertake",
+  underpinned: "underpin",
+  varies: "vary",
+  wearing: "wear",
+}));
 
 function readText(path) {
   return fs.readFileSync(path, "utf8");
@@ -120,6 +225,26 @@ function meaningHasNounPos(text) {
   return /^n(?:\.|\/)/i.test(String(text || "").trim());
 }
 
+function meaningHasVerbPos(text) {
+  const value = String(text || "").trim();
+  return /^(?:vi|vt|v)(?:\.|\/)/i.test(value) || /\/v\./i.test(value) || /^v\.\s+phr\./i.test(value);
+}
+
+function looksLikeVerbPhrase(term, definitionZh = "") {
+  const normalized = normalizeTerm(term);
+  const first = normalized.split(" ")[0] || "";
+  return normalized.includes(" ") && /^短语\./.test(String(definitionZh || "").trim()) && VERB_LEMMA_OVERRIDES.has(first);
+}
+
+function looksLikePassiveInflectedPhrase(term, definitionZh = "") {
+  const normalized = normalizeTerm(term);
+  if (!normalized.includes(" ")) return false;
+  const first = normalized.split(" ")[0] || "";
+  const isPastParticiple = /(?:ed|en)$/.test(first) || ["undertaken", "forgotten", "overheard"].includes(first);
+  if (!isPastParticiple) return false;
+  return /\sby$/.test(normalized) || /(?:被|由……)/.test(String(definitionZh || ""));
+}
+
 function singularizeNounTerm(term) {
   const normalized = normalizeTerm(term);
   if (!normalized || normalized.includes(" ") || PLURAL_NOUN_EXCEPTIONS.has(normalized)) return normalized;
@@ -130,7 +255,44 @@ function singularizeNounTerm(term) {
   return normalized.slice(0, -1);
 }
 
+function baseVerbWord(word) {
+  const lower = String(word || "").toLowerCase();
+  if (VERB_LEMMA_OVERRIDES.has(lower)) return VERB_LEMMA_OVERRIDES.get(lower);
+  if (!/^[a-z][a-z'-]*$/i.test(lower) || /(?:ss|ous|is)$/.test(lower)) return lower;
+  if (/[^aeiou]ies$/.test(lower)) return `${lower.slice(0, -3)}y`;
+  if (/(?:ches|shes|xes|zzes|sses)$/.test(lower)) return lower.slice(0, -2);
+  if (lower.endsWith("s")) return lower.slice(0, -1);
+  if (lower.endsWith("ying")) return `${lower.slice(0, -4)}ie`;
+  if (lower.endsWith("ing")) {
+    let stem = lower.slice(0, -3);
+    if (/([b-df-hj-np-tv-z])\1$/.test(stem) && !/(ll|ss|zz)$/.test(stem)) stem = stem.slice(0, -1);
+    if (/(?:at|iz|is|iv|os|pos|ak|ov)$/.test(stem)) return `${stem}e`;
+    return stem;
+  }
+  if (lower.endsWith("ied")) return `${lower.slice(0, -3)}y`;
+  if (lower.endsWith("ed") && !/(?:eed|ceed)$/.test(lower)) {
+    let stem = lower.slice(0, -2);
+    if (/([b-df-hj-np-tv-z])\1$/.test(stem) && !/(ll|ss|zz)$/.test(stem)) stem = stem.slice(0, -1);
+    if (/(?:at|iz|iv|ad|ud|clud|lud|crib|ov|ens|par|figur)$/.test(stem)) return `${stem}e`;
+    return stem;
+  }
+  return lower;
+}
+
+function baseVerbTerm(term) {
+  const normalized = normalizeTerm(term);
+  if (!normalized) return normalized;
+  const parts = normalized.split(" ");
+  parts[0] = baseVerbWord(parts[0]);
+  return parts.join(" ");
+}
+
 function canonicalizeOptionTerm(rowTerm, definitionZh = "", definitionEn = "") {
+  if (looksLikePassiveInflectedPhrase(rowTerm, definitionZh)) return rowTerm;
+  if (meaningHasVerbPos(definitionZh) || posKeyFromText(definitionEn) === "v" || looksLikeVerbPhrase(rowTerm, definitionZh)) {
+    const base = baseVerbTerm(rowTerm);
+    if (base && base !== normalizeTerm(rowTerm)) return base;
+  }
   if (!meaningHasNounPos(definitionZh) && posKeyFromText(definitionEn) !== "n") return rowTerm;
   const singular = singularizeNounTerm(rowTerm);
   return singular && singular !== normalizeTerm(rowTerm) ? singular : rowTerm;
