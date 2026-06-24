@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sat-words-index-v18';
+const CACHE_NAME = 'sat-words-index-v19';
 const ASSETS = ['./','./index.html'];
 const OLD_CACHE_NAMES = ['sat-a-vocab-pwa-v1', 'sat-a-vocab-pwa-v2'];
 self.addEventListener('install', event => {
