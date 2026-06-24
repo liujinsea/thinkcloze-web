@@ -920,8 +920,7 @@ function setMatchStatus(text){byId('matchStatus').textContent=text;}
 function clearMatchSelection(){matchSelectedTerm=null;matchSelectedMeaning=null;document.querySelectorAll('.match-card.selected').forEach(x=>x.classList.remove('selected'));}
 function buildMatchRound(){
   const pool=gamePool().filter(w=>displayMeaning(w));
-  const roundSize=window.matchMedia?.('(max-width: 760px)').matches ? 4 : 5;
-  matchDeck=sample(pool,Math.min(roundSize,pool.length));
+  matchDeck=sample(pool,Math.min(5,pool.length));
   const meanings=sample(matchDeck,matchDeck.length);
   byId('matchTerms').innerHTML=matchDeck.map(w=>`<button class="match-card term" type="button" data-id="${w.id}" title="${escapeHtml(w.term)}"><span class="match-text">${escapeHtml(w.term)}</span></button>`).join('');
   byId('matchMeanings').innerHTML=meanings.map(w=>`<button class="match-card meaning" type="button" data-id="${w.id}" title="${escapeHtml(displayMeaning(w))}"><span class="match-text">${escapeHtml(displayMeaning(w))}</span></button>`).join('');
