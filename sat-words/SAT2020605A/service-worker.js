@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sat-words-2020605a-pwa-v41';
+const CACHE_NAME = 'sat-words-2020605a-pwa-v43';
 const ASSETS = ['./','./index.html','./manifest.json','./barron3500.js','./icon-192.png','./icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));

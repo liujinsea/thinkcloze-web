@@ -170,7 +170,7 @@ body.menu-view .tab[data-tab="dungeon"]::after{content:"";position:absolute;righ
 <header><h1 id="appTitle">SAT阅读词汇</h1><div class="sub" id="appSub">登录后同步到账号；未登录时保存在本机。</div>
 <div class="header-actions"><a class="btn ghost vocab-home-link" href="/sat-vocab/">返回词汇首页</a>
 <div class="auth-bar"><span class="auth-status" id="authStatus">正在检查登录状态...</span><div class="auth-actions"><button class="auth-btn primary" id="authLoginBtn" type="button">登录</button><button class="auth-btn hidden" id="authLogoutBtn" type="button">退出</button></div></div></div>
-<div class="tabs"><button class="tab" data-tab="study"><span class="tab-title">背词</span><span class="tab-meta">逐个背诵当前词表，显示答案后标记掌握或加入错题。</span><span class="tab-action">开始背词</span></button><button class="tab" data-tab="quiz"><span class="tab-title">测验</span><span class="tab-meta">按词性匹配干扰项，用中文释义进行四选一考查。</span><span class="tab-action">开始测验</span></button><button class="tab game-tab match-game" data-tab="match"><span class="tab-title">限时配对</span><span class="tab-meta">60 秒配对英文和中文释义，连对越多节奏越快。</span><span class="tab-action">开始练习</span></button><button class="tab game-tab cloze-game" data-tab="cloze"><span class="tab-title">例句填空</span><span class="tab-meta">把目标词放回语境里，用例句巩固记忆。</span><span class="tab-action">开始练习</span></button><button class="tab" data-tab="dungeon"><span class="tab-title">词汇地牢</span><span class="tab-meta">用词汇题推进地牢战斗，每 10 题挑战一次 Boss。</span><span class="tab-action">进入地牢</span></button><button class="tab" data-tab="review"><span class="tab-title">复习</span><span class="tab-meta">按 1/3/7/15/30 天节奏复习已经掌握的词。</span><span class="tab-action">开始复习</span></button><button class="tab" data-tab="wrong"><span class="tab-title">错题</span><span class="tab-meta">集中查看答错或不认识的词，并随时回到测验。</span><span class="tab-action">查看错题</span></button><button class="tab" data-tab="list"><span class="tab-title">词表</span><span class="tab-meta">搜索当前词表里的英文、中文释义、题号和备注。</span><span class="tab-action">查看词表</span></button></div></header>
+<div class="tabs"><button class="tab" data-tab="study"><span class="tab-title">背词</span><span class="tab-meta">逐个背诵当前词表，显示答案后标记掌握或加入错题。</span><span class="tab-action">开始背词</span></button><button class="tab" data-tab="quiz"><span class="tab-title">测验</span><span class="tab-meta">按词性匹配干扰项，用中文释义进行四选一考查。</span><span class="tab-action">开始测验</span></button><button class="tab game-tab match-game" data-tab="match"><span class="tab-title">不限时配对</span><span class="tab-meta">不设倒计时，英文和中文释义配成一组。</span><span class="tab-action">开始练习</span></button><button class="tab game-tab cloze-game" data-tab="cloze"><span class="tab-title">例句填空</span><span class="tab-meta">把目标词放回语境里，用例句巩固记忆。</span><span class="tab-action">开始练习</span></button><button class="tab" data-tab="dungeon"><span class="tab-title">词汇地牢</span><span class="tab-meta">用词汇题推进地牢战斗，每 10 题挑战一次 Boss。</span><span class="tab-action">进入地牢</span></button><button class="tab" data-tab="review"><span class="tab-title">复习</span><span class="tab-meta">按 1/3/7/15/30 天节奏复习已经掌握的词。</span><span class="tab-action">开始复习</span></button><button class="tab" data-tab="wrong"><span class="tab-title">错题</span><span class="tab-meta">集中查看答错或不认识的词，并随时回到测验。</span><span class="tab-action">查看错题</span></button><button class="tab" data-tab="list"><span class="tab-title">词表</span><span class="tab-meta">搜索当前词表里的英文、中文释义、题号和备注。</span><span class="tab-action">查看词表</span></button></div></header>
 <div class="content-top"><a class="btn ghost vocab-home-link" href="/sat-vocab/">返回词汇首页</a><button class="btn ghost" id="backToMenu" type="button">返回功能菜单</button><div class="content-title" id="contentTitle"></div></div>
 
 <div class="auth-modal hidden" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
@@ -198,7 +198,7 @@ body.menu-view .tab[data-tab="dungeon"]::after{content:"";position:absolute;righ
 </section>
 
 <section id="match" class="panel">
-<div class="card match-shell"><div class="game-head"><div><strong>限时配对</strong><div class="small">英文和中文释义配成一组。</div></div><div class="game-score"><span class="pill" id="matchTimer">60s</span><span class="pill" id="matchScore">0 分</span><span class="pill" id="matchStreak">0 连对</span></div><button class="btn primary" id="matchStart" type="button">开始限时配对</button></div><div id="matchStatus" class="small match-status">准备开始。</div><div class="match-board"><div class="match-column" id="matchTerms"></div><div class="match-column" id="matchMeanings"></div></div></div>
+<div class="card match-shell"><div class="game-head"><div><strong>不限时配对</strong><div class="small">英文和中文释义配成一组。</div></div><div class="game-score"><span class="pill" id="matchTimer">不限时</span><span class="pill" id="matchScore">0 分</span><span class="pill" id="matchStreak">0 连对</span></div><button class="btn primary" id="matchStart" type="button">开始配对</button></div><div id="matchStatus" class="small match-status">准备开始。</div><div class="match-board"><div class="match-column" id="matchTerms"></div><div class="match-column" id="matchMeanings"></div></div></div>
 </section>
 
 <section id="cloze" class="panel">
@@ -244,7 +244,7 @@ const WORD_LISTS = {
   "词汇题": {
     label: "词汇题",
     title: "SAT 词汇题选项",
-    description: "315 个从 SAT Words in Context 题目选项中整理的词和短语。",
+    description: "312 个从 SAT Words in Context 题目选项中整理的词和短语。",
     words: [
         {
             "id": 1343,
@@ -1871,52 +1871,6 @@ const WORD_LISTS = {
             ],
             "originalForms": [
                 "decried"
-            ],
-            "correctionNotes": [],
-            "pos": "v.",
-            "posKey": "v"
-        },
-        {
-            "id": 1297,
-            "question": "202505AsiaBM1Q4",
-            "term": "realize",
-            "meaning": "v. to make something real or become aware of something",
-            "note": "中文：实现；意识到；原始写法：realized；来源：2025-05 202505AsiaBM1Q4(B)；出现次数：1；释义来源：existing",
-            "priority": false,
-            "reviewStatus": "ready",
-            "definitionSource": "existing",
-            "count": 1,
-            "sources": [
-                "2025年5月亚太第2套"
-            ],
-            "sourceRefs": [
-                "2025-05 202505AsiaBM1Q4(B)"
-            ],
-            "originalForms": [
-                "realized"
-            ],
-            "correctionNotes": [],
-            "pos": "v.",
-            "posKey": "v"
-        },
-        {
-            "id": 1301,
-            "question": "202505AsiaBM2Q1",
-            "term": "enhance",
-            "meaning": "v. to improve or increase the quality, value, or extent of something",
-            "note": "中文：提高；增强；原始写法：enhanced；来源：2025-05 202505AsiaBM2Q1(B)；出现次数：1；释义来源：existing",
-            "priority": false,
-            "reviewStatus": "ready",
-            "definitionSource": "existing",
-            "count": 1,
-            "sources": [
-                "2025年5月亚太第2套"
-            ],
-            "sourceRefs": [
-                "2025-05 202505AsiaBM2Q1(B)"
-            ],
-            "originalForms": [
-                "enhanced"
             ],
             "correctionNotes": [],
             "pos": "v.",
@@ -7007,31 +6961,6 @@ const WORD_LISTS = {
             "posKey": "v"
         },
         {
-            "id": 4543,
-            "question": "202605AsiaAM1Q1",
-            "term": "efficiency of",
-            "meaning": "Definition to review: efficiency of",
-            "note": "中文：……的效率；……的效能；原始写法：efficiency of；来源：2026-05 202605AsiaAM1Q1(A)；2026-05 202605AsiaCM1Q2(B)；出现次数：2；释义来源：manual-zh",
-            "priority": false,
-            "reviewStatus": "ready",
-            "definitionSource": "manual-zh",
-            "count": 2,
-            "sources": [
-                "2026年5月亚太第三套",
-                "2026年5月亚太第一套"
-            ],
-            "sourceRefs": [
-                "2026-05 202605AsiaAM1Q1(A)",
-                "2026-05 202605AsiaCM1Q2(B)"
-            ],
-            "originalForms": [
-                "efficiency of"
-            ],
-            "correctionNotes": [],
-            "pos": "",
-            "posKey": ""
-        },
-        {
             "id": 1163,
             "question": "202605AsiaAM1Q2",
             "term": "postponement",
@@ -8077,8 +8006,6 @@ const VOCAB_QUESTION_ZH = {
   "insurmountable": "adj. 难以克服的；不可逾越的",
   "dissipate": "v. 消散；驱散",
   "decry": "v. 公开批评；谴责",
-  "realize": "v. 实现；意识到",
-  "enhance": "v. 提高；增强",
   "influence": "v. 影响",
   "protect": "v. 保护",
   "surpass": "v. 超过；胜过",
@@ -8287,7 +8214,6 @@ const VOCAB_QUESTION_ZH = {
   "efface": "v. 抹去；淡化",
   "misconstrue": "v. 误解；曲解",
   "overhear": "v. 无意中听到；偶然听见",
-  "efficiency of": "短语. ……的效率；……的效能",
   "postponement": "n. 推迟；延期",
   "consternation": "n. 惊愕；恐慌",
   "gratification": "n. 满足；愉悦",
@@ -8722,6 +8648,10 @@ const VOCAB_QUESTION_EXCLUDED = [
     "reason": "标记为暂不纳入"
   },
   {
+    "term": "efficiency of",
+    "reason": "标记为暂不纳入"
+  },
+  {
     "term": "elaborate",
     "reason": "标记为暂不纳入"
   },
@@ -8739,6 +8669,10 @@ const VOCAB_QUESTION_EXCLUDED = [
   },
   {
     "term": "engender",
+    "reason": "标记为暂不纳入"
+  },
+  {
+    "term": "enhance",
     "reason": "标记为暂不纳入"
   },
   {
@@ -9259,6 +9193,10 @@ const VOCAB_QUESTION_EXCLUDED = [
   },
   {
     "term": "really",
+    "reason": "标记为暂不纳入"
+  },
+  {
+    "term": "realize",
     "reason": "标记为暂不纳入"
   },
   {
@@ -9848,8 +9786,8 @@ function recordGameCorrect(w){recordAnswerProgress(w,true);}
 function recordGameWrong(w){recordAnswerProgress(w,false);}
 function escapeRegExp(str){return String(str).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
 
-let matchDeck=[],matchSelectedTerm=null,matchSelectedMeaning=null,matchScore=0,matchStreak=0,matchTimeLeft=60,matchTimer=null,matchActive=false;
-function updateMatchHud(){byId('matchTimer').textContent=`${matchTimeLeft}s`; byId('matchScore').textContent=`${matchScore} 分`; byId('matchStreak').textContent=`${matchStreak} 连对`;}
+let matchDeck=[],matchSelectedTerm=null,matchSelectedMeaning=null,matchScore=0,matchStreak=0,matchActive=false;
+function updateMatchHud(){byId('matchTimer').textContent='不限时'; byId('matchScore').textContent=`${matchScore} 分`; byId('matchStreak').textContent=`${matchStreak} 连对`;}
 function setMatchStatus(text){byId('matchStatus').textContent=text;}
 function clearMatchSelection(){matchSelectedTerm=null;matchSelectedMeaning=null;document.querySelectorAll('.match-card.selected').forEach(x=>x.classList.remove('selected'));}
 function buildMatchRound(){
@@ -9880,7 +9818,7 @@ function checkMatchPair(){
     setMatchStatus(matchStreak>=3?`连对 ${matchStreak} 组。`:'配对成功。');
     clearMatchSelection();
     if([...document.querySelectorAll('.match-card.term')].every(x=>x.disabled)){
-      setTimeout(()=>{if(matchActive&&matchTimeLeft>0) buildMatchRound();},350);
+      setTimeout(()=>{if(matchActive) buildMatchRound();},350);
     }
   }else{
     matchSelectedTerm.classList.add('wrong'); matchSelectedMeaning.classList.add('wrong');
@@ -9890,20 +9828,16 @@ function checkMatchPair(){
     setTimeout(()=>{document.querySelectorAll('.match-card.wrong').forEach(x=>x.classList.remove('wrong')); clearMatchSelection();},450);
   }
 }
-function endMatchGame(){matchActive=false; if(matchTimer){clearInterval(matchTimer); matchTimer=null;} document.querySelectorAll('.match-card').forEach(x=>x.disabled=true); setMatchStatus(`本轮结束：${matchScore} 分。`);}
 function startMatchGame(){
   const pool=gamePool();
   if(pool.length<2){setMatchStatus('当前词表词数不足。'); return;}
-  matchScore=0; matchStreak=0; matchTimeLeft=60; matchActive=true; updateMatchHud(); setMatchStatus('开始。');
+  matchScore=0; matchStreak=0; matchActive=true; updateMatchHud(); setMatchStatus('开始。');
   buildMatchRound();
-  if(matchTimer) clearInterval(matchTimer);
-  matchTimer=setInterval(()=>{matchTimeLeft-=1; updateMatchHud(); if(matchTimeLeft<=0) endMatchGame();},1000);
 }
 function stopMatchGame(reset=false){
-  if(matchTimer){clearInterval(matchTimer); matchTimer=null;}
   matchActive=false;
   if(reset){
-    matchScore=0; matchStreak=0; matchTimeLeft=60; updateMatchHud();
+    matchScore=0; matchStreak=0; updateMatchHud();
     clearMatchSelection();
     byId('matchTerms').innerHTML='';
     byId('matchMeanings').innerHTML='';
@@ -10323,7 +10257,7 @@ function stopDungeonGame(reset=false){
 }
 byId('dungeonNext').onclick=()=>{if(!dungeonState.started) startDungeonGame(); else if(dungeonState.answered) nextDungeonQuestion();};
 
-const PANEL_TITLES={study:'背词',quiz:'测验',match:'限时配对',cloze:'例句填空',dungeon:'词汇地牢',review:'复习',wrong:'错题',list:'词表'};
+const PANEL_TITLES={study:'背词',quiz:'测验',match:'不限时配对',cloze:'例句填空',dungeon:'词汇地牢',review:'复习',wrong:'错题',list:'词表'};
 function setViewParam(view, replace=false){
   const url=new URL(location.href);
   if(view) url.searchParams.set('view',view); else url.searchParams.delete('view');
