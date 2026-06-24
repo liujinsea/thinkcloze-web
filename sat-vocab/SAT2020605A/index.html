@@ -158,6 +158,12 @@ body.menu-view .tab.game-tab.cloze-game::after{content:"";position:absolute;righ
 body.menu-view .tab[data-tab="dungeon"]{background:radial-gradient(circle at 86% 18%,rgba(202,255,148,.65) 0 7px,transparent 8px),radial-gradient(circle at 78% 72%,rgba(70,209,125,.46) 0 42px,transparent 43px),linear-gradient(135deg,#2b1b55 0%,#5b2bc7 58%,#11956d 100%)}
 body.menu-view .tab[data-tab="dungeon"]::before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 0 46%,rgba(255,255,255,.14) 46% 48%,transparent 48% 100%);background-size:34px 34px;opacity:.42}
 body.menu-view .tab[data-tab="dungeon"]::after{content:"";position:absolute;right:26px;bottom:18px;width:86px;height:72px;border-radius:46% 46% 38% 38%;background:radial-gradient(circle at 36% 42%,#171827 0 6px,transparent 7px),radial-gradient(circle at 66% 42%,#171827 0 6px,transparent 7px),radial-gradient(circle at 50% 68%,rgba(23,24,39,.9) 0 14px,transparent 15px),linear-gradient(145deg,#7cff8a,#25b86f);box-shadow:-22px -22px 0 -14px #d7ff7a,22px -22px 0 -14px #d7ff7a,0 12px 0 rgba(0,0,0,.12)}
+@media (max-width: 760px){
+  body.content-view #match .match-card{height:auto!important;max-height:none!important;overflow:visible!important}
+  body.content-view #match .match-text,
+  body.content-view #match .match-card.term .match-text,
+  body.content-view #match .match-card.meaning .match-text{display:block!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important;-webkit-line-clamp:unset!important;-webkit-box-orient:initial!important}
+}
 </style>
 </head>
 <body><div class="app">
@@ -238,7 +244,7 @@ const WORD_LISTS = {
   "词汇题": {
     label: "词汇题",
     title: "SAT 词汇题选项",
-    description: "317 个从 SAT Words in Context 题目选项中整理的词和短语。",
+    description: "315 个从 SAT Words in Context 题目选项中整理的词和短语。",
     words: [
         {
             "id": 1343,
@@ -1871,32 +1877,6 @@ const WORD_LISTS = {
             "posKey": "v"
         },
         {
-            "id": 4296,
-            "question": "202505AsiaBM1Q4",
-            "term": "overcome",
-            "meaning": "Definition to review: overcome",
-            "note": "中文：克服；战胜；原始写法：overcame；来源：2025-05 202505AsiaBM1Q4(A)；出现次数：1；释义来源：manual-zh（词形匹配）；修正说明：过去式还原为原形 overcome",
-            "priority": false,
-            "reviewStatus": "ready",
-            "definitionSource": "manual-zh",
-            "count": 1,
-            "sources": [
-                "2025年5月亚太第2套"
-            ],
-            "sourceRefs": [
-                "2025-05 202505AsiaBM1Q4(A)"
-            ],
-            "originalForms": [
-                "overcame"
-            ],
-            "correctionNotes": [
-                "过去式还原为原形 overcome"
-            ],
-            "pos": "v.",
-            "posKey": "v",
-            "matchedByLemma": true
-        },
-        {
             "id": 1297,
             "question": "202505AsiaBM1Q4",
             "term": "realize",
@@ -2058,29 +2038,6 @@ const WORD_LISTS = {
             ],
             "originalForms": [
                 "preceded"
-            ],
-            "correctionNotes": [],
-            "pos": "v.",
-            "posKey": "v"
-        },
-        {
-            "id": 1305,
-            "question": "202505AsiaBM2Q2",
-            "term": "summarize",
-            "meaning": "v. to state the main points briefly",
-            "note": "中文：总结；概括；原始写法：summarized；来源：2025-05 202505AsiaBM2Q2(B)；出现次数：1；释义来源：existing",
-            "priority": false,
-            "reviewStatus": "ready",
-            "definitionSource": "existing",
-            "count": 1,
-            "sources": [
-                "2025年5月亚太第2套"
-            ],
-            "sourceRefs": [
-                "2025-05 202505AsiaBM2Q2(B)"
-            ],
-            "originalForms": [
-                "summarized"
             ],
             "correctionNotes": [],
             "pos": "v.",
@@ -8120,7 +8077,6 @@ const VOCAB_QUESTION_ZH = {
   "insurmountable": "adj. 难以克服的；不可逾越的",
   "dissipate": "v. 消散；驱散",
   "decry": "v. 公开批评；谴责",
-  "overcome": "克服；战胜",
   "realize": "v. 实现；意识到",
   "enhance": "v. 提高；增强",
   "influence": "v. 影响",
@@ -8128,7 +8084,6 @@ const VOCAB_QUESTION_ZH = {
   "surpass": "v. 超过；胜过",
   "overlook": "v. 忽视；未注意到",
   "precede": "v. 先于；在……之前",
-  "summarize": "v. 总结；概括",
   "expediency": "n. 权宜；便利性",
   "fecundity": "n. 繁殖力；多产性",
   "heterogeneity": "n. 异质性；多样性",
@@ -9179,6 +9134,10 @@ const VOCAB_QUESTION_EXCLUDED = [
     "reason": "标记为暂不纳入"
   },
   {
+    "term": "overcome",
+    "reason": "标记为暂不纳入"
+  },
+  {
     "term": "overshadow",
     "reason": "标记为暂不纳入"
   },
@@ -9476,6 +9435,10 @@ const VOCAB_QUESTION_EXCLUDED = [
   },
   {
     "term": "suggest",
+    "reason": "标记为暂不纳入"
+  },
+  {
+    "term": "summarize",
     "reason": "标记为暂不纳入"
   },
   {
