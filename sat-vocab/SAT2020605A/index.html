@@ -11138,7 +11138,7 @@ function normalizeExampleText(text){return String(text||'').replace(/([A-Za-z])\
 function barronGeneratedExample(w){
   const term=String(w.term||'').trim();
   if(!term) return null;
-  const sentences=(typeof clozeScenePair==='function' ? clozeScenePair(w) : []).filter(Boolean);
+  const sentences=((typeof clozeScenePair==='function' ? clozeScenePair(w) : null)||[]).filter(Boolean);
   const en=sentences.join(' ');
   const meaning=cleanExampleMeaning(w)||'这个词的核心含义';
   return en ? {en,zh:`语境线索：${clozeMeaningHint(w)}。这里“${term}”表示：${meaning}。`} : null;
@@ -11566,7 +11566,7 @@ function ensureSentence(text){const value=String(text||'').replace(/\s+/g,' ').t
 function clozeEnglishHint(w){const candidates=[w.definitionEn,w.meaningEn,w.meaning].filter(Boolean).map(plainMeaningText); return candidates.find(t=>/[a-z]/i.test(t)&&!/[\u4e00-\u9fff]/.test(t))||'';}
 function clozeMeaningHint(w){return clozeEnglishHint(w)||cleanExampleMeaning(w)||displayMeaning(w)||'the intended meaning';}
 function clozeBaseMeaning(w){
-  const raw=clozeMeaningHint(w).replace(/\bIie\b/g,'lie').replace(/\.$/,'').trim();
+  const raw=clozeMeaningHint(w).replace(/\bIie\b/g,'lie').replace(/\bIure\b/g,'lure').replace(/\.$/,'').trim();
   const term=String(w.term||'').trim();
   return term ? raw.replace(new RegExp(`\\b${escapeRegExp(term)}\\b`,'ig'),'this word').replace(/\s+/g,' ').trim() : raw;
 }
@@ -11580,39 +11580,84 @@ function clozeScenePair(w){
   const meaning=clozeBaseMeaning(w);
   const action=withoutLeadingTo(meaning);
   const pos=partOfSpeechKey(w);
-  const bag=`${term} ${meaning} ${w.note||''}`.toLowerCase();
+  const bag=term.toLowerCase();
   const patterns=[
-    {pos:'v',re:/abrogat|abolish|repeal|rescind|annul|cancel|nullif|terminate|bring to an end/,pairs:[
+    {pos:'v',re:/abrogat|abolish|repeal|rescind|revoke|annul|cancel|nullif|terminate|bring to an end/,pairs:[
       [`The old rule no longer served its purpose.`,`At the meeting, officials voted to ${term} it.`],
       [`The policy was outdated and unfair.`,`Lawmakers decided to ${term} it rather than revise it.`],
       [`The contract clause had become impossible to enforce.`,`The board moved to ${term} the clause.`]
     ]},
-    {pos:'v',re:/forestall|preclude|prevent|avoid|evad|obviate|circumvent|escape/,pairs:[
+    {pos:'v',re:/temporiz|delay.*decision|stall for time|play for time/,pairs:[
+      [`The council avoided a final vote by asking for another study.`,`Critics said officials were trying to ${term}.`],
+      [`The negotiator answered every question vaguely so the talks would continue.`,`He hoped to ${term} until reinforcements arrived.`],
+      [`The company promised a review but set no deadline for action.`,`Employees accused it of trying to ${term}.`]
+    ]},
+    {pos:'v',re:/forestall|preclude|prevent|evad|obviate|circumvent|escape/,pairs:[
       [`The team saw the problem coming early.`,`They changed the plan to ${term} it before it grew worse.`],
       [`A delay would have created several new risks.`,`The manager acted quickly to ${term} those risks.`],
       [`The new procedure removed the need for a second inspection.`,`It helped ${term} several unnecessary checks.`]
     ]},
-    {pos:'v',re:/demonstrat|verify|confirm|corroborat|substantiate|validat|prove|make evident|indicate|reveal|exemplif/,pairs:[
+    {pos:'v',re:/\bdisclose\b|divulge|make known|reveal.*secret|reveal.*identity|reveal.*source/,pairs:[
+      [`The report kept the donor's name hidden until the final paragraph.`,`Only then did the author ${term} the source of the funding.`],
+      [`The witness knew who had opened the locked cabinet.`,`Under questioning, she agreed to ${term} the name.`],
+      [`The company had not told customers how the data were being used.`,`The new policy forced it to ${term} that information.`]
+    ]},
+    {pos:'v',re:/invalidat|disprove|make invalid|show.*false/,pairs:[
+      [`The theory predicted that no metal would survive the heat, but the sample remained intact.`,`That result seemed to ${term} the theory.`],
+      [`The witness's timeline placed the suspect miles away at the crucial moment.`,`Her testimony could ${term} the accusation.`],
+      [`The old calculation depended on a measurement later shown to be wrong.`,`The correction helped ${term} the earlier conclusion.`]
+    ]},
+    {pos:'v',re:/demonstrat|verify|confirm|corroborat|substantiate|\bvalidat|\bprove\b|make evident|indicate|reveal|exemplif/,pairs:[
       [`The claim seemed doubtful until new data appeared.`,`Those data helped ${term} the researchers' conclusion.`],
       [`The pattern was visible in every trial.`,`The repeated results ${term} the team's hypothesis.`],
       [`Readers needed concrete evidence, not just a claim.`,`The example was included to ${term} the point.`]
     ]},
-    {pos:'v',re:/ameliorat|improv|enhance|augment|bolster|strengthen|reinforce|empower|increase|enlarge/,pairs:[
+    {pos:'v',re:/improvis|without preparation|extempor/,pairs:[
+      [`The actor forgot several lines, but the scene could not stop.`,`She had to ${term} until the other performers recovered.`],
+      [`The storm destroyed the planned route before the expedition began.`,`The team was forced to ${term} a new path through the valley.`],
+      [`The musician had no written solo for the final chorus.`,`He decided to ${term} one on stage.`]
+    ]},
+    {pos:'v',re:/ameliorat|\bimprov(?:e|ed|es|ing|ement)\b|enhance|augment|bolster|strengthen|reinforce|empower|increase|enlarge/,pairs:[
       [`The program was weak at first.`,`Extra funding helped ${term} its effectiveness.`],
       [`The argument lacked enough support.`,`The new evidence was added to ${term} it.`],
       [`Conditions in the area had begun to decline.`,`The reform was designed to ${term} them.`]
     ]},
-    {pos:'v',re:/attenuat|diminish|undermin|weaken|lessen|mitigat|reduce|impair|erod|decrease|abate/,pairs:[
+    {pos:'v',re:/palliat|ease.*pain|relieve.*symptom|make.*less severe/,pairs:[
+      [`The medicine could not cure the disease itself.`,`It was meant to ${term} the patient's pain.`],
+      [`The apology did not erase the damage, but it softened the anger in the room.`,`At least it helped ${term} the conflict.`],
+      [`The shelter could not solve homelessness overnight.`,`Its beds and meals helped ${term} the immediate hardship.`]
+    ]},
+    {pos:'v',re:/impair|damage.*ability|make.*worse|weaken.*function/,pairs:[
+      [`The injury affected the athlete's balance even after the pain faded.`,`Doctors said it could ${term} her coordination for weeks.`],
+      [`The fog grew thick just before the plane was scheduled to land.`,`Poor visibility began to ${term} the pilot's judgment.`],
+      [`The chemical spill did not destroy the river, but it harmed several species.`,`Scientists warned that it could ${term} the ecosystem.`]
+    ]},
+    {pos:'v',re:/undermin|weaken.*gradually|damage.*support/,pairs:[
+      [`The scandal did not end the campaign immediately, but it damaged public trust.`,`Over time, it began to ${term} support for the candidate.`],
+      [`The bridge looked solid, yet water was washing away the soil beneath it.`,`Engineers feared the current would ${term} the foundation.`],
+      [`The witness changed small details each time she spoke.`,`Those changes started to ${term} her credibility.`]
+    ]},
+    {pos:'v',re:/attenuat|diminish|weaken|lessen|reduce|erod|decrease/,pairs:[
       [`The original effect was too strong.`,`The researchers adjusted the design to ${term} it.`],
       [`The criticism made the proposal less convincing.`,`It began to ${term} support for the plan.`],
       [`The problem could not be removed completely.`,`The new measure at least helped ${term} its impact.`]
     ]},
-    {pos:'v',re:/obscur|conceal|mask|hide|blur|confound|perplex|puzzl|unclear/,pairs:[
+    {pos:'v',re:/\bblurt\b|utter suddenly|say.*without thinking|speak.*impulsively/,pairs:[
+      [`The answer was supposed to remain secret until the announcement.`,`Nervous and excited, the student almost ${term} it out early.`],
+      [`The witness tried to stay calm, but the question surprised her.`,`She began to ${term} details she had meant to keep private.`],
+      [`The child realized the surprise party was hidden in the next room.`,`Before anyone could stop him, he was about to ${term} the news.`]
+    ]},
+    {pos:'v',re:/obscur|conceal|mask|\bhide\b|blur|confound|perplex|puzzl|unclear/,pairs:[
       [`The extra details made the main pattern harder to see.`,`Instead of clarifying the issue, they ${term} it.`],
       [`The two species looked almost identical in the photograph.`,`That similarity could ${term} even trained observers.`],
       [`The explanation added too many unrelated points.`,`As a result, it seemed to ${term} the central claim.`]
     ]},
-    {pos:'v',re:/coalesce|integrat|incorporat|combine|merge|fuse|unify|synthes/,pairs:[
+    {pos:'v',re:/incorporat|include.*as part|take in.*part/,pairs:[
+      [`The first draft ignored the new survey results.`,`The revision tried to ${term} that evidence into the argument.`],
+      [`The city wanted the old factory to become part of the new arts district.`,`Planners looked for a way to ${term} the building into the design.`],
+      [`The recipe was plain until the cook added herbs from the garden.`,`Those ingredients helped ${term} more flavor into the dish.`]
+    ]},
+    {pos:'v',re:/coalesce|integrat|combin|merge|\bfuse\b|unify|synthes/,pairs:[
       [`Several separate groups began working toward the same goal.`,`Over time, they started to ${term} into one organization.`],
       [`The revision did not leave the new evidence aside.`,`Instead, it tried to ${term} that evidence into the argument.`],
       [`The pieces looked unrelated at first.`,`The final paragraph helped ${term} them into a single idea.`]
@@ -11622,7 +11667,17 @@ function clozeScenePair(w){
       [`The heat was concentrated in one small area.`,`The new design allowed it to ${term} more evenly.`],
       [`The seeds did not remain beside the parent plant.`,`Wind helped ${term} them across the field.`]
     ]},
-    {pos:'v',re:/elicit|induce|engender|prompt|trigger|produce|cause|bring about|generate|evoke|provoke/,pairs:[
+    {pos:'v',re:/prevail|win out|prove stronger|succeed despite/,pairs:[
+      [`Several proposals were debated, but only one had enough support.`,`By the end of the meeting, it began to ${term}.`],
+      [`The team faced injuries, bad weather, and a hostile crowd.`,`Even so, it managed to ${term}.`],
+      [`The old theory survived years of criticism.`,`For a long time, it continued to ${term}.`]
+    ]},
+    {pos:'v',re:/\bevoke\b|call forth.*memory|bring to mind/,pairs:[
+      [`The smell of cedar reminded the traveler of her childhood home.`,`It seemed to ${term} memories she had not expected.`],
+      [`The photograph showed an empty station at dusk.`,`Its quiet colors ${term} a feeling of loneliness.`],
+      [`The composer used a slow melody and distant horns.`,`The music was meant to ${term} a sense of mourning.`]
+    ]},
+    {pos:'v',re:/elicit|induce|engender|prompt|trigger|\bproduce\b|bring about|generate|\bprovoke\b/,pairs:[
       [`The image was meant to make viewers react.`,`Its unusual colors helped ${term} a strong response.`],
       [`The policy changed people's incentives.`,`Those incentives could ${term} different behavior.`],
       [`The question was carefully worded.`,`It was designed to ${term} a detailed answer.`]
@@ -11631,6 +11686,11 @@ function clozeScenePair(w){
       [`The answer was not stated directly.`,`Readers had to ${term} it from the evidence.`],
       [`The data showed a pattern but not an explicit explanation.`,`The scientists could ${term} the cause from that pattern.`],
       [`The passage gave several clues.`,`A careful reader could ${term} the author's point.`]
+    ]},
+    {pos:'v',re:/fulminat|denounce angrily|thunder against|violent protest/,pairs:[
+      [`The proposal angered the columnist so much that he devoted an entire essay to it.`,`In print, he began to ${term} against the policy.`],
+      [`The speaker's voice rose as he attacked the corrupt officials.`,`He seemed ready to ${term} for the rest of the evening.`],
+      [`The editorial did not merely disagree with the law; it condemned it furiously.`,`Its author used the page to ${term}.`]
     ]},
     {pos:'v',re:/decry|criticiz|condemn|denounce|censure|disparag/,pairs:[
       [`The policy was widely seen as unfair.`,`Several writers used their essays to ${term} it.`],
@@ -11642,31 +11702,151 @@ function clozeScenePair(w){
       [`The custom did not disappear after many years.`,`Instead, it continued to ${term}.`],
       [`The species faced harsh conditions.`,`Even so, it managed to ${term} in the region.`]
     ]},
-    {pos:'v',re:/derive|descend|originate|stem from|come from|source|ancestor/,pairs:[
+    {pos:'v',re:/subside|settle down|sink to a lower|become less intense|die down/,pairs:[
+      [`The storm was violent at midnight, but the wind weakened before dawn.`,`By morning, the danger had begun to ${term}.`],
+      [`The crowd shouted for several minutes after the announcement.`,`The noise finally started to ${term}.`],
+      [`Floodwater covered the road during the night.`,`Residents waited for it to ${term} before returning home.`]
+    ]},
+    {pos:'v',re:/derive|originate|stem from|come from|source|ancestor/,pairs:[
       [`The modern form was not invented independently.`,`It appears to ${term} an older tradition.`],
       [`The word has a long history.`,`Linguists think it may ${term} a regional expression.`],
       [`The species shares traits with an earlier group.`,`Researchers believe it may ${term} that group.`]
     ]},
-    {pos:'adj',re:/mutable|variable|vary|change|evolv|fluid|alter/,pairs:[
+    {pos:'v',re:/domineer|rule over tyrannically|tyrann|oppress|subjugat|dictat|bully|control every|dominat/,pairs:[
+      [`The new supervisor rejected every suggestion and punished employees who disagreed with him.`,`Within weeks, the staff felt that he wanted to ${term} the entire office.`],
+      [`The ruler ignored local councils and made even minor decisions by force.`,`Historians argue that he tried to ${term} the province.`],
+      [`The coach shouted down questions and allowed no one else to set the team's strategy.`,`Players said he tended to ${term} rather than lead.`]
+    ]},
+    {pos:'v',re:/masticat|chew|grind.*teeth|bite.*food/,pairs:[
+      [`The leaves were too tough to swallow whole.`,`The animal had to ${term} them slowly before eating.`],
+      [`Doctors told the patient not to rush through meals after the surgery.`,`Instead, she needed to ${term} each bite carefully.`],
+      [`The food was fibrous and difficult to swallow.`,`It became easier only after the diners began to ${term}.`]
+    ]},
+    {pos:'v',re:/waft|float.*air|drift.*air|carry.*scent|pass.*gently/,pairs:[
+      [`Someone opened the bakery door, and the smell of warm bread reached the street.`,`The aroma began to ${term} through the crowd.`],
+      [`A light breeze moved across the garden after sunset.`,`The scent of jasmine seemed to ${term} toward the porch.`],
+      [`Smoke rose from the candle without any sudden movement.`,`It appeared to ${term} across the room.`]
+    ]},
+    {pos:'v',re:/dismember|cut.*limb|sever|take apart.*body|divide.*body/,pairs:[
+      [`The ancient myth describes a monster being cut apart after the battle.`,`In the final scene, the hero threatens to ${term} it.`],
+      [`The statue was not merely damaged; its arms and legs were removed.`,`The attackers had tried to ${term} the figure.`],
+      [`The machine pulled the model apart piece by piece.`,`The demonstration showed how easily it could ${term} the object.`]
+    ]},
+    {pos:'v',re:/constrict|contract|squeeze|close.*tight|compress|narrow/,pairs:[
+      [`Cold air made the metal ring tighten around the pipe.`,`As the temperature dropped, the ring began to ${term}.`],
+      [`The snake wrapped itself around the branch and tightened its coils.`,`With each movement, it seemed to ${term} its grip.`],
+      [`The passage grew narrower near the cave entrance.`,`The walls appeared to ${term} until only one person could pass.`]
+    ]},
+    {pos:'v',re:/rejuvenat|make young again|restore.*youth|renew.*energy|revitalize/,pairs:[
+      [`The neglected park had empty paths and broken benches.`,`New trees, lights, and playgrounds helped ${term} the space.`],
+      [`The old theater had lost most of its audience.`,`A bold season of new plays was meant to ${term} it.`],
+      [`After months of illness, the athlete looked exhausted.`,`Rest and careful training gradually helped ${term} her career.`]
+    ]},
+    {pos:'v',re:/expurgat|sanitize|remove offensive|clean.*book|censor|delete.*passage/,pairs:[
+      [`The school edition kept the plot but removed several violent scenes.`,`Editors chose to ${term} the novel before assigning it.`],
+      [`The diary contained details the family considered too private for publication.`,`The publisher agreed to ${term} the text.`],
+      [`The speech was printed without its harshest insults.`,`A committee had decided to ${term} the transcript.`]
+    ]},
+    {pos:'v',re:/\btipple\b|drink moderately|drink.*regularly|sip.*alcohol/,pairs:[
+      [`The guests did not drink heavily at the reception.`,`They simply gathered by the fireplace to ${term} and talk.`],
+      [`After dinner, the professor poured a small glass of wine.`,`He liked to ${term} while reading in the evening.`],
+      [`The festival served only small cups of cider.`,`Visitors could ${term} without becoming noisy.`]
+    ]},
+    {pos:'v',re:/\bengage\b|capture.*attention|draw.*attention|involve.*audience/,pairs:[
+      [`The opening scene was quiet, but its mystery made viewers lean forward.`,`The director knew it would ${term} the audience.`],
+      [`The teacher used a surprising question before introducing the lesson.`,`She wanted to ${term} the class immediately.`],
+      [`The exhibit included objects visitors could touch and move.`,`Those features helped ${term} younger children.`]
+    ]},
+    {pos:'v',re:/dissuad|persuade.*not|discourage.*from|talk.*out of/,pairs:[
+      [`The route crossed unstable ice, so the guide warned the hikers repeatedly.`,`She tried to ${term} them from continuing.`],
+      [`The plan was expensive and unlikely to work.`,`Several advisors attempted to ${term} the mayor from approving it.`],
+      [`The student wanted to quit school after one bad semester.`,`Her teacher tried to ${term} her from leaving.`]
+    ]},
+    {pos:'v',re:/allure|entice|attract.*by charm|tempt/,pairs:[
+      [`The bright window display made pedestrians stop and look inside.`,`The store hoped the colors would ${term} new customers.`],
+      [`The brochure showed quiet beaches and clear water.`,`Its images were designed to ${term} travelers.`],
+      [`The smell of fresh bread reached people halfway down the block.`,`The bakery used it to ${term} passersby.`]
+    ]},
+    {pos:'v',re:/cajol|coax|wheedle|talk.*into|persuade.*gently/,pairs:[
+      [`The child refused to leave the playground until her brother promised one more game.`,`He tried to ${term} her into going home.`],
+      [`The committee was reluctant to fund the project.`,`The director used charts and humor to ${term} members into supporting it.`],
+      [`The cat would not come out from under the bed.`,`The owner used treats to ${term} it into the hallway.`]
+    ]},
+    {pos:'v',re:/defray|pay.*cost|cover.*expense|finance|fund/,pairs:[
+      [`The trip was too expensive for many students.`,`A local foundation agreed to ${term} part of the cost.`],
+      [`The museum wanted the lecture to be free to the public.`,`A donor offered to ${term} the speaker's travel expenses.`],
+      [`The repairs would strain the school's budget.`,`The grant helped ${term} the bill.`]
+    ]},
+    {pos:'v',re:/ignite|kindle|light.*fire|set.*fire|spark/,pairs:[
+      [`The campfire would not start until the wood was dry.`,`A single match was enough to ${term} it.`],
+      [`The discovery gave the debate new energy.`,`It helped ${term} public interest in the issue.`],
+      [`The candle sat untouched on the table.`,`The child asked whether she could ${term} it before dinner.`]
+    ]},
+    {pos:'v',re:/foment|incit|instigat|stir up|encourage.*unrest|arouse.*trouble/,pairs:[
+      [`The crowd was already angry, and the rumor made it more restless.`,`Officials feared the speech would ${term} further unrest.`],
+      [`The editor printed exaggerations about the dispute for several weeks.`,`Those articles helped ${term} resentment between the groups.`],
+      [`The city needed calm, but the false message spread through every district.`,`Its effect was to ${term} panic rather than reduce it.`]
+    ]},
+    {pos:'v',re:/adorn|decorate|ornament|embellish/,pairs:[
+      [`The plain hall looked bare before the ceremony.`,`Students used flowers and ribbons to ${term} the doorway.`],
+      [`The manuscript's margins were empty at first.`,`The artist later added gold leaves to ${term} each page.`],
+      [`The old jacket seemed too simple for the performance.`,`The designer chose beads to ${term} the collar.`]
+    ]},
+    {pos:'v',re:/protract|prolong|lengthen|draw out|extend.*time/,pairs:[
+      [`The debate had already lasted for hours, but several speakers requested more time.`,`Their speeches threatened to ${term} the meeting.`],
+      [`The lawsuit could have ended quickly if both sides had agreed.`,`Instead, new objections helped ${term} the case.`],
+      [`The director kept adding scenes after the film was nearly complete.`,`Those additions began to ${term} the production.`]
+    ]},
+    {pos:'v',re:/filch|steal|pilfer|snatch|take.*secretly/,pairs:[
+      [`The coins disappeared from the desk while the room was crowded.`,`Investigators suspected that someone had tried to ${term} them.`],
+      [`The student copied a paragraph from the article without citation.`,`The teacher said he had tried to ${term} another writer's work.`],
+      [`The shopkeeper watched the customer slip a scarf into her bag.`,`She appeared ready to ${term} it.`]
+    ]},
+    {pos:'adj',re:/immutable|unchangeable|not subject to change|fixed forever/,pairs:[
+      [`The rule had survived every reform and every change in leadership.`,`To many officials, it seemed ${term}.`],
+      [`The inscription was carved into stone and protected by law.`,`Its wording was treated as ${term}.`],
+      [`The philosopher argued that moral truths do not shift with fashion.`,`She described them as ${term}.`]
+    ]},
+    {pos:'adj',re:/\bmutable\b|variable|vary|change|evolv|fluid/,pairs:[
       [`The category did not stay fixed over time.`,`Scholars now describe it as ${term}.`],
       [`The conditions shifted whenever the environment changed.`,`This made the system seem ${term}.`],
       [`The tradition kept adapting to new audiences.`,`Its form was therefore ${term} rather than fixed.`]
     ]},
-    {pos:'adj',re:/static|unvarying|unchanged|fixed|stationary|constant|permanent/,pairs:[
+    {pos:'adj',re:/irresolute|indecisive|hesitant|unable to decide/,pairs:[
+      [`The committee kept postponing the vote because members feared choosing a side.`,`Its leadership seemed ${term}.`],
+      [`The traveler changed plans three times before leaving the station.`,`Friends found him unusually ${term}.`],
+      [`The general wanted to advance, then retreat, then wait for more reports.`,`His officers worried that he had become ${term}.`]
+    ]},
+    {pos:'adj',re:/indeterminate|not precisely determined|vague|undefined|not fixed/,pairs:[
+      [`The inscription was too damaged for scholars to date with confidence.`,`Its age remained ${term}.`],
+      [`The rules did not say exactly when the committee had to decide.`,`The deadline was ${term}.`],
+      [`The shadowy image could have shown a bird, a plane, or a cloud.`,`Its shape was ${term}.`]
+    ]},
+    {pos:'adj',re:/static|unvarying|unchanged|\bfixed\b|stationary|constant|permanent/,pairs:[
       [`The pattern did not shift from one trial to the next.`,`It remained ${term} throughout the experiment.`],
       [`The object stayed in the same position.`,`The researchers treated it as ${term}.`],
       [`No meaningful change occurred over time.`,`The result was described as ${term}.`]
     ]},
-    {pos:'n',re:/paucity|scarcity|lack|shortage|insufficiency/,pairs:[
+    {pos:'n',re:/paucity|scarcity|shortage|insufficiency/,pairs:[
       [`The archive contained very little evidence.`,`The historian emphasized the ${term} of reliable records.`],
       [`Only a small number of examples survived.`,`That ${term} made the conclusion uncertain.`],
       [`The team needed more data than it had.`,`The ${term} of observations limited the study.`]
     ]},
-    {pos:'n',re:/ubiquit|prevalence|widespread presence|abundance/,pairs:[
+    {pos:'n',re:/plethora|overabundance|excessive amount|too many/,pairs:[
+      [`The appendix listed far more examples than the argument needed.`,`Readers complained about the ${term} of details.`],
+      [`The market offered dozens of nearly identical models.`,`Buyers faced a ${term} of choices.`],
+      [`The professor assigned articles, videos, and three books for one week.`,`Students felt overwhelmed by the ${term}.`]
+    ]},
+    {pos:'n',re:/profusion|abundance|large quantity|lavish supply/,pairs:[
+      [`Wildflowers covered every open patch of the hillside.`,`Their ${term} turned the field bright yellow.`],
+      [`The artist filled the border with leaves, birds, and tiny stars.`,`The decoration's ${term} made the page feel alive.`],
+      [`The archive held hundreds of letters from the same month.`,`That ${term} gave historians unusual detail.`]
+    ]},
+    {pos:'n',re:/ubiquit|prevalence|widespread presence/,pairs:[
       [`The pattern appeared in almost every region studied.`,`Its ${term} surprised the researchers.`],
       [`The species was not limited to one habitat.`,`Its ${term} made it easy to observe.`]
     ]},
-    {pos:'adj',re:/ubiquitous|widespread|prevalent|common|universal|abundant|prolific/,pairs:[
+    {pos:'adj',re:/ubiquitous|widespread|prevalent|found nearly everywhere/,pairs:[
       [`Examples could be found nearly everywhere.`,`The report emphasized how ${term} the practice had become.`],
       [`The pattern appeared in almost every region studied.`,`Researchers described it as ${term}.`],
       [`The species was not limited to one habitat.`,`By the end of the survey, it seemed ${term}.`]
@@ -11676,12 +11856,27 @@ function clozeScenePair(w){
       [`The difference existed, but it was barely visible.`,`The researchers described it as ${term}.`],
       [`Only a very small amount remained in the sample.`,`That amount was ${term}.`]
     ]},
-    {pos:'n',re:/disparity|inequality|difference|distinction|divergence|gap|contrast/,pairs:[
+    {pos:'n',re:/apathy|lack of interest|lack of emotion|indifference/,pairs:[
+      [`The election affected every family, yet only a few people attended the forum.`,`Officials worried about public ${term}.`],
+      [`The charity expected anger or support, but most viewers simply changed the channel.`,`That ${term} made fundraising difficult.`],
+      [`The student knew the grade mattered but could not make herself care.`,`Her teacher mistook the ${term} for laziness.`]
+    ]},
+    {pos:'n',re:/antithesis|direct opposite|exact opposite|complete contrast/,pairs:[
+      [`The first poem praises restraint, while the second celebrates excess.`,`In that sense, the second is the ${term} of the first.`],
+      [`The old building is ornate and crowded with detail; the new one is plain glass.`,`The new design is almost the ${term} of its neighbor.`],
+      [`The hero values mercy, but the villain treats mercy as weakness.`,`The villain becomes the ${term} of everything the hero believes.`]
+    ]},
+    {pos:'n',re:/disparity|inequality|\bdifference\b|distinction|divergence|\bgap\b|\bcontrast\b/,pairs:[
       [`The two groups showed a clear gap in results.`,`The study focused on that ${term}.`],
       [`The first case succeeded while the second failed.`,`The author emphasizes this ${term}.`],
       [`The evidence did not support a single uniform pattern.`,`Instead, it revealed a ${term} between the groups.`]
     ]},
-    {pos:'n',re:/amends|compensation|reparation|redress|repayment|make up for/,pairs:[
+    {pos:'n',re:/unguent|ointment|salve|medicinal paste/,pairs:[
+      [`The burn stung until the nurse opened a small jar of medicine.`,`She spread the ${term} gently over the skin.`],
+      [`The herbal mixture was thick and oily rather than drinkable.`,`Patients used the ${term} on sore joints.`],
+      [`The travel kit included bandages and a soothing cream.`,`The hiker applied the ${term} to the scrape.`]
+    ]},
+    {pos:'n',re:/amends|compensation|\breparation\b|redress|repayment/,pairs:[
       [`The company admitted that its policy had unfairly cost workers money.`,`Employees asked for ${term} to make up for the loss.`],
       [`The city damaged several homes during construction.`,`Residents argued that some form of ${term} was necessary.`],
       [`The apology alone did not repair the harm.`,`The community also wanted ${term}.`]
@@ -11696,83 +11891,431 @@ function clozeScenePair(w){
       [`The proposal violated the community's deepest values.`,`Its announcement produced immediate ${term}.`],
       [`The description was meant to make readers recoil.`,`It filled them with ${term}.`]
     ]},
-    {pos:'v',re:/tether|fasten|tie|attach|secure/,pairs:[
+    {pos:'v',re:/\btether\b|fasten|\btie\b|attach|secure/,pairs:[
       [`The balloon would have blown away in the wind.`,`The guide used a cord to ${term} it to the railing.`],
       [`The boat kept drifting from the dock.`,`A rope helped ${term} it in place.`],
       [`The animal needed enough room to move but could not wander freely.`,`The handler decided to ${term} it near the post.`]
     ]},
-    {pos:'n',re:/tether|rope|cord|restraint|tie/,pairs:[
+    {pos:'n',re:/constraint|limitation|restricting condition/,pairs:[
+      [`The budget could not support every proposal.`,`That financial ${term} forced the team to choose only one project.`],
+      [`The bridge design had to fit a narrow riverbank and strict height rules.`,`Engineers worked within that ${term}.`],
+      [`The writer had only five hundred words for a complex topic.`,`The ${term} made every sentence matter.`]
+    ]},
+    {pos:'n',re:/restraint|self-control/,pairs:[
+      [`The speaker was angry but chose each word carefully.`,`Her ${term} kept the meeting civil.`],
+      [`The budget could not support every proposal.`,`Financial ${term} forced the team to choose only one project.`],
+      [`The athlete wanted to sprint early, but the race was long.`,`His ${term} helped him save energy for the finish.`]
+    ]},
+    {pos:'n',re:/\btether\b|\brope\b|\bcord\b|\btie\b/,pairs:[
       [`The balloon would have blown away without a cord.`,`Its ${term} kept it attached to the railing.`],
       [`The boat drifted until someone secured it.`,`The ${term} held it close to the dock.`],
       [`The device could move, but only within a limited range.`,`A short ${term} kept it from going farther.`]
     ]},
-    {pos:'adj',re:/substantial|considerable|significant|important|large|major/,pairs:[
+    {pos:'adj',re:/factious|factional|divisive|causing factions/,pairs:[
+      [`The debate split the club into hostile camps that refused to work together.`,`The issue became ${term}.`],
+      [`Each committee member defended a different faction instead of the shared goal.`,`The atmosphere grew ${term}.`],
+      [`The leader's speech encouraged rivalry within the movement.`,`Opponents called it ${term}.`]
+    ]},
+    {pos:'adj',re:/insubstantial|lacking substance|not substantial|flimsy|unreal/,pairs:[
+      [`The accusation sounded dramatic, but no evidence supported it.`,`Investigators found the claim ${term}.`],
+      [`The wall looked solid from far away, but it was only thin plywood.`,`Up close, the structure seemed ${term}.`],
+      [`The ghost in the story could pass through doors and leave no shadow.`,`The figure appeared ${term}.`]
+    ]},
+    {pos:'adj',re:/\bsubstantial\b|considerable|significant|important|large|major/,pairs:[
       [`The change was too large to ignore.`,`The report called it ${term}.`],
       [`The effect influenced the entire result.`,`Researchers described its role as ${term}.`],
       [`The difference between the groups was not minor.`,`It was ${term}.`]
     ]},
-    {pos:'adj',re:/feasible|practical|workable|viable|possible/,pairs:[
+    {pos:'adj',re:/quixotic|impractical ideal|unrealistic|romantic.*impossible/,pairs:[
+      [`The plan depended on every nation giving up its weapons at once.`,`Critics dismissed it as ${term}.`],
+      [`The inventor wanted to build a city in the clouds with no money or materials.`,`The proposal was ${term}.`],
+      [`The campaign promised a perfect society by the end of the year.`,`Commentators called it ${term}.`]
+    ]},
+    {pos:'adj',re:/feasible|practical|workable|viable/,pairs:[
       [`The plan could be completed with the available time and money.`,`For that reason, the team considered it ${term}.`],
       [`The proposal sounded ambitious but could actually be carried out.`,`The committee judged it ${term}.`],
       [`Nothing in the design made the project impossible.`,`The solution remained ${term}.`]
     ]},
-    {pos:'adj',re:/similar|comparable|homogeneous|same|uniform|identical|analogous|parallel/,pairs:[
+    {pos:'adj',re:/coeval|same age|same period|contemporary with/,pairs:[
+      [`The two manuscripts were copied in the same century.`,`Scholars now treat them as ${term}.`],
+      [`The fossils came from a single layer of rock.`,`Researchers believe the species were ${term}.`],
+      [`The temple and the nearby wall used identical stone from the same quarry.`,`The evidence suggests the structures are ${term}.`]
+    ]},
+    {pos:'adj',re:/coincident|occurring at the same time|happening together|same place and time/,pairs:[
+      [`The two festivals began on the same weekend by chance.`,`Their dates were ${term}.`],
+      [`The maps showed that the old road and the trade route overlapped exactly.`,`For several miles, the paths were ${term}.`],
+      [`The power failure happened just as the storm reached the city.`,`The events were ${term}, but not necessarily related.`]
+    ]},
+    {pos:'adj',re:/monolithic|single massive|rigidly uniform|one solid block/,pairs:[
+      [`The party allowed no public disagreement among its members.`,`To outsiders, it looked ${term}.`],
+      [`The monument was carved from one enormous block of stone.`,`Its form appeared ${term}.`],
+      [`The company presented every department as if it shared one view.`,`Critics said the organization seemed ${term}.`]
+    ]},
+    {pos:'adj',re:/similar|comparable|homogeneous|uniform|identical|analogous|parallel/,pairs:[
       [`The samples did not vary much from one another.`,`The researchers described them as ${term}.`],
       [`The two cases shared the same structure and led to similar results.`,`The passage presents them as ${term}.`],
       [`Each item in the set had nearly the same features.`,`That made the set seem ${term}.`]
+    ]},
+    {pos:'adj',re:/multifarious|many and varied|numerous and diverse|varied kinds/,pairs:[
+      [`The museum displayed tools, costumes, letters, and musical instruments from the region.`,`Its holdings were ${term}.`],
+      [`The festival included lectures, dances, food stalls, and science demonstrations.`,`Visitors enjoyed its ${term} offerings.`],
+      [`The report drew evidence from archaeology, poetry, law, and trade records.`,`Its sources were unusually ${term}.`]
     ]},
     {pos:'adj',re:/heterogeneous|different|diverse|varied|unlike|divergent/,pairs:[
       [`The collection contained many unlike elements.`,`Its composition was ${term}.`],
       [`The examples came from several unrelated categories.`,`The group was therefore ${term}.`],
       [`The two results did not follow the same pattern.`,`They were clearly ${term}.`]
+    ]},
+    {pos:'adj',re:/pastoral|rural|idyllic|shepherd|simple and peaceful/,pairs:[
+      [`The poem imagines green fields, quiet paths, and shepherds resting beside a stream.`,`Its world is deliberately ${term}.`],
+      [`The painting avoids crowded streets and shows a calm village landscape instead.`,`Critics describe its mood as ${term}.`],
+      [`The novel opens far from the city, among farms and grazing animals.`,`That setting gives the first chapter a ${term} quality.`]
+    ]},
+    {pos:'adj',re:/brawny|husky|muscular|strong.*body|sturdy/,pairs:[
+      [`The worker lifted the stone table without help.`,`Everyone noticed his ${term} build.`],
+      [`The statue's shoulders and arms are unusually broad.`,`The sculptor clearly wanted the figure to look ${term}.`],
+      [`The athlete looked powerful even before the race began.`,`Reporters described him as ${term}.`]
+    ]},
+    {pos:'adj',re:/invulnerable|incapable of injury|cannot be harmed|immune.*harm/,pairs:[
+      [`The armor withstood arrows, fire, and repeated blows.`,`To ordinary weapons, the knight seemed ${term}.`],
+      [`The computer system survived every attempted attack.`,`Engineers began to treat it as nearly ${term}.`],
+      [`In the legend, no blade could wound the hero.`,`For most of the story, he appears ${term}.`]
+    ]},
+    {pos:'adj',re:/cosmic|universe|outer space|celestial|stars|astronomical/,pairs:[
+      [`The documentary moved from Earth to galaxies billions of miles away.`,`Its final chapter took a ${term} view of history.`],
+      [`The poem compares a single human life with the scale of the stars.`,`That contrast gives the ending a ${term} mood.`],
+      [`The scientist studied radiation left from the earliest moments of the universe.`,`Her research focused on ${term} origins.`]
+    ]},
+    {pos:'adj',re:/colossal|gigantic|enormous|immense|huge|vast/,pairs:[
+      [`The new telescope was larger than any instrument the team had built before.`,`Its ${term} mirror required a special building.`],
+      [`The storm covered several states at once.`,`Meteorologists described it as ${term}.`],
+      [`The sculpture rose above the plaza and dwarfed the nearby trees.`,`Visitors called it ${term}.`]
+    ]},
+    {pos:'adj',re:/bogus|fake|false|counterfeit|fraudulent|not genuine/,pairs:[
+      [`The seller claimed the signature belonged to a famous poet, but the ink was modern.`,`Experts quickly decided the autograph was ${term}.`],
+      [`The email looked official, yet its links led to a suspicious address.`,`The security team warned that the message was ${term}.`],
+      [`The ticket copied the theater's logo but had no valid code.`,`At the door, the usher discovered it was ${term}.`]
+    ]},
+    {pos:'adj',re:/genuine|sincere|not pretended|authentic|heartfelt/,pairs:[
+      [`The apology did not sound rehearsed; the speaker paused and admitted specific mistakes.`,`Listeners believed it was ${term}.`],
+      [`The old letter matched every detail known about the poet's life.`,`Experts concluded that it was ${term}.`],
+      [`Her concern continued long after the cameras left.`,`Friends said her kindness was ${term}.`]
+    ]},
+    {pos:'adj',re:/resonant|echoing|resounding|deep and full.*sound/,pairs:[
+      [`The singer's low note filled the hall and seemed to linger after it ended.`,`Critics praised the voice as ${term}.`],
+      [`The bell's tone carried across the valley long after it was struck.`,`Its sound was unusually ${term}.`],
+      [`The cello did not sound thin or brittle.`,`Its ${term} tone gave the passage warmth.`]
+    ]},
+    {pos:'adj',re:/categorical|absolute|unqualified|without exception/,pairs:[
+      [`The witness did not hedge or leave room for doubt.`,`Her denial was ${term}.`],
+      [`The rule applied to every applicant, with no exceptions.`,`The ban was ${term}.`],
+      [`The scientist rejected the claim entirely rather than partly.`,`His statement was ${term}.`]
+    ]},
+    {pos:'adj',re:/qualified|limited|restricted|conditional/,pairs:[
+      [`The committee supported the proposal only if costs stayed low.`,`Its approval was therefore ${term}, not absolute.`],
+      [`The scientist agreed with part of the claim but rejected its broadest conclusion.`,`Her support was carefully ${term}.`],
+      [`The permit allowed concerts during the day but not at night.`,`The permission was ${term}.`]
+    ]},
+    {pos:['adj','n'],re:/incendiary|arsonist|sets? fires?|inflammatory/,pairs:[
+      [`The pamphlet used language so provocative that it angered both sides of the debate.`,`Officials described it as ${term}.`],
+      [`The fire was not accidental; witnesses saw someone pour fuel near the door.`,`Police searched for the ${term}.`],
+      [`The speech did more than criticize the policy; it seemed designed to provoke unrest.`,`Reporters called it ${term}.`]
+    ]},
+    {pos:'adj',re:/macabre|gruesome|ghastly|deathly|morbid|horrid.*death/,pairs:[
+      [`The play opened in a room filled with skulls and funeral candles.`,`Its atmosphere was deliberately ${term}.`],
+      [`The artist painted dancers as skeletons moving through a ruined ballroom.`,`Critics described the image as ${term}.`],
+      [`The story turned a village festival into a procession of ghosts.`,`That strange celebration gave the chapter a ${term} tone.`]
+    ]},
+    {pos:'adj',re:/obnoxious|offensive|objectionable|annoying|repellent/,pairs:[
+      [`The comment interrupted the speaker and mocked several people in the room.`,`Audience members found it ${term}.`],
+      [`The smell from the chemical spill spread through the hallway.`,`Workers described it as ${term}.`],
+      [`The advertisement was loud, insulting, and hard to avoid.`,`Many viewers considered it ${term}.`]
+    ]},
+    {pos:'adj',re:/scrupulous|conscientious|extremely thorough|careful|meticulous/,pairs:[
+      [`The archivist checked every date twice before releasing the catalog.`,`Her method was ${term}.`],
+      [`The accountant refused to approve the report until each receipt matched the ledger.`,`Colleagues called him ${term}.`],
+      [`The editor caught errors that everyone else had missed.`,`Her review was unusually ${term}.`]
+    ]},
+    {pos:'adj',re:/haggard|gaunt|wasted away|exhausted|drawn/,pairs:[
+      [`After three sleepless nights, the traveler looked pale and hollow-eyed.`,`His face was ${term}.`],
+      [`The portrait shows a figure with sunken cheeks and tired eyes.`,`The painter makes him appear ${term}.`],
+      [`Weeks of illness had changed her appearance.`,`Friends were startled by how ${term} she looked.`]
+    ]},
+    {pos:'adj',re:/ignominious|disgrace|shame|humiliating|dishonorable/,pairs:[
+      [`The team lost after breaking rules that it had promised to follow.`,`Reporters called the defeat ${term}.`],
+      [`The official resigned after the scandal became public.`,`His exit from office was ${term}.`],
+      [`The general abandoned his soldiers and fled the field.`,`Historians describe the retreat as ${term}.`]
+    ]},
+    {pos:'adj',re:/subservient|servile|obsequious|behaving like a slave|excessively obedient/,pairs:[
+      [`The assistant praised every decision the director made, even obvious mistakes.`,`Her behavior seemed ${term}.`],
+      [`The courtier never disagreed with the king in public.`,`Observers considered him ${term}.`],
+      [`The character gives up his own judgment whenever a powerful person enters the room.`,`The novel presents him as ${term}.`]
+    ]},
+    {pos:'adj',re:/droll|queer and amusing|amusing|oddly funny/,pairs:[
+      [`The comedian told the story so quietly that its humor took a moment to register.`,`The effect was ${term}.`],
+      [`The drawing shows a dog wearing a judge's robe and looking completely serious.`,`Its humor is ${term}.`],
+      [`The remark was strange, but it made the whole room laugh.`,`Listeners found it ${term}.`]
+    ]},
+    {pos:'adj',re:/impious|irreverent|disrespectful.*sacred|not pious/,pairs:[
+      [`The joke mocked a ritual that many people considered sacred.`,`Religious leaders called it ${term}.`],
+      [`The character laughs during the solemn prayer.`,`The scene presents him as deliberately ${term}.`],
+      [`The essay questions the holy tradition in a scornful tone.`,`Its critics considered the argument ${term}.`]
+    ]},
+    {pos:'adj',re:/pharisaical|hypocritically pious|hypocritical|self-righteous|\bpious\b/,pairs:[
+      [`The speaker condemned small faults in others while hiding his own misconduct.`,`His moral tone seemed ${term}.`],
+      [`The character boasts about virtue but treats poorer neighbors cruelly.`,`The novel exposes his ${term} attitude.`],
+      [`The essay criticizes leaders who sound holy while acting selfishly.`,`It calls their behavior ${term}.`]
+    ]},
+    {pos:'adj',re:/foolhardy|rash|reckless|imprud|unwise risk/,pairs:[
+      [`The climber ignored storm warnings and started up the mountain alone.`,`The decision was ${term}.`],
+      [`The captain sailed into dangerous waters without maps or supplies.`,`Crew members called the plan ${term}.`],
+      [`The experiment used unstable chemicals without proper protection.`,`Reviewers judged it ${term}.`]
+    ]},
+    {pos:'adj',re:/incontrovertible|indisputable|not open to question|undeniable|irrefutable/,pairs:[
+      [`The video showed the suspect entering the room at the exact time of the theft.`,`The evidence was ${term}.`],
+      [`Every measurement pointed to the same conclusion.`,`The result seemed ${term}.`],
+      [`The fossil was found in a dated rock layer with no sign of disturbance.`,`For the researchers, its age was ${term}.`]
+    ]},
+    {pos:'n',re:/peccadillo|minor offense|small fault|trivial sin/,pairs:[
+      [`The error embarrassed the intern, but it did not harm the project.`,`Her manager treated it as a ${term}.`],
+      [`The memoir admits a few youthful mistakes without presenting them as serious crimes.`,`Each one appears as a ${term}.`],
+      [`The host was late by five minutes and apologized at once.`,`Guests saw the delay as only a ${term}.`]
+    ]},
+    {pos:['n','v','adj'],re:/\bslight\b|small insult|minor insult|treat.*as unimportant/,pairs:[
+      [`The invitation placed the senior scholar at a table far from the stage.`,`She interpreted the arrangement as a ${term}.`],
+      [`The reviewer mentioned the poet only in passing despite her influence.`,`Many readers felt the essay had ${term}ed her.`],
+      [`The difference between the two measurements was too small to matter.`,`Researchers called it ${term}.`]
+    ]},
+    {pos:'n',re:/defamation|libel|slander|damage.*reputation|false statement.*reputation/,pairs:[
+      [`The article accused the mayor of theft without evidence.`,`His lawyers called the claim ${term}.`],
+      [`The rumor damaged the scientist's career even after it was disproved.`,`She sued the magazine for ${term}.`],
+      [`The speaker knew the accusation was false but repeated it in public.`,`The statement crossed into ${term}.`]
+    ]},
+    {pos:'n',re:/\bincredulity\b|doubt about the truth|skepticism|disbelief|refusal to believe/,pairs:[
+      [`The claim sounded impossible, and even the friendly audience fell silent.`,`Many listeners reacted with ${term}.`],
+      [`The witness described events that seemed to violate common sense.`,`The judge could not hide her ${term}.`],
+      [`The magician explained that the trick used no hidden mirrors.`,`The crowd greeted the explanation with ${term}.`]
+    ]},
+    {pos:'n',re:/\bcredulity\b|belief on slight evidence|readiness to believe|too ready to believe|gullibility|naivete|trustfulness/,pairs:[
+      [`The advertisement promised impossible results, yet many buyers accepted every claim.`,`Their ${term} made the fraud easy to spread.`],
+      [`The story sounded unlikely, but the audience never questioned it.`,`The speaker depended on their ${term}.`],
+      [`The fake expert used scientific words to sound impressive.`,`He took advantage of the crowd's ${term}.`]
+    ]},
+    {pos:'n',re:/affront|insult|offense|disrespect/,pairs:[
+      [`The ambassador was seated behind junior officials at the ceremony.`,`His government treated the arrangement as an ${term}.`],
+      [`The editor removed the dedication without telling the author.`,`To the author, that decision felt like an ${term}.`],
+      [`The joke mocked the guest rather than welcoming her.`,`Many people considered it an ${term}.`]
+    ]},
+    {pos:'n',re:/tenure|duration of service|term of office|period.*service/,pairs:[
+      [`The professor taught at the college for nearly forty years.`,`Her ${term} there shaped several generations of students.`],
+      [`The mayor served during a decade of rapid growth.`,`Historians still debate the effects of his ${term}.`],
+      [`The coach led the team through five winning seasons.`,`His ${term} ended only after he retired.`]
+    ]},
+    {pos:'n',re:/\bepoch\b|distinct historical period|new era/,pairs:[
+      [`The invention changed how people worked, traveled, and communicated.`,`Historians describe it as the beginning of a new ${term}.`],
+      [`The dynasty's fall ended centuries of political stability.`,`A turbulent ${term} followed.`],
+      [`The discovery opened questions that shaped science for generations.`,`Researchers later saw it as an ${term} in the field.`]
+    ]},
+    {pos:'n',re:/period of time|span of time|\binterval\b|\bera\b/,pairs:[
+      [`The fossils all came from the same layer of rock.`,`Researchers dated them to a single ${term}.`],
+      [`The city changed rapidly between the two wars.`,`That ${term} produced much of its modern architecture.`],
+      [`The diary covers only three months of the expedition.`,`Even that short ${term} reveals the crew's difficulties.`]
+    ]},
+    {pos:'n',re:/gusto|enjoyment|enthusiasm|zest|relish/,pairs:[
+      [`The singer attacked the final chorus with obvious delight.`,`Her ${term} energized the whole audience.`],
+      [`The children ran into the science fair, eager to try every experiment.`,`Their ${term} impressed the teachers.`],
+      [`He described the meal so happily that everyone wanted to taste it.`,`His ${term} was contagious.`]
+    ]},
+    {pos:'n',re:/deceit|deception|misrepresentation|fraud|trickery/,pairs:[
+      [`The advertisement promised a free trial but hid expensive fees in the fine print.`,`Consumer groups called the campaign ${term}.`],
+      [`The witness changed key details to protect the company.`,`The judge saw the testimony as ${term}.`],
+      [`The email looked official but was designed to steal passwords.`,`Investigators warned that it was ${term}.`]
+    ]},
+    {pos:'n',re:/valor|bravery|courage|heroism/,pairs:[
+      [`The firefighter entered the building after everyone else had fled.`,`The city later honored her ${term}.`],
+      [`The soldiers held their position despite the danger.`,`Their ${term} became the subject of several poems.`],
+      [`The nurse stayed during the outbreak when supplies were scarce.`,`Patients remembered her ${term}.`]
+    ]},
+    {pos:'n',re:/molt|shed.*hair|shed.*feathers|cast off.*hair|cast off.*feathers/,pairs:[
+      [`The bird's old feathers fell away before the migration season.`,`This yearly ${term} left bright new plumage behind.`],
+      [`The crab had outgrown its hard shell.`,`After the ${term}, its new shell was still soft.`],
+      [`The animal's winter coat came off in patches as spring arrived.`,`Its ${term} lasted several weeks.`]
+    ]},
+    {pos:'n',re:/cataclysm|deluge|violent upheaval|flood|disaster/,pairs:[
+      [`The flood erased roads, bridges, and whole neighborhoods in a single night.`,`Survivors remembered it as a ${term}.`],
+      [`The revolution overturned institutions that had lasted for centuries.`,`Writers later called the event a ${term}.`],
+      [`The eruption buried the town under ash.`,`For the region, it was a ${term}.`]
+    ]},
+    {pos:'n',re:/prescience|foretell|predict.*future|ability to foretell/,pairs:[
+      [`The analyst warned about the shortage months before prices rose.`,`Afterward, colleagues praised her ${term}.`],
+      [`The novel imagined a technology that appeared decades later.`,`Readers now see the author’s ${term} as remarkable.`],
+      [`The scientist expected the outbreak before most officials saw any danger.`,`Her ${term} helped the city prepare.`]
+    ]},
+    {pos:['n','v'],re:/\bprod\b|\bpoke\b|\burge\b|urging|push.*action/,pairs:[
+      [`The class was silent until the teacher asked one pointed question.`,`That small ${term} finally started the discussion.`],
+      [`The senator had ignored the issue for weeks.`,`Public criticism served as a ${term} to act.`],
+      [`The animal refused to move from the path.`,`The farmer used a stick to ${term} it forward.`]
+    ]},
+    {pos:'n',re:/oculist|defects of vision|corrective glasses|testing sight|prescribing lenses/,pairs:[
+      [`The patient could no longer read signs across the street.`,`She made an appointment with an ${term}.`],
+      [`The child kept squinting at the board during class.`,`His parents took him to an ${term}.`],
+      [`The clinic specialized in testing sight and prescribing lenses.`,`Its senior doctor was an ${term}.`]
+    ]},
+    {pos:['n','v'],re:/gouge|tear out|deep cut|scoop.*out/,pairs:[
+      [`The chisel slipped and left a deep mark in the table.`,`The carpenter tried to sand away the ${term}.`],
+      [`The river cut a channel through the soft bank after the storm.`,`Its current seemed to ${term} the earth.`],
+      [`The statue's surface was not merely scratched; a chunk had been torn away.`,`The damage looked like a ${term}.`]
+    ]},
+    {pos:['n','v'],re:/relapse|lapse back|backslide|return to illness|fall back into/,pairs:[
+      [`The patient had improved for months, but the fever returned suddenly.`,`Doctors worried that she might ${term}.`],
+      [`The team stopped following the new routine after one difficult week.`,`Without support, it began to ${term} into old habits.`],
+      [`The counselor warned that recovery often includes setbacks.`,`One ${term} did not mean the progress was lost.`]
+    ]},
+    {pos:'n',re:/\bbait\b/,pairs:[
+      [`The hook was hidden inside a worm so the fish would bite.`,`The worm served as ${term}.`],
+      [`The email promised a prize but was designed to steal passwords.`,`Security experts called it ${term}.`],
+      [`The trap needed something that would draw the animal closer.`,`The hunter placed ${term} near the entrance.`]
+    ]},
+    {pos:'n',re:/\bdecoy\b|\blure\b|\btrap\b/,pairs:[
+      [`Hunters placed a wooden bird on the water to attract ducks.`,`The object served as a ${term}.`],
+      [`Police left an unlocked bicycle in the square to catch thieves.`,`The bicycle was a ${term}.`],
+      [`The email promised a prize but was designed to steal passwords.`,`Security experts called it a ${term}.`]
+    ]},
+    {pos:'n',re:/mischance|ill luck|misfortune|bad luck/,pairs:[
+      [`A storm delayed the train, and then the only bridge into town closed.`,`The trip was ruined by ${term}.`],
+      [`The runner tripped just meters from the finish line.`,`Commentators called the fall pure ${term}.`],
+      [`The manuscript was lost in a fire before anyone could copy it.`,`Scholars blamed ${term}.`]
+    ]},
+    {pos:'n',re:/preponderance|superiority in power|greater weight|dominance|greater influence/,pairs:[
+      [`One faction controlled most of the newspapers, banks, and courts.`,`Its ${term} shaped every election.`],
+      [`The evidence supporting the first theory was much stronger than the evidence against it.`,`The jury noticed that ${term}.`],
+      [`The northern army had more soldiers, supplies, and artillery.`,`That ${term} eventually decided the campaign.`]
+    ]},
+    {pos:'n',re:/lineaments|distinctive features|outlines|characteristic details/,pairs:[
+      [`Even in the unfinished sketch, the face's main contours were clear.`,`The artist had already drawn its ${term}.`],
+      [`The historian could see the basic shape of the policy before all details were known.`,`Its ${term} had begun to emerge.`],
+      [`The mountain range appeared as dark outlines against the dawn sky.`,`Its ${term} were visible before the sun rose.`]
+    ]},
+    {pos:'n',re:/rotunda|circular.*dome|\bdomed\b|circular plan/,pairs:[
+      [`Visitors entered a round hall covered by a high dome.`,`The guide called the space a ${term}.`],
+      [`The museum's central room had a circular floor and a ceiling that curved overhead.`,`Architects described it as a ${term}.`],
+      [`The capitol building includes a domed circular chamber.`,`Tourists often gather in the ${term}.`]
+    ]},
+    {pos:'n',re:/turmoil|commotion|confusion|unrest|disorder/,pairs:[
+      [`After the announcement, people shouted questions and rushed toward the exits.`,`The room fell into ${term}.`],
+      [`The revolution disrupted courts, schools, and markets for months.`,`The country remained in ${term}.`],
+      [`Rumors spread faster than officials could answer them.`,`The city was filled with ${term}.`]
+    ]},
+    {pos:'n',re:/taper|narrows toward a point|narrow.*point|gradual narrowing/,pairs:[
+      [`The candle was wide at the base but narrow at the top.`,`Its ${term} made it easy to fit into the holder.`],
+      [`The column grows thinner as it rises.`,`That ${term} gives the design a lighter appearance.`],
+      [`The tool's handle slowly narrows toward the tip.`,`The ${term} helps the user grip it.`]
+    ]},
+    {pos:'n',re:/girth|circumference|distance around/,pairs:[
+      [`The tailor wrapped a measuring tape around the horse's body.`,`She recorded its ${term} before making the harness.`],
+      [`The tree was too wide for one person to reach around.`,`Its ${term} surprised the survey team.`],
+      [`Engineers measured the pipe around its widest point.`,`That ${term} determined which clamp would fit.`]
+    ]},
+    {pos:['n','adj'],re:/obituary|death notice|notice.*death/,pairs:[
+      [`The newspaper printed a short notice after the scientist died.`,`Her family saved the ${term}.`],
+      [`The article listed the actor's major roles and the date of his death.`,`It was an ${term}.`],
+      [`The editor wrote a respectful account of the mayor's life after the funeral.`,`The piece was ${term} in tone.`]
+    ]},
+    {pos:'n',re:/aureole|corona|halo/,pairs:[
+      [`In the painting, a ring of gold light surrounds the saint's head.`,`That bright ${term} marks the figure as holy.`],
+      [`During the eclipse, a glowing rim appeared around the darkened sun.`,`Observers photographed the ${term}.`],
+      [`The icon uses a circular halo behind the face.`,`The artist painted the ${term} in gold.`]
+    ]},
+    {pos:['n','v'],re:/wrest|pull.*away.*force|twist.*away.*force|take.*away.*force/,pairs:[
+      [`The child gripped the toy tightly, but his brother pulled harder.`,`He tried to ${term} it from the child's hands.`],
+      [`The rebels did not receive power peacefully.`,`They had to ${term} it from the old regime.`],
+      [`The door handle was stuck after the storm.`,`She had to ${term} it open.`]
+    ]},
+    {pos:'n',re:/fiat|official decree|authoritative order|arbitrary order|court order/,pairs:[
+      [`The committee debated for weeks, but the ruler did not wait for a vote.`,`The policy became law by royal ${term}.`],
+      [`No one in the agency had time to object before the command arrived.`,`The change was imposed by administrative ${term}.`],
+      [`The judge issued a brief order that ended the dispute immediately.`,`Both parties had to obey the court's ${term}.`]
+    ]},
+    {pos:'n',re:/schism|formal split|division within.*church|division within.*group|split into factions/,pairs:[
+      [`The movement once shared a single doctrine, but two camps began rejecting each other's authority.`,`The dispute eventually caused a ${term}.`],
+      [`Members disagreed so sharply that they formed separate organizations.`,`Historians describe the break as a ${term}.`],
+      [`The church could no longer contain both sides of the theological argument.`,`The conflict ended in a lasting ${term}.`]
+    ]},
+    {pos:'n',re:/mirage|optical illusion|desert illusion|shimmering image/,pairs:[
+      [`The desert heat made water seem to shimmer on the road.`,`Drivers recognized the image as a ${term}.`],
+      [`From a distance, the travelers thought they saw a lake.`,`As they approached, the ${term} vanished.`],
+      [`The hot pavement seemed to reflect a pool of blue sky.`,`The effect was only a ${term}.`]
+    ]},
+    {pos:'n',re:/illusion|false impression|deceptive appearance|misleading appearance|mistaken belief/,pairs:[
+      [`The mirror made the narrow room seem twice as large.`,`Visitors enjoyed the ${term}.`],
+      [`The politician appeared calm on camera, but aides knew he was worried.`,`His confidence was partly an ${term}.`],
+      [`The desert heat made water seem to shimmer on the road.`,`Drivers recognized the image as an ${term}.`]
+    ]},
+    {pos:'n',re:/provender|fodder|animal feed|food for livestock|feed for cattle/,pairs:[
+      [`The stable had enough hay and oats for the winter.`,`The farmer checked the ${term} before the first snow.`],
+      [`The caravan carried grain not for people but for the horses.`,`That sack of ${term} kept the animals moving.`],
+      [`The cattle could not graze during the storm.`,`Workers brought extra ${term} into the barn.`]
+    ]},
+    {pos:'v',re:/polariz|divide.*opposing|split.*opposing|cause.*division|drive.*apart/,pairs:[
+      [`The proposal turned a mild disagreement into two hostile camps.`,`Rather than settle the issue, it began to ${term} the town.`],
+      [`The article praised one side and mocked the other.`,`Its tone helped ${term} the debate.`],
+      [`The election forced neighbors to choose between sharply opposed positions.`,`By spring, it had started to ${term} the community.`]
+    ]},
+    {pos:'v',re:/divest|strip.*of|deprive.*of|sell off.*assets/,pairs:[
+      [`The foundation no longer wanted money tied to fossil fuel companies.`,`Its board voted to ${term} those holdings.`],
+      [`The scandal cost the official more than public trust.`,`The court moved to ${term} him of authority.`],
+      [`The company sold its least profitable division to focus on software.`,`Analysts expected it to ${term} the old unit.`]
+    ]},
+    {pos:['n','v'],re:/\brent\b/,pairs:[
+      [`The sail tore during the storm and left a long opening in the cloth.`,`The crew patched the ${term} before morning.`],
+      [`The earthquake opened a crack across the road.`,`That ${term} made the bridge unsafe.`],
+      [`A loud sound seemed to split the quiet air.`,`The cry ${term} the silence.`]
+    ]},
+    {pos:'n',re:/empathy|identify with another|another.s feelings|understand.*feelings/,pairs:[
+      [`The counselor listened until the student felt understood rather than judged.`,`Her ${term} made the conversation easier.`],
+      [`The novel lets readers feel the grief of characters very different from themselves.`,`That emotional ${term} is one reason it remains powerful.`],
+      [`The doctor asked about fear and pain before discussing treatment.`,`Patients valued his ${term}.`]
+    ]},
+    {pos:'v',re:/granulat|form into grains|grains/,pairs:[
+      [`As the mixture dried, it no longer stayed smooth.`,`It began to ${term} into small particles.`],
+      [`The chemist wanted the powder to pour evenly.`,`She adjusted the process so it would ${term}.`],
+      [`Moisture caused the sugar to clump and then break into coarse bits.`,`The surface started to ${term}.`]
+    ]},
+    {pos:'v',re:/gloat|evil satisfaction|malevolently|smug satisfaction/,pairs:[
+      [`The rival team lost after boasting all season.`,`The winners tried not to ${term} in front of them.`],
+      [`He smiled at his opponent's mistake instead of offering help.`,`It was obvious that he wanted to ${term}.`],
+      [`The villain watches the hero fail and takes pleasure in it.`,`In that scene, he begins to ${term}.`]
+    ]},
+    {pos:'n',re:/sheaf|bundle of stalks|bundle.*tied/,pairs:[
+      [`The farmer tied the cut wheat into one bundle.`,`He carried the ${term} back to the barn.`],
+      [`The secretary gathered the loose pages and tied them with string.`,`The ${term} of papers sat on the desk.`],
+      [`After the harvest, bundles of grain stood in the field.`,`Each ${term} dried in the sun.`]
     ]}
   ];
   const hit=patterns.find(p=>(!p.pos || p.pos===pos || (Array.isArray(p.pos)&&p.pos.includes(pos))) && p.re.test(bag));
   if(hit) return clozePickPair(term,hit.pairs);
-  if(/\s/.test(term)) return clozePickPair(term,[
-    [`The clue points to this relationship: ${meaning}.`,`The phrase ${term} completes that relationship.`],
-    [`The paragraph needs a phrase with this meaning: ${meaning}.`,`In context, ${term} supplies the missing link.`],
-    [`The writer wants to express this relationship: ${meaning}.`,`The phrase ${term} completes that connection.`]
-  ]);
-  if(pos==='v') return clozePickPair(term,[
-    [`The clue points to an action meaning: ${action}.`,`The sentence therefore needs the verb ${term}.`],
-    [`The evidence calls for a precise action: ${action}.`,`The writer chooses ${term} to name that action.`],
-    [`The context asks for an action meaning: ${action}.`,`The most precise verb is ${term}.`],
-    [`The sentence needs a verb with this meaning: ${action}.`,`The verb that fits the clue is ${term}.`]
-  ]);
-  if(pos==='adj') return clozePickPair(term,[
-    [`The clue points to this quality: ${meaning}.`,`For that reason, the passage describes the subject as ${term}.`],
-    [`The evidence points to this description: ${meaning}.`,`The best adjective for that description is ${term}.`],
-    [`The context narrows the meaning to this specific quality: ${meaning}.`,`The adjective that labels that quality is ${term}.`],
-    [`The subject is being judged by this feature: ${meaning}.`,`That feature makes it ${term}.`]
-  ]);
-  if(pos==='adv') return clozePickPair(term,[
-    [`The clue points to the manner of the action: ${meaning}.`,`The person acts ${term}.`],
-    [`The manner of the action matters: ${meaning}.`,`The blank is completed by the adverb ${term}.`],
-    [`The context focuses on how something is done: ${meaning}.`,`The action is performed ${term}.`]
-  ]);
-  return clozePickPair(term,[
-    [`The clue points to this idea or thing: ${meaning}.`,`The passage identifies it as ${term}.`],
-    [`The passage describes this concept in plain language first: ${meaning}.`,`The word ${term} gives that concept its precise name.`],
-    [`The context gives this clue: ${meaning}.`,`The blank asks for the noun ${term}.`],
-    [`The writer moves from this clue to the abstract idea behind it: ${meaning}.`,`That idea is called ${term}.`]
-  ]);
+  return null;
 }
 function clozeSourceExample(w){
   if(typeof barronContextExample==='function') return barronContextExample(w);
   if(typeof wordExample==='function') return wordExample(w);
   return null;
 }
+function looksLikeMetaCloze(text){
+  return /\b(the sentence needs|the word that fits|the verb that fits|the adjective that fits|the noun that fits|this meaning|target word|best fits this sat meaning|context asks for)\b/i.test(String(text||''));
+}
 function exampleForWord(w){
-  const existing=clozeSourceExample(w);
   const term=String(w.term||'').trim();
+  const generated=clozeScenePair(w);
+  if(generated) return {en:'',zh:`线索：${displayMeaning(w)}`,mode:'generated',sentences:generated};
+  const existing=clozeSourceExample(w);
   const sourceSentences=existing?.en ? sentenceFragments(existing.en).map(ensureSentence) : [];
   const sourceTarget=sourceSentences.find(sentence=>sentenceHasTerm(sentence,term));
   const sourceClue=sourceSentences.find(sentence=>sentence!==sourceTarget&&!sentenceHasTerm(sentence,term));
-  if(sourceTarget&&sourceClue){
+  if(sourceTarget&&sourceClue&&!looksLikeMetaCloze(`${sourceClue} ${sourceTarget}`)){
     return {en:sourceTarget,zh:existing.zh||'',mode:'example',sentences:[sourceClue,sourceTarget]};
   }
-  return {en:'',zh:`线索：${displayMeaning(w)}`,mode:'generated',sentences:clozeScenePair(w)};
+  return null;
 }
 function blankedSentence(en,term){
   const text=String(en||'');
@@ -11794,7 +12337,7 @@ function clozeOptionsFor(answerWord){const key=partOfSpeechKey(answerWord); let 
 function startClozeGame(){clozeTotal=0;clozeCorrect=0;clozeStreak=0;updateClozeHud();nextCloze();}
 function nextCloze(){
   if(clozeAutoTimer){clearTimeout(clozeAutoTimer); clozeAutoTimer=null;}
-  const pool=gamePool().filter(w=>w.term&&displayMeaning(w));
+  const pool=gamePool().filter(w=>w.term&&displayMeaning(w)&&exampleForWord(w));
   if(!pool.length){byId('clozeCard').classList.add('hidden'); return;}
   clozeCurrent=sample(pool,1)[0];
   const ex=exampleForWord(clozeCurrent);
@@ -11889,11 +12432,15 @@ function spellingOptions(term){
 function dungeonQuestionFor(word,isBoss){
   const normal=['zh','en','spell'];
   const boss=['en','cloze','synonym','spell'];
-  const type=sample(isBoss?boss:normal,1)[0];
+  let type=sample(isBoss?boss:normal,1)[0];
   const meaning=displayMeaning(word);
   if(type==='zh'){
     const data=optionMeaningsFor(word,WORDS);
     return {type,label:'中文释义选择',prompt:`<b>${escapeHtml(word.term)}</b>`,answer:data.answer,options:data.opts,explain:`解析：${word.term} 表示 ${data.answer}。`};
+  }
+  if(type==='cloze'){
+    const ex=exampleForWord(word);
+    if(!ex) type='synonym';
   }
   if(type==='cloze'){
     const ex=exampleForWord(word);
