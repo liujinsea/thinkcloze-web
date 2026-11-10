@@ -129,6 +129,46 @@
       text-decoration: underline;
     }
 
+    .sat-context-module {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px 24px;
+      margin: 0 0 24px;
+      padding: 16px 18px;
+      border: 1px solid #c9d8fa;
+      border-radius: 10px;
+      background: #f0f5ff;
+    }
+
+    .sat-context-module h2 {
+      margin: 0;
+      color: #17223b;
+      font-size: 20px;
+    }
+
+    .sat-context-module .sat-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      align-items: center;
+    }
+
+    .sat-links a {
+      color: #2449bf;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .sat-links .sat-start {
+      border-radius: 7px;
+      background: #2449bf;
+      color: #fff;
+      padding: 8px 12px;
+      text-decoration: none;
+    }
+
     .set-grid {
       width: 100%;
       margin: 0;
@@ -779,6 +819,16 @@
           <button class="status-link hidden" id="logoutBtn" type="button">Log Out</button>
         </div>
       </div>
+      <section class="sat-context-module" aria-labelledby="sat-context-title">
+        <div>
+          <h2 id="sat-context-title" lang="en">SAT Words in Context</h2>
+          <p>421 道语境词汇题，分组练习、重刷错题、收藏选项词汇。</p>
+        </div>
+        <div class="sat-links">
+          <a class="sat-start" href="/sat-context/">开始练习</a>
+          <a href="/sat-context/#words">我的词汇表</a>
+        </div>
+      </section>
       <div class="set-grid" id="homeGrid"></div>
       <button class="unlock-banner hidden" id="unlockBanner" type="button">Register to Unlock Sets 21-40</button>
     </div>

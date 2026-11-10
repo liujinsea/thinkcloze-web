@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SAT Words in Context 语境词汇练习，按组刷题、复习错题和背诵收藏的选项词汇。">
+  <title>SAT Words in Context | ThinkCloze</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <main>
+    <header class="site-header">
+      <nav aria-label="ThinkCloze">
+        <a class="brand" href="/">ThinkCloze</a>
+        <a href="/sat-vocab/">SAT 词汇</a>
+      </nav>
+      <div class="eyebrow">SAT Reading and Writing</div>
+      <h1 lang="en">Words in Context</h1>
+      <p class="intro">在语境中练词。按组做题、重刷错题，把想背的选项和词义收进自己的词表。</p>
+    </header>
+    <nav class="tabs" aria-label="练习功能">
+      <a href="#practice" aria-current="page">练习</a>
+      <a href="#questions">题目收藏 <span id="question-count" class="count">0</span></a>
+      <a href="#words">我的词汇表 <span id="word-count" class="count">0</span></a>
+    </nav>
+    <p class="notice" id="storage-notice" role="status" hidden></p>
+    <section id="screen" aria-label="练习内容" aria-busy="true">
+      <p role="status">正在加载语境词汇题库…</p>
+    </section>
+    <footer>练习记录和收藏保存在当前浏览器。</footer>
+    <noscript>请开启 JavaScript 后开始练习。</noscript>
+  </main>
+</body>
+</html>
