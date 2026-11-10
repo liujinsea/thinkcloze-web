@@ -256,6 +256,7 @@ body.menu-view .tab[data-tab="dungeon"]::after{content:"";position:absolute;righ
 <section id="wrong" class="panel"><div class="card"><div class="row"><strong>错题本</strong><button class="btn primary" style="width:auto;padding:9px 12px" id="wrongQuizBtn">错题集中测验</button><button class="btn ghost" style="width:auto;padding:9px 12px" id="clearWrong">清空</button></div><div class="small">答错或点“不认识”的词会自动出现在这里；点击“错题集中测验”可以只练错题。手动标记已掌握，或测试正确累计 5 次后，该词会从后续测试中排除。</div></div><div class="card" id="wrongList"></div></section>
 <section id="list" class="panel"><div class="card"><input id="search" placeholder="搜索单词、中文意思、题号…"/><select id="listScope"></select></div><div class="card" id="wordList"></div></section>
 </div>
+<script src="/sat-vocab/SAT2020605A/sat-vocab-2610.js"></script>
 <script>
 const WORD_LISTS = {
   "202505A": {
@@ -9415,6 +9416,12 @@ const WORD_LISTS = {
       }
     ]
   },
+  "SAT2610": {
+    "label": "SAT 词汇 2610",
+    "title": "SAT 词汇 2610",
+    "description": "截至 2026 年 10 月的 SAT 真题选项词汇，分为 92 组",
+    "words": window.SAT_VOCAB_2610 || []
+  },
   "Barron3500": {
     "label": "Barron 3500",
     "title": "Barron 3500",
@@ -11132,7 +11139,7 @@ applyVocabularyQuestionPosPrefixes();
 function displayMeaning(w){const meaning=isVocabQuestionWord(w) ? (VOCAB_QUESTION_ZH[w.term] || noteChinese(w) || w.meaning) : w.meaning; return withPartOfSpeech(w, meaning);}
 function partOfSpeechKey(w){return normalizePosKey(w.pos||w.posKey)||normalizePosKey(displayMeaning(w))||normalizePosKey(inferPartOfSpeech(w, displayMeaning(w)));}
 function optionMeaningsFor(answerWord, sourceWords=WORDS){const answer=displayMeaning(answerWord); const key=partOfSpeechKey(answerWord); let pool=sourceWords.filter(w=>w.id!==answerWord.id&&displayMeaning(w)!==answer); if(key){const same=pool.filter(w=>partOfSpeechKey(w)===key); if(same.length>=3) pool=same;} let wrongs=[...new Set(sample(pool,12).map(displayMeaning).filter(m=>m&&m!==answer))].slice(0,3); if(wrongs.length<3){wrongs=[...new Set([...wrongs,...sample(sourceWords.filter(w=>w.id!==answerWord.id),16).map(displayMeaning).filter(m=>m&&m!==answer)])].slice(0,3);} return {answer,opts:sample([answer,...wrongs],4)};}
-function isBarronWord(w){return !!w && (w._listKey==='Barron3500' || activeListKey==='Barron3500' || Number(w.id)>=5000);}
+function isBarronWord(w){return !!w && (w._listKey==='Barron3500' || activeListKey==='Barron3500' || (Number(w.id)>=5000 && Number(w.id)<2610000));}
 function cleanExampleMeaning(w){return displayMeaning(w).replace(/^(n|vi|vt|v|adj|adv|prep|phr\.v|v\. phr|n\. phr|adj\. phr)\.?\s*/i,'').replace(/\s+/g,' ').trim();}
 function normalizeExampleText(text){return String(text||'').replace(/([A-Za-z])\?([st])\b/g,"$1'$2").replace(/\s+/g,' ').trim();}
 function barronGeneratedExample(w){
