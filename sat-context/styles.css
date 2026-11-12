@@ -66,6 +66,10 @@ footer { margin-top: 22px; }
 .option-gloss .btn { font-size: .85rem; }
 .feedback { padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #f5f7fe; }
 .feedback p + p { margin-top: 5px; }
+.option-analysis { margin-top: 8px; }
+.option-analysis summary { cursor: pointer; font-weight: 650; }
+.option-analysis ol { margin: 6px 0 0; padding-inline-start: 25px; }
+.option-analysis li + li { margin-top: 4px; }
 .good { color: var(--green); }
 .bad { color: var(--red); }
 

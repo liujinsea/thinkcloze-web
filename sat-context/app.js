@@ -2,10 +2,11 @@
 
 const LETTERS = "ABCD";
 const GROUP_SIZE = 10;
-const STORAGE_KEY = "thinkcloze_sat_context_v1";
+const STORAGE_KEY = document.body.dataset.storageKey || "thinkcloze_sat_context_v1";
 const VERIFIED = "source_verified";
 const screen = document.getElementById("screen");
 const notice = document.getElementById("storage-notice");
+const wordCount = document.getElementById("word-count");
 const headings = {
   questions: "题目收藏", wrong: "错题重练", review: "标记复习", pending: "待核对题"
 };
@@ -54,6 +55,8 @@ function updateState(change) {
 }
 
 function statusFor(question) {
+  if (question.status === "inferred_answer") return "答案为语境推定 · 待同卷答案键复核";
+  if (question.status === "incomplete_source") return "原图局部缺文 · 参考练习";
   if (question.status === "historical_unverified") return "历史题 · 原答案待核对";
   if (question.status !== VERIFIED) return "答案为编辑建议 · 原答案待核对";
   return "";
@@ -86,7 +89,7 @@ function roundTitle() {
 
 function render() {
   document.getElementById("question-count").textContent = Object.keys(state.favorites).length;
-  document.getElementById("word-count").textContent = Object.keys(state.words).length;
+  if (wordCount) wordCount.textContent = Object.keys(state.words).length;
   const activeTab = ["words", "memorize"].includes(route) ? "words"
     : ["questions", "run-questions"].includes(route) || (route.startsWith("q-") && state.favorites[route.slice(2)])
       ? "questions" : "practice";
@@ -197,7 +200,7 @@ function renderRound() {
       <p class="prompt" lang="en">${html(q.prompt)}</p>
       <div class="options" aria-label="选项">${q.options.map((opt, i) => {
         const letter = LETTERS[i];
-        const isSaved = !!state.words[wordKey(opt)];
+        const isSaved = wordCount && !!state.words[wordKey(opt)];
         const outcome = letter === q.answer ? "correct" : letter === answer ? "wrong" : "";
         const label = outcome === "correct" ? (pending ? "参考答案" : "正确答案") : "你的选择";
         return `<div class="option-row">
@@ -206,7 +209,7 @@ function renderRound() {
             <span class="letter">${letter}</span> <span lang="en">${html(opt.text)}</span>
             ${answer && outcome ? `<span class="badge">${label}</span>` : ""}
           </button>
-          ${answer ? `<div class="row spread option-gloss">
+          ${answer && wordCount ? `<div class="row spread option-gloss">
             <span>${html(opt.meaning)}</span>
             <button class="btn" data-action="word" data-letter="${letter}" aria-label="${isSaved ? "取消收藏" : "收藏单词"} ${letter} ${html(opt.text)}" aria-pressed="${isSaved}">${isSaved ? "★ 已收藏" : "☆ 收藏单词"}</button>
           </div>` : ""}
@@ -214,7 +217,12 @@ function renderRound() {
       }).join("")}</div>
       ${answer ? `<div class="feedback" tabindex="-1" data-feedback>
         <p class="${result === "correct" ? "good" : "bad"}"><strong>${pending ? "参考答案" : result === "correct" ? "答对了" : "正确答案"} · ${q.answer}</strong></p>
+        ${q.clue ? `<p><strong>关键线索</strong> · ${html(q.clue)}</p>` : ""}
         <p>${html(q.explanation)}</p>
+        ${q.optionAnalysis ? `<details class="option-analysis">
+          <summary>查看四个选项的分析</summary>
+          <ol type="A">${q.optionAnalysis.map(analysis => `<li>${html(analysis)}</li>`).join("")}</ol>
+        </details>` : ""}
       </div>` : ""}
       <div class="actions">
         <button class="btn" data-action="favorite" aria-pressed="${!!state.favorites[q.id]}">${state.favorites[q.id] ? "★ 已收藏题目" : "☆ 收藏题目"}</button>
@@ -314,7 +322,8 @@ function readRoute(focus = false) {
     route = requested;
     if (!state.rounds[route] && !startRound()) route = requested.slice(4);
   } else {
-    route = Object.hasOwn(headings, requested) || ["words", "memorize"].includes(requested) ? requested : "practice";
+    const isWordRoute = wordCount && ["words", "memorize"].includes(requested);
+    route = Object.hasOwn(headings, requested) || isWordRoute ? requested : "practice";
   }
   render();
   if (focus) screen.querySelector("[data-focus]")?.focus();
