@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sat-vocab-list-pwa-v2610-context-merged';
+const CACHE_NAME = 'sat-vocab-list-pwa-v2610-context-merged-title';
 const ASSETS = ['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
