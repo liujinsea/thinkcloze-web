@@ -1,5 +1,5 @@
-const CACHE_NAME = 'sat-words-2020605a-pwa-v43';
-const ASSETS = ['./','./index.html','./manifest.json','./barron3500.js','./icon-192.png','./icon-512.png'];
+const CACHE_NAME = 'sat-words-2020605a-pwa-v2611-filtered';
+const ASSETS = ['./','./index.html','./manifest.json','./barron3500.js','/sat-vocab/SAT2020605A/sat-vocab-2610.js?v=2611-filtered','./icon-192.png','./icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
   self.skipWaiting();
