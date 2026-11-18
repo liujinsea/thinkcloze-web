@@ -312,6 +312,24 @@ function startRound() {
   return true;
 }
 
+function extendSavedSets() {
+  const extensions = data => Object.entries(data.rounds).flatMap(([scope, round]) => {
+    if (!/^set-[1-9]\d*$/.test(scope)) return [];
+    const ids = scopeQuestions(scope).map(q => q.id);
+    // When a later release fills the old last group, keep the existing answers.
+    return ids.length > round.ids.length && round.ids.every((id, i) => id === ids[i])
+      ? [{ round, ids }] : [];
+  });
+  if (!extensions(state).length) return;
+  updateState(data => {
+    for (const { round, ids } of extensions(data)) {
+      if (round.done) round.index = round.ids.length;
+      round.ids = ids;
+      round.done = false;
+    }
+  });
+}
+
 function readRoute(focus = false) {
   const requested = location.hash.slice(1);
   const group = /^set-([1-9]\d*)$/.exec(requested);
@@ -448,11 +466,13 @@ async function initialize() {
     questionById = new Map(questions.map(q => [q.id, q]));
     groupCount = Math.ceil(questions.length / GROUP_SIZE);
     state = loadState();
+    extendSavedSets();
     readRoute();
     window.addEventListener("hashchange", () => readRoute(true));
     window.addEventListener("storage", event => {
       if (event.key !== STORAGE_KEY || !canPersist) return;
       state = loadState();
+      extendSavedSets();
       readRoute();
     });
   } catch (error) {
