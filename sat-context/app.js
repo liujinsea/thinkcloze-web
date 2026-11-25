@@ -13,16 +13,20 @@ const headings = {
 const escaped = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 const html = value => String(value ?? "").replace(/[&<>"']/g, char => escaped[char]);
 
-function passageHtml(question) {
+function markedHtml(text, phrases, tag) {
   let cursor = 0;
   let markup = "";
-  for (const text of question.passageUnderlines || []) {
-    const start = question.passage.indexOf(text, cursor);
-    if (!text || start < 0) continue;
-    markup += html(question.passage.slice(cursor, start)) + `<u>${html(text)}</u>`;
-    cursor = start + text.length;
+  for (const phrase of phrases || []) {
+    const start = text.indexOf(phrase, cursor);
+    if (!phrase || start < 0) continue;
+    markup += html(text.slice(cursor, start)) + `<${tag}>${html(phrase)}</${tag}>`;
+    cursor = start + phrase.length;
   }
-  return markup + html(question.passage.slice(cursor));
+  return markup + html(text.slice(cursor));
+}
+
+function passageHtml(question) {
+  return markedHtml(question.passage, question.passageUnderlines, "u");
 }
 
 function readingHtml(question) {
@@ -34,7 +38,7 @@ function readingHtml(question) {
       : '<span class="verse-break" aria-hidden="true"></span>').join("\n")
     : content;
   return `<div class="reading-text" lang="en">
-    ${question.blurb ? `<p class="passage-blurb">${html(question.blurb)}</p>` : ""}
+    ${question.blurb ? `<p class="passage-blurb">${markedHtml(question.blurb, question.blurbItalics, "cite")}</p>` : ""}
     <p class="passage${isPoem ? " poem" : ""}">${body}</p>
   </div>`;
 }
