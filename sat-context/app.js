@@ -13,6 +13,18 @@ const headings = {
 const escaped = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 const html = value => String(value ?? "").replace(/[&<>"']/g, char => escaped[char]);
 
+function passageHtml(question) {
+  let cursor = 0;
+  let markup = "";
+  for (const text of question.passageUnderlines || []) {
+    const start = question.passage.indexOf(text, cursor);
+    if (!text || start < 0) continue;
+    markup += html(question.passage.slice(cursor, start)) + `<u>${html(text)}</u>`;
+    cursor = start + text.length;
+  }
+  return markup + html(question.passage.slice(cursor));
+}
+
 let questions = [];
 let questionById;
 let groupCount;
@@ -196,7 +208,7 @@ function renderRound() {
         <span class="muted">${q.id} · ${html(q.source)}</span>
         ${pending ? `<span class="badge">${pending}</span>` : `<span class="badge">${item.mastered ? "已掌握" : `连续答对 ${item.streak || 0}/5`}</span>`}
       </div>
-      <p class="passage" lang="en">${html(q.passage)}</p>
+      <p class="passage" lang="en">${passageHtml(q)}</p>
       <p class="prompt" lang="en">${html(q.prompt)}</p>
       <div class="options" aria-label="选项">${q.options.map((opt, i) => {
         const letter = LETTERS[i];
