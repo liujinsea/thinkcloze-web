@@ -25,6 +25,20 @@ function passageHtml(question) {
   return markup + html(question.passage.slice(cursor));
 }
 
+function readingHtml(question) {
+  const content = passageHtml(question);
+  const isPoem = question.passageFormat === "poem";
+  const body = isPoem
+    ? content.split("\n").map(line => line.trim()
+      ? `<span class="verse-line">${line}</span>`
+      : '<span class="verse-break" aria-hidden="true"></span>').join("\n")
+    : content;
+  return `<div class="reading-text" lang="en">
+    ${question.blurb ? `<p class="passage-blurb">${html(question.blurb)}</p>` : ""}
+    <p class="passage${isPoem ? " poem" : ""}">${body}</p>
+  </div>`;
+}
+
 let questions = [];
 let questionById;
 let groupCount;
@@ -208,7 +222,7 @@ function renderRound() {
         <span class="muted">${q.id} · ${html(q.source)}</span>
         ${pending ? `<span class="badge">${pending}</span>` : `<span class="badge">${item.mastered ? "已掌握" : `连续答对 ${item.streak || 0}/5`}</span>`}
       </div>
-      <p class="passage" lang="en">${passageHtml(q)}</p>
+      ${readingHtml(q)}
       <p class="prompt" lang="en">${html(q.prompt)}</p>
       <div class="options" aria-label="选项">${q.options.map((opt, i) => {
         const letter = LETTERS[i];
@@ -231,6 +245,7 @@ function renderRound() {
         <p class="${result === "correct" ? "good" : "bad"}"><strong>${pending ? "参考答案" : result === "correct" ? "答对了" : "正确答案"} · ${q.answer}</strong></p>
         ${q.clue ? `<p><strong>关键线索</strong> · ${html(q.clue)}</p>` : ""}
         <p>${html(q.explanation)}</p>
+        ${q.formattingNote ? `<p class="muted">${html(q.formattingNote)}</p>` : ""}
         ${q.optionAnalysis ? `<details class="option-analysis">
           <summary>查看四个选项的分析</summary>
           <ol type="A">${q.optionAnalysis.map(analysis => `<li>${html(analysis)}</li>`).join("")}</ol>
