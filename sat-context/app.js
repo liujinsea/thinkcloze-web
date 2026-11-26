@@ -48,7 +48,7 @@ let questionById;
 let groupCount;
 let state;
 let route = "practice";
-let canPersist = true;
+let progressSync;
 let flash = null;
 const excludedWords = new Set();
 
@@ -56,32 +56,12 @@ function emptyState() {
   return { progress: {}, favorites: {}, words: {}, rounds: {} };
 }
 
-function warnStorage() {
-  canPersist = false;
-  notice.textContent = "当前浏览器无法保存新记录，本次练习仍可继续。";
-  notice.hidden = false;
-}
-
 function loadState() {
-  if (!canPersist) return state;
-  try {
-    return { ...emptyState(), ...JSON.parse(localStorage.getItem(STORAGE_KEY)) };
-  } catch {
-    warnStorage();
-    return state || emptyState();
-  }
+  return progressSync ? progressSync.load() : state || emptyState();
 }
 
-function updateState(change) {
-  state = loadState();
-  change(state);
-  if (canPersist) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {
-      warnStorage();
-    }
-  }
+function updateState(change, options) {
+  state = progressSync.change(change, options);
 }
 
 function statusFor(question) {
@@ -338,7 +318,8 @@ function startRound() {
     : scopeQuestions(route.replace(/^run-/, ""));
   if (!candidates.length || !candidates[0]) return false;
   updateState(data => {
-    data.rounds[route] = { ids: candidates.map(q => q.id), answers: {}, index: 0, done: false };
+    const runId = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    data.rounds[route] = { ids: candidates.map(q => q.id), answers: {}, index: 0, done: false, runId };
   });
   return true;
 }
@@ -410,7 +391,9 @@ screen.addEventListener("click", event => {
   const qid = round?.ids[round.index];
 
   switch (action) {
-    case "answer": updateState(data => recordAnswer(data, qid, letter)); break;
+    case "answer": updateState(data => recordAnswer(data, qid, letter), {
+      answer: { id: qid, correct: questionById.get(qid).answer === letter, verified: questionById.get(qid).status === VERIFIED }
+    }); break;
     case "favorite": updateState(data => toggle(data.favorites, qid)); break;
     case "review": updateState(data => {
       const item = data.progress[qid] ||= {};
@@ -496,16 +479,31 @@ async function initialize() {
     questions = await response.json();
     questionById = new Map(questions.map(q => [q.id, q]));
     groupCount = Math.ceil(questions.length / GROUP_SIZE);
+    progressSync = new SATQuestionSync({
+      namespace: STORAGE_KEY,
+      onChange: (next, details) => {
+        const filter = details?.accountChanged ? null : document.getElementById("word-filter")?.value;
+        state = next;
+        if (details?.accountChanged) {
+          flash = null;
+          excludedWords.clear();
+          if (route === "memorize") location.hash = "words";
+        }
+        extendSavedSets();
+        readRoute();
+        const input = document.getElementById("word-filter");
+        if (input && filter != null) {
+          input.value = filter;
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+      }
+    });
+    await progressSync.prepare();
     state = loadState();
     extendSavedSets();
     readRoute();
     window.addEventListener("hashchange", () => readRoute(true));
-    window.addEventListener("storage", event => {
-      if (event.key !== STORAGE_KEY || !canPersist) return;
-      state = loadState();
-      extendSavedSets();
-      readRoute();
-    });
+    progressSync.init().catch(error => console.warn("账号同步初始化未完成", error.message));
   } catch (error) {
     console.error(error);
     screen.innerHTML = '<div class="card stack"><h2>题库暂时无法加载</h2><p>请刷新页面后再试。</p></div>';
