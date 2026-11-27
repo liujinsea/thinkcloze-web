@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SAT 图表与定量证据题分组练习，作答后查看中文解析、重刷错题和收藏题目。">
+  <title>SAT 图表与定量证据题 | ThinkCloze</title>
+  <link rel="stylesheet" href="/sat-context/styles.css">
+  <script async data-sat-auth src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/config.js"></script>
+  <script defer src="/sat-context/progress-state.js"></script>
+  <script defer src="/sat-context/account-sync.js"></script>
+  <script defer src="/sat-context/app.js"></script>
+</head>
+<body data-storage-key="thinkcloze_sat_quantitative_evidence_v1">
+  <main>
+    <header class="site-header">
+      <nav aria-label="ThinkCloze">
+        <a class="brand" href="/">ThinkCloze</a>
+        <a href="/sat-practice/">SAT 题型练习</a>
+      </nav>
+      <div class="eyebrow">SAT Reading and Writing</div>
+      <h1>SAT 图表与定量证据题</h1>
+      <div class="account-sync" aria-label="账号与同步">
+        <p id="sync-status" role="status">正在检查登录状态…</p>
+        <div class="actions">
+          <button class="btn" id="sync-login" type="button" aria-controls="sync-dialog">登录 / 注册</button>
+          <button class="btn" id="sync-now" type="button" hidden>立即同步</button>
+          <button class="btn" id="sync-logout" type="button" hidden>退出</button>
+        </div>
+      </div>
+    </header>
+    <nav class="tabs" aria-label="练习功能">
+      <a href="#practice" aria-current="page">练习</a>
+      <a href="#questions">题目收藏 <span id="question-count" class="count">0</span></a>
+    </nav>
+    <p class="notice" id="storage-notice" role="status" hidden></p>
+    <section id="screen" aria-label="练习内容" aria-busy="true">
+      <p role="status">正在加载图表与定量证据题题库…</p>
+    </section>
+    <footer>未登录记录保存在当前浏览器；登录同一账号后同步。</footer>
+    <noscript>请开启 JavaScript 后开始练习。</noscript>
+  </main>
+  <dialog class="sync-dialog" id="sync-dialog" aria-labelledby="sync-title" aria-describedby="sync-hint">
+    <form class="stack" id="sync-form">
+      <h2 id="sync-title">登录后同步练习记录</h2>
+      <p class="muted" id="sync-hint">已有网站账号可直接登录，无需重新注册。登录后自动合并本机记录。</p>
+      <div class="sync-field">
+        <label for="sync-email">邮箱</label>
+        <input id="sync-email" name="email" type="email" autocomplete="username" required autofocus>
+      </div>
+      <div class="sync-field">
+        <label for="sync-password">密码</label>
+        <input id="sync-password" name="password" type="password" minlength="6" autocomplete="current-password" required>
+      </div>
+      <p class="sync-message muted" id="sync-message" role="status"></p>
+      <div class="actions">
+        <button class="btn primary" id="sync-submit" type="submit" data-mode="login">登录</button>
+        <button class="btn" id="sync-register" type="submit" data-mode="register">注册</button>
+        <button class="btn" id="sync-cancel" type="button">取消</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>

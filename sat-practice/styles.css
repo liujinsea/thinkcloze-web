@@ -1,0 +1,23 @@
+.practice-hub .site-header { padding-bottom: 6px; }
+.practice-hub .intro { max-width: 700px; line-height: 1.7; }
+.hub-stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.hub-stat { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 5px 12px; font-size: .85rem; color: var(--muted); }
+.practice-group { margin-top: 30px; }
+.practice-group-heading { margin-bottom: 14px; }
+.practice-group-heading h2 { margin-bottom: 3px; }
+.practice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.practice-card { min-width: 0; margin-bottom: 0; padding: 22px; display: flex; flex-direction: column; gap: 10px; }
+.practice-card h3 { font-size: 1.15rem; line-height: 1.4; }
+.practice-card .row { align-items: baseline; gap: 6px 10px; }
+.practice-english { font-size: .8rem; line-height: 1.5; color: var(--muted); }
+.practice-description { color: var(--muted); font-size: .92rem; line-height: 1.65; margin-bottom: 6px; }
+.practice-card .actions { margin-top: auto; gap: 8px 14px; }
+.review-link { font-size: .85rem; text-decoration: none; padding-block: 10px; }
+.review-link:hover { text-decoration: underline; }
+.practice-hub footer { margin-top: 26px; }
+
+@media (max-width: 620px) {
+  .practice-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .practice-card { padding: 18px; }
+  .practice-group { margin-top: 26px; }
+}

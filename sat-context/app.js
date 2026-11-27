@@ -53,7 +53,69 @@ function passageHtml(question) {
   return markedHtml(question.passage, question.passageUnderlines, "u");
 }
 
+function runHtml(runs, text) {
+  if (!runs?.length) return html(text);
+  return runs.map(run => {
+    let content = html(run.text);
+    if (run.italic) content = `<i>${content}</i>`;
+    if (run.bold) content = `<strong>${content}</strong>`;
+    if (run.underline) content = `<u>${content}</u>`;
+    if (run.superscript) content = `<sup>${content}</sup>`;
+    if (run.subscript) content = `<sub>${content}</sub>`;
+    return content;
+  }).join("");
+}
+
+function verseHtml(runs, text) {
+  const lines = [[]];
+  for (const run of runs?.length ? runs : [{ text }]) {
+    const parts = run.text.split("\n");
+    parts.forEach((part, index) => {
+      if (index) lines.push([]);
+      if (part) lines.at(-1).push({ ...run, text: part });
+    });
+  }
+  return lines.map(line => line.some(run => run.text.trim())
+    ? `<span class="verse-line">${runHtml(line)}</span>`
+    : '<span class="verse-break" aria-hidden="true"></span>').join("\n");
+}
+
+function tableHtml(block) {
+  const rows = block.rows.map(row => `<tr>${row.map(value => {
+    const cell = typeof value === "string" ? { text: value } : value;
+    const tag = cell.header ? "th" : "td";
+    return `<${tag}>${runHtml(cell.runs, cell.text)}</${tag}>`;
+  }).join("")}</tr>`).join("");
+  const caption = block.caption ? `<caption>${html(block.caption)}</caption>` : "";
+  return `<div class="table-scroll" tabindex="0" role="region" aria-label="题目数据表"><table>${caption}<tbody>${rows}</tbody></table></div>`;
+}
+
+function blockHtml(block) {
+  if (block.type === "image") {
+    if (!/^media\/[a-zA-Z0-9_-]+\.(?:png|jpe?g|webp)$/.test(block.src)) return "";
+    const dimensions = ["width", "height"].map(key => Number.isSafeInteger(block[key]) && block[key] > 0
+      ? ` ${key}="${block[key]}"` : "").join("");
+    const width = Number.isSafeInteger(block.displayWidth) && block.displayWidth > 0
+      ? ` style="max-width:min(100%, ${block.displayWidth}px)"` : "";
+    const caption = block.caption ? `<figcaption>${html(block.caption)}</figcaption>` : "";
+    return `<figure class="question-figure"${width}><a href="${html(block.src)}" target="_blank" rel="noopener" aria-label="${html(block.alt || "题目图表")}，打开原图">
+      <img src="${html(block.src)}" alt="${html(block.alt || "题目图表")}"${dimensions}>
+      <span class="figure-zoom" lang="zh-CN">查看原图</span>
+    </a>${caption}</figure>`;
+  }
+  if (block.type === "table") return tableHtml(block);
+  if (block.type !== "text") return "";
+  const isBlurb = block.format === "blurb";
+  const isPoem = block.format === "poem";
+  const className = isBlurb ? "passage-blurb" : isPoem ? "passage poem" : "passage";
+  const content = isPoem ? verseHtml(block.runs, block.text) : runHtml(block.runs, block.text);
+  return `<p class="${className}">${content}</p>`;
+}
+
 function readingHtml(question) {
+  if (question.passageBlocks?.length) {
+    return `<div class="reading-text reading-blocks" lang="en">${question.passageBlocks.map(blockHtml).join("")}</div>`;
+  }
   const content = passageHtml(question);
   const isPoem = question.passageFormat === "poem";
   const body = isPoem
@@ -94,11 +156,20 @@ function updateState(change, options) {
 }
 
 function statusFor(question) {
+  if (!hasAnswer(question)) return "答案待核对";
   if (question.status === "inferred_answer") return "答案为语境推定 · 待同卷答案键复核";
-  if (question.status === "incomplete_source") return "原图局部缺文 · 参考练习";
-  if (question.status === "historical_unverified") return "历史题 · 原答案待核对";
+  if (question.status === "incomplete_source") return "原题资料不全 · 参考练习";
+  if (question.status === "historical_unverified") return "参考答案 · 待核对";
   if (question.status !== VERIFIED) return "答案为编辑建议 · 原答案待核对";
   return "";
+}
+
+function hasAnswer(question) {
+  return /^[ABCD]$/.test(question.answer || "");
+}
+
+function isScored(question) {
+  return hasAnswer(question) && question.status === VERIFIED;
 }
 
 function progressFor(id) {
@@ -112,7 +183,7 @@ function scopeQuestions(scope) {
   if (scope === "questions") return questions.filter(q => state.favorites[q.id]);
   if (scope === "wrong") return questions.filter(q => progressFor(q.id).wrong);
   if (scope === "review") return questions.filter(q => progressFor(q.id).review);
-  if (scope === "pending") return questions.filter(q => q.status !== VERIFIED);
+  if (scope === "pending") return questions.filter(q => !isScored(q));
   return [];
 }
 
@@ -173,7 +244,7 @@ function renderPractice() {
         <a class="btn" href="#review">标记复习 · ${scopeQuestions("review").length}</a>
         <a class="btn" href="#pending">待核对题 · ${scopeQuestions("pending").length}</a>
       </div>
-      <p class="muted">答错后进入错题，连续答对 3 次移出，连续答对 5 次标为掌握。待核对题提供参考解析。</p>
+      <p class="muted">答错后进入错题，连续答对 3 次移出，连续答对 5 次标为掌握。待核对题不计分。</p>
     </div>
     <div class="card stack">
       <h2>分组练习</h2>
@@ -216,12 +287,12 @@ function renderRound() {
   const { ids, answers, index, done } = round;
   const back = `<a class="btn" href="#${backRoute()}">返回列表</a>`;
   if (done) {
-    const scored = ids.filter(id => questionById.get(id).status === VERIFIED);
+    const scored = ids.filter(id => isScored(questionById.get(id)));
     const correct = scored.filter(id => answers[id] === questionById.get(id).answer).length;
     screen.innerHTML = `<div class="card stack">
       <h2 tabindex="-1" data-focus>${roundTitle()}完成</h2>
       <p>本轮已练 ${ids.length} 题 · ${scored.length ? `答对 ${correct}/${scored.length} 道计分题` : "本轮为待核对练习"}</p>
-      ${scored.length !== ids.length ? `<p class="muted">${ids.length - scored.length} 道待核对题仅显示参考答案。</p>` : ""}
+      ${scored.length !== ids.length ? `<p class="muted">${ids.length - scored.length} 道待核对题不计分。</p>` : ""}
       <div class="actions"><button class="btn primary" data-action="restart">再练一轮</button>${back}
         ${scopeQuestions("wrong").length ? '<a class="btn" href="#wrong">去错题重练</a>' : ""}</div>
     </div>`;
@@ -233,6 +304,7 @@ function renderRound() {
   const pending = statusFor(q);
   const item = progressFor(q.id);
   const result = answer === q.answer ? "correct" : "wrong";
+  const keyed = hasAnswer(q);
   screen.innerHTML = `
     <article class="card stack">
       <div class="row spread">
@@ -245,16 +317,17 @@ function renderRound() {
         ${pending ? `<span class="badge">${pending}</span>` : `<span class="badge">${item.mastered ? "已掌握" : `连续答对 ${item.streak || 0}/5`}</span>`}
       </div>
       ${readingHtml(q)}
-      <p class="prompt" lang="en">${html(q.prompt)}</p>
+      <p class="prompt" lang="en">${runHtml(q.promptRuns, q.prompt)}</p>
       <div class="options" aria-label="选项">${q.options.map((opt, i) => {
         const letter = LETTERS[i];
         const isSaved = wordCount && !!state.words[wordKey(opt)];
-        const outcome = letter === q.answer ? "correct" : letter === answer ? "wrong" : "";
-        const label = outcome === "correct" ? (pending ? "参考答案" : "正确答案") : "你的选择";
+        const matchesKey = keyed && letter === q.answer;
+        const outcome = matchesKey ? (pending ? "reference" : "correct") : letter === answer ? (pending ? "selected" : "wrong") : "";
+        const label = matchesKey ? (pending ? "参考答案" : "正确答案") : "你的选择";
         return `<div class="option-row">
           <button class="answer" data-action="answer" data-letter="${letter}"
             ${answer ? `disabled data-result="${outcome}"` : ""}>
-            <span class="letter">${letter}</span> <span lang="en">${html(opt.text)}</span>
+            <span class="letter">${letter}</span> <span lang="en">${runHtml(opt.runs, opt.text)}</span>
             ${answer && outcome ? `<span class="badge">${label}</span>` : ""}
           </button>
           ${answer && wordCount ? `<div class="row spread option-gloss">
@@ -264,11 +337,14 @@ function renderRound() {
         </div>`;
       }).join("")}</div>
       ${answer ? `<div class="feedback" tabindex="-1" data-feedback>
-        <p class="${result === "correct" ? "good" : "bad"}"><strong>${pending ? "参考答案" : result === "correct" ? "答对了" : "正确答案"} · ${q.answer}</strong></p>
+        ${keyed
+          ? `<p class="${pending ? "muted" : result === "correct" ? "good" : "bad"}"><strong>${pending ? "参考答案" : result === "correct" ? "答对了" : "正确答案"} · ${q.answer}</strong></p>`
+          : '<p><strong>已记录你的选择。答案待核对，本题不计分。</strong></p>'}
         ${q.clue ? `<p><strong>关键线索</strong> · ${html(q.clue)}</p>` : ""}
-        <p>${html(q.explanation)}</p>
+        ${q.explanation ? `<p>${html(q.explanation)}</p>` : ""}
+        ${q.sourceNote ? `<p class="muted source-note">${html(q.sourceNote)}</p>` : ""}
         ${q.formattingNote && !q.formatNote ? `<p class="muted">${html(q.formattingNote)}</p>` : ""}
-        ${q.optionAnalysis ? `<details class="option-analysis">
+        ${q.optionAnalysis?.length ? `<details class="option-analysis">
           <summary>查看四个选项的分析</summary>
           <ol type="A">${q.optionAnalysis.map(analysis => `<li>${html(analysis)}</li>`).join("")}</ol>
         </details>` : ""}
@@ -404,7 +480,7 @@ function recordAnswer(data, id, letter) {
   const q = questionById.get(id);
   const item = data.progress[id] ||= {};
   item.attempts = (item.attempts || 0) + 1;
-  if (q.status !== VERIFIED) return;
+  if (!isScored(q)) return;
   if (q.answer === letter) {
     item.streak = Math.min(5, (item.streak || 0) + 1);
     if (item.streak >= 3) item.wrong = false;
@@ -430,7 +506,7 @@ screen.addEventListener("click", event => {
 
   switch (action) {
     case "answer": updateState(data => recordAnswer(data, qid, letter), {
-      answer: { id: qid, correct: questionById.get(qid).answer === letter, verified: questionById.get(qid).status === VERIFIED }
+      answer: { id: qid, correct: questionById.get(qid).answer === letter, verified: isScored(questionById.get(qid)) }
     }); break;
     case "favorite": updateState(data => toggle(data.favorites, qid)); break;
     case "review": updateState(data => {

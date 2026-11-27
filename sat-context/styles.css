@@ -74,6 +74,18 @@ footer { margin-top: 22px; }
 .passage.poem { white-space: normal; }
 .verse-line { display: block; white-space: pre-wrap; padding-inline-start: 1.25em; text-indent: -1.25em; }
 .verse-break { display: block; height: 1em; }
+.reading-blocks > * + * { margin-top: .85rem; }
+.reading-blocks > .passage-blurb { margin-bottom: 1.2em; }
+.question-figure { margin-inline: 0; margin-bottom: 0; }
+.question-figure a { display: inline-block; max-width: 100%; text-decoration: none; }
+.question-figure img { display: block; max-width: 100%; height: auto; background: #fff; }
+.figure-zoom { display: inline-block; padding-block: .4rem; font-size: .88rem; text-decoration: underline; }
+.question-figure figcaption { margin-top: .4rem; color: var(--muted); font-size: .9rem; }
+.table-scroll { max-width: 100%; overflow-x: auto; }
+.table-scroll table { border-collapse: collapse; table-layout: auto; font-size: .95rem; }
+.table-scroll caption { margin-bottom: .5rem; text-align: start; font-weight: 650; }
+.table-scroll th, .table-scroll td { border: 1px solid var(--line); padding: .45rem .65rem; text-align: start; white-space: pre-wrap; min-width: 3.5rem; }
+.table-scroll th { background: #f5f7fc; }
 .prompt { font-weight: 700; }
 .options { display: grid; gap: 8px; }
 .option-row { min-width: 0; display: grid; gap: 6px; }
@@ -81,11 +93,14 @@ footer { margin-top: 22px; }
 .answer:disabled { opacity: 1; }
 .answer[data-result="correct"] { background: #eaf8ef; border-color: #79b89b; color: var(--green); }
 .answer[data-result="wrong"] { background: #fff0f2; border-color: #dea0aa; color: var(--red); }
+.answer[data-result="selected"] { background: var(--pale); border-color: #adbeef; }
+.answer[data-result="reference"] { background: #f5f7fc; border-color: #adbeef; }
 .letter { flex: 0 0 27px; display: grid; place-items: center; height: 27px; border-radius: 50%; border: 1px solid currentColor; font-size: .83rem; font-weight: 750; }
 .option-gloss { padding: 0 0 3px 6px; color: var(--muted); font-size: .9rem; }
 .option-gloss .btn { font-size: .85rem; }
 .feedback { padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #f5f7fe; }
 .feedback p + p { margin-top: 5px; }
+.feedback .source-note { white-space: pre-wrap; }
 .option-analysis { margin-top: 8px; }
 .option-analysis summary { cursor: pointer; font-weight: 650; }
 .option-analysis ol { margin: 6px 0 0; padding-inline-start: 25px; }
