@@ -67,6 +67,9 @@ footer { margin-top: 22px; }
 .passage { font: 1.16rem/1.62 Georgia, "Times New Roman", serif; white-space: pre-wrap; }
 .passage-blurb { font: 1rem/1.6 Georgia, "Times New Roman", serif; white-space: pre-wrap; margin-bottom: 1.2em; }
 .passage-blurb cite { font-style: italic; }
+.passage cite { font-style: italic; }
+.format-note { margin-bottom: 1.2em; }
+.passage-copyright { margin-top: .55em; font: .8rem/1.4 Georgia, "Times New Roman", serif; }
 .passage u { text-underline-offset: .15em; }
 .passage.poem { white-space: normal; }
 .verse-line { display: block; white-space: pre-wrap; padding-inline-start: 1.25em; text-indent: -1.25em; }

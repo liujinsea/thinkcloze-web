@@ -26,6 +26,30 @@ function markedHtml(text, phrases, tag) {
 }
 
 function passageHtml(question) {
+  if (question.passageItalics?.length) {
+    const text = question.passage;
+    const ranges = [];
+    for (const [phrases, tag] of [[question.passageUnderlines, "u"], [question.passageItalics, "cite"]]) {
+      let cursor = 0;
+      for (const phrase of phrases || []) {
+        const start = text.indexOf(phrase, cursor);
+        if (!phrase || start < 0) continue;
+        ranges.push({ start, end: start + phrase.length, tag });
+        cursor = start + phrase.length;
+      }
+    }
+    const lineEnds = [...text.matchAll(/\n/g)].flatMap(match => [match.index, match.index + 1]);
+    const boundaries = [...new Set([0, text.length, ...lineEnds, ...ranges.flatMap(range => [range.start, range.end])])].sort((a, b) => a - b);
+    return boundaries.slice(0, -1).map((start, index) => {
+      const end = boundaries[index + 1];
+      if (text.slice(start, end) === "\n") return "\n";
+      let part = html(text.slice(start, end));
+      for (const tag of ["cite", "u"]) {
+        if (ranges.some(range => range.tag === tag && range.start <= start && range.end >= end)) part = `<${tag}>${part}</${tag}>`;
+      }
+      return part;
+    }).join("");
+  }
   return markedHtml(question.passage, question.passageUnderlines, "u");
 }
 
@@ -39,13 +63,18 @@ function readingHtml(question) {
     : content;
   return `<div class="reading-text" lang="en">
     ${question.blurb ? `<p class="passage-blurb">${markedHtml(question.blurb, question.blurbItalics, "cite")}</p>` : ""}
+    ${question.excerptNote ? `<p class="format-note muted" lang="zh-CN" role="note">${html(question.excerptNote)}</p>` : ""}
+    ${question.formatNote ? `<p class="format-note muted" lang="zh-CN" role="note">${html(question.formatNote)}</p>` : ""}
     <p class="passage${isPoem ? " poem" : ""}">${body}</p>
+    ${question.copyright ? `<p class="passage-copyright">${html(question.copyright)}</p>` : ""}
   </div>`;
 }
 
 let questions = [];
 let questionById;
 let groupCount;
+let questionGroups = [];
+let practiceYear = new URLSearchParams(location.search).get("year") || "";
 let state;
 let route = "practice";
 let progressSync;
@@ -78,8 +107,7 @@ function progressFor(id) {
 
 function scopeQuestions(scope) {
   if (scope.startsWith("set-")) {
-    const start = (Number(scope.slice(4)) - 1) * GROUP_SIZE;
-    return questions.slice(start, start + GROUP_SIZE);
+    return questionGroups[Number(scope.slice(4)) - 1] || [];
   }
   if (scope === "questions") return questions.filter(q => state.favorites[q.id]);
   if (scope === "wrong") return questions.filter(q => progressFor(q.id).wrong);
@@ -118,7 +146,14 @@ function render() {
 function renderPractice() {
   const mastered = questions.filter(q => progressFor(q.id).mastered).length;
   const completed = questions.filter(q => progressFor(q.id).attempts).length;
-  const sets = Array.from({ length: groupCount }, (_, index) => {
+  const yearFor = question => String(question.year || /^(\d{4})/.exec(question.source)?.[1] || "");
+  const years = [...new Set(questions.map(yearFor).filter(Boolean))].sort();
+  const showYearFilter = STORAGE_KEY === "thinkcloze_sat_context_v1";
+  if (!showYearFilter) practiceYear = "";
+  if (practiceYear && !years.includes(practiceYear)) practiceYear = "";
+  const sets = Array.from({ length: groupCount }, (_, index) => index).filter(index =>
+    !practiceYear || questionGroups[index].some(question => yearFor(question) === practiceYear)
+  ).map(index => {
     const scope = `set-${index + 1}`;
     const total = scopeQuestions(scope).length;
     const round = state.rounds[scope];
@@ -130,6 +165,9 @@ function renderPractice() {
     <div class="card stack">
       <h2 tabindex="-1" data-focus>专项练习</h2>
       <p class="muted">已练 ${completed}/${questions.length} 题 · 已掌握 ${mastered} 题</p>
+      ${showYearFilter ? `<div class="row"><label for="practice-year">题目年份</label><select id="practice-year">
+        <option value="">全部年份</option>${years.map(year => `<option value="${html(year)}"${year === practiceYear ? " selected" : ""}>${html(year)}年</option>`).join("")}
+      </select></div>` : ""}
       <div class="actions">
         <a class="btn" href="#wrong">错题重练 · ${scopeQuestions("wrong").length}</a>
         <a class="btn" href="#review">标记复习 · ${scopeQuestions("review").length}</a>
@@ -229,7 +267,7 @@ function renderRound() {
         <p class="${result === "correct" ? "good" : "bad"}"><strong>${pending ? "参考答案" : result === "correct" ? "答对了" : "正确答案"} · ${q.answer}</strong></p>
         ${q.clue ? `<p><strong>关键线索</strong> · ${html(q.clue)}</p>` : ""}
         <p>${html(q.explanation)}</p>
-        ${q.formattingNote ? `<p class="muted">${html(q.formattingNote)}</p>` : ""}
+        ${q.formattingNote && !q.formatNote ? `<p class="muted">${html(q.formattingNote)}</p>` : ""}
         ${q.optionAnalysis ? `<details class="option-analysis">
           <summary>查看四个选项的分析</summary>
           <ol type="A">${q.optionAnalysis.map(analysis => `<li>${html(analysis)}</li>`).join("")}</ol>
@@ -461,6 +499,13 @@ screen.addEventListener("change", event => {
   updateWordSelection();
 });
 
+screen.addEventListener("change", event => {
+  if (event.target.id !== "practice-year") return;
+  practiceYear = event.target.value;
+  renderPractice();
+  document.getElementById("practice-year")?.focus();
+});
+
 screen.addEventListener("input", event => {
   if (event.target.id !== "word-filter") return;
   const query = event.target.value.toLowerCase().trim();
@@ -478,7 +523,15 @@ async function initialize() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     questions = await response.json();
     questionById = new Map(questions.map(q => [q.id, q]));
-    groupCount = Math.ceil(questions.length / GROUP_SIZE);
+    questionGroups = [];
+    questions.forEach((question, index) => {
+      // An import starts new groups, preserving the old final partial group.
+      const number = question.practiceGroup || Math.floor(index / GROUP_SIZE) + 1;
+      if (!Number.isSafeInteger(number) || number < 1) throw new Error("Invalid practice group");
+      (questionGroups[number - 1] ||= []).push(question);
+    });
+    if (Array.from(questionGroups).some(group => !group?.length)) throw new Error("Missing practice group");
+    groupCount = questionGroups.length;
     progressSync = new SATQuestionSync({
       namespace: STORAGE_KEY,
       onChange: (next, details) => {
